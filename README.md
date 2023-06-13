@@ -52,6 +52,8 @@ Follow the steps below to install:
 
     **Debian (AllStarLink)**
     ```bash
+    apt update
+    apt upgrade
     apt install python3 python3-pip ffmpeg
     pip3 install requests python-dateutil pydub
     ```
