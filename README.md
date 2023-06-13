@@ -104,11 +104,15 @@ Update parameters in the [config.ini](config.ini) file according to your prefere
 
 Remember you can also use CONTROL.sh to conveniently change specific key-value pairs in the config file from the command line. For example: `./CONTROL.sh sayalert false` would set 'SayAlert' to 'False'.
 
-## Tailmessage and Courtesy Tones
+# Customizing the Audio Files
+
+SkywarnPlus comes with a library of audio files that can be replaced with any 8kHz mono PCM16 WAV files you want. These are found in the `SOUNDS/` directory by default, along with `DICTIONARY.txt` which explains audio file assignments.
+
+# Tailmessage and Courtesy Tones
 
 SkywarnPlus offers functionalities such as Tailmessage management and Automatic Courtesy Tones, which require specific configurations in the `rpt.conf` file.
 
-### Tailmessage
+## Tailmessage
 
 Tailmessage functionality requires the `rpt.conf` to be properly set up. Here's an example:
 
@@ -118,7 +122,7 @@ tailsquashedtime = 30000
 tailmessagelist = /usr/local/bin/SkywarnPlus/SOUNDS/wx-tail
 ```
 
-### Automatic Courtesy Tones
+## Automatic Courtesy Tones
 
 SkywarnPlus can automatically change the repeater courtesy tone whenever certain weather alerts are active. The configuration for this is based on your `rpt.conf` file setup. Here's an example:
 
@@ -132,6 +136,7 @@ ct1 = /usr/local/bin/SkywarnPlus/SOUNDS/TONES/CT-LOCAL
 ct2 = /usr/local/bin/SkywarnPlus/SOUNDS/TONES/CT-LINK
 remotetx = /usr/local/bin/SkywarnPlus/SOUNDS/TONES/CT-LOCAL
 ```
+Courtesy tone files are located in `SOUNDS/TONES` by default and are configured through `config.ini` and `rpt.conf`.
 
 # Control Script
 
