@@ -1,0 +1,85 @@
+SkywarnPlus Audio Library Dictionary
+----------------------------------------
+This file does not actually do anything.
+This is just a reference for which audio
+files correspond to which weather events.
+This is useful for those who may want to
+replace the audio files with their own.
+----------------------------------------
+SWP01.wav: Hurricane Force Wind Warning
+SWP02.wav: Severe Thunderstorm Warning
+SWP03.wav: Severe Thunderstorm Watch
+SWP04.wav: Winter Weather Advisory
+SWP05.wav: Tropical Storm Warning
+SWP06.wav: Special Marine Warning
+SWP07.wav: Freezing Rain Advisory
+SWP08.wav: Special Weather Statement
+SWP09.wav: Excessive Heat Warning
+SWP10.wav: Coastal Flood Advisory
+SWP11.wav: Coastal Flood Warning
+SWP12.wav: Winter Storm Warning
+SWP13.wav: Tropical Storm Watch
+SWP14.wav: Thunderstorm Warning
+SWP15.wav: Small Craft Advisory
+SWP16.wav: Extreme Wind Warning
+SWP17.wav: Excessive Heat Watch
+SWP18.wav: Wind Chill Advisory
+SWP19.wav: Storm Surge Warning
+SWP20.wav: River Flood Warning
+SWP21.wav: Flash Flood Warning
+SWP22.wav: Coastal Flood Watch
+SWP23.wav: Winter Storm Watch
+SWP24.wav: Wind Chill Warning
+SWP25.wav: Thunderstorm Watch
+SWP26.wav: Fire Weather Watch
+SWP27.wav: Dense Fog Advisory
+SWP28.wav: Storm Surge Watch
+SWP29.wav: River Flood Watch
+SWP30.wav: Ice Storm Warning
+SWP31.wav: Hurricane Warning
+SWP32.wav: High Wind Warning
+SWP33.wav: Flash Flood Watch
+SWP34.wav: Red Flag Warning
+SWP35.wav: Blizzard Warning
+SWP36.wav: Tornado Warning
+SWP37.wav: Hurricane Watch
+SWP38.wav: High Wind Watch
+SWP39.wav: Frost Advisory
+SWP40.wav: Freeze Warning
+SWP41.wav: Wind Advisory
+SWP42.wav: Tornado Watch
+SWP43.wav: Storm Warning
+SWP44.wav: Heat Advisory
+SWP45.wav: Flood Warning
+SWP46.wav: Gale Warning
+SWP47.wav: Freeze Watch
+SWP48.wav: Flood Watch
+SWP49.wav: Flood Advisory
+SWP50.wav: Hurricane Local Statement
+SWP51.wav: Beach Hazards Statement
+SWP52.wav: Air Quality Alert
+SWP53.wav: Severe Weather Statement
+SWP54.wav: Winter Storm Advisory
+SWP55.wav: Tropical Storm Advisory
+SWP56.wav: Blizzard Watch
+SWP57.wav: Dust Storm Warning
+SWP58.wav: High Surf Advisory
+SWP59.wav: Heat Watch
+SWP60.wav: Freeze Watch
+SWP61.wav: Dense Smoke Advisory
+SWP62.wav: Avalanche Warning
+SWP85.wav: SkywarnPlus Enabled
+SWP86.wav: SkywarnPlus Disabled
+SWP87.wav: SayAlert Enabled
+SWP88.wav: SayAlert Disabled
+SWP89.wav: SayAllClear Enabled
+SWP90.wav: SayAllClear Disabled
+SWP91.wav: Tailmessage Enabled
+SWP92.wav: Tailmessage Disabled
+SWP93.wav: CourtesyTone Enabled
+SWP94.wav: CourtesyTone Disabled
+SWP95.wav: Tic Sound Effect
+SWP96.wav: All Clear Message
+SWP97.wav: Updated Weather Information Message
+SWP98.wav: Error Sound Effect
+SWP99.wav: Word Space Silence
