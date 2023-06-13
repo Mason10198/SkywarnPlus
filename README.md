@@ -1,6 +1,6 @@
 # SkywarnPlus
 
-SkywarnPlus is an optimized, powerful weather alert system designed for Asterisk/app_rpt repeater controller systems such as [AllStarLink](https://allstarlink.org/) and ~~[HAMVOIP](https://hamvoip.org/)~~ (in progress). It's written in Python and utilizes the new [NWS CAP v1.2 JSON API](https://www.weather.gov/documentation/services-web-api). SkywarnPlus is optimized to be resource-efficient and offers customization options to suit various user needs.
+SkywarnPlus is an optimized, powerful weather alert system designed for Asterisk/app_rpt repeater controller systems such as [AllStarLink](https://allstarlink.org/) and [HAMVOIP](https://hamvoip.org/). It's written in Python and utilizes the new [NWS CAP v1.2 JSON API](https://www.weather.gov/documentation/services-web-api). SkywarnPlus is optimized to be resource-efficient and offers customization options to suit various user needs.
 
 ## Features
 
@@ -42,59 +42,61 @@ This combination of steps ensures SkywarnPlus provides reliable, timely, and acc
 
 # Installation
 
-SkywarnPlus is recommended to be installed at the `/usr/local/bin/SkywarnPlus` location on a Debian (AllStarLink) machine. **HAMVOIP is not yet supported due to Python3.5 issues, but is actively being worked on.**
+SkywarnPlus is recommended to be installed at the `/usr/local/bin/SkywarnPlus` location on Debian (AllStarLink) and Arch (HAMVOIP) machines.
 
 Follow the steps below to install:
 
 1. **Dependencies**
 
-Install the required dependencies using the following commands:
+    Install the required dependencies using the following commands:
 
-**Debian**
-```bash
-apt install python3 python3-pip ffmpeg
-pip3 install requests python-dateutil pydub
-```
-<!--
-**Arch**
-```bash
-sudo pacman -S python python-pip ffmpeg
-pip install requests python-dateutil pydub
-```
--->
+    **Debian (AllStarLink)**
+    ```bash
+    apt install python3 python3-pip ffmpeg
+    pip3 install requests python-dateutil pydub
+    ```
+
+    **Arch (HAMVOIP)**
+    ```bash
+    pacman -S ffmpeg
+    wget https://bootstrap.pypa.io/pip/3.5/get-pip.py
+    python get-pip.py
+    pip install requests python-dateutil pydub
+    ```
+
 2. **Clone the Repository**
 
-Clone the SkywarnPlus repository from GitHub to the `/usr/local/bin` directory:
+    Clone the SkywarnPlus repository from GitHub to the `/usr/local/bin` directory:
 
-```bash
-cd /usr/local/bin
-git clone https://github.com/mason10198/SkywarnPlus.git
-```
-3. **Configure CONTROL.sh Permissions**
+    ```bash
+    cd /usr/local/bin
+    git clone https://github.com/mason10198/SkywarnPlus.git
+    ```
+    3. **Configure CONTROL.sh Permissions**
 
-The CONTROL.sh script must be made executable. Use the chmod command to change the file permissions:
+    The CONTROL.sh script must be made executable. Use the chmod command to change the file permissions:
 
-```bash
-sudo chmod +x /usr/local/bin/SkywarnPlus/CONTROL.sh
-```
+    ```bash
+    sudo chmod +x /usr/local/bin/SkywarnPlus/CONTROL.sh
+    ```
 
 4. **Edit Configuration**
 
-Edit the configuration file to suit your system:
+    Edit the configuration file to suit your system:
 
-```bash
-sudo nano SkywarnPlus/config.ini
-```
+    ```bash
+    sudo nano SkywarnPlus/config.ini
+    ```
 
 5. **Crontab Entry**
 
-Add a crontab entry to call SkywarnPlus on an interval. Open your crontab file using the `crontab -e` command, and add the following line:
+    Add a crontab entry to call SkywarnPlus on an interval. Open your crontab file using the `crontab -e` command, and add the following line:
 
-```bash
-* * * * * /usr/bin/python3 /usr/local/bin/SkywarnPlus/SkywarnPlus.py
-```
+    ```bash
+    * * * * * /usr/bin/python3 /usr/local/bin/SkywarnPlus/SkywarnPlus.py
+    ```
 
-This command will execute SkywarnPlus every minute.
+    This command will execute SkywarnPlus (poll NWS API for data) every minute.
 
 # Configuration
 
