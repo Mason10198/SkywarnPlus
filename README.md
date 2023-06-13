@@ -244,3 +244,5 @@ SkywarnPlus is open-source and welcomes contributions. If you'd like to contribu
 # License
 
 SkywarnPlus is open-sourced software licensed under the [MIT license](LICENSE).
+
+Created by Mason Nelson (N5LSN/WRKF394)

@@ -2,6 +2,8 @@
 
 # CONTROL.sh
 # A Control Script for SkywarnPlus
+# by Mason Nelson (N5LSN/WRKF394)
+#
 #
 # This script allows you to change the value of specific keys in the SkywarnPlus config.ini file.
 # It's designed to enable or disable certain features of SkywarnPlus from the command line.
