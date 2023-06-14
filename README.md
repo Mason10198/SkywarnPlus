@@ -158,6 +158,13 @@ SkywarnPlus comes with a powerful control script (`CONTROL.sh`) that can be used
 To use the CONTROL.sh script, you need to call it with two parameters:
 
 1. The name of the setting you want to change (case insensitive).
+
+    - Enable (Completely enable/disable SkywarnPlus)
+    - SayAlert
+    - SayAllClear
+    - TailMessage
+    - CourtesyTone
+
 2. The new value for the setting (either 'true' or 'false').
 
 For example, to enable the SayAlert function, you would use: 
