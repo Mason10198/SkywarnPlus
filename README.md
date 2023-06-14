@@ -74,7 +74,8 @@ Follow the steps below to install:
     cd /usr/local/bin
     git clone https://github.com/mason10198/SkywarnPlus.git
     ```
-    3. **Configure CONTROL.sh Permissions**
+    
+3. **Configure CONTROL.sh Permissions**
 
     The CONTROL.sh script must be made executable. Use the chmod command to change the file permissions:
 
