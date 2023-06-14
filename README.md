@@ -106,9 +106,7 @@ Follow the steps below to install:
 
 # Configuration
 
-Update parameters in the [config.ini](config.ini) file according to your preferences. 
-
-Remember you can also use CONTROL.sh to conveniently change specific key-value pairs in the config file from the command line. For example: `./CONTROL.sh sayalert false` would set 'SayAlert' to 'False'.
+Update parameters in the [config.ini](config.ini) file according to your needs. This is where you will enter your NWS county/zone codes, etc.
 
 # Customizing the Audio Files
 
