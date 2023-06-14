@@ -194,7 +194,7 @@ Upon the successful execution of a control command, the `CONTROL.sh` script will
 
 ## Mapping to DTMF Control Codes
 
-You can map the CONTROL.sh script to DTMF control codes in the `rpt.conf` file of your AllStar node. Here is an example of how to do this:
+You can map the CONTROL.sh script to DTMF control codes in the `rpt.conf` file of your node. Here is an example of how to do this:
 
 ```bash
 801 = cmd,/usr/local/bin/SkywarnPlus/CONTROL.sh enable toggle ; Toggles SkywarnPlus
