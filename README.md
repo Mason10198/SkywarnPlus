@@ -120,7 +120,7 @@ boundaries."
 
 > "...county based alerts are not mapped to zones but zone based alerts are mapped to counties."
 
-This means that if you use a County code, you will receive all alerts for both your County **AND** your Zone - but if you use a Zone code, you will **ONLY** recieve alerts that cover the entire Zone, and none of the alerts specific to your County.
+This means that if you use a County code, you will receive all alerts for both your County **AND** your Zone - but if you use a Zone code, you will **ONLY** receive alerts that cover the entire Zone, and none of the alerts specific to your County.
 
 # Customizing the Audio Files
 
