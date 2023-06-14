@@ -141,6 +141,14 @@ remotetx = /usr/local/bin/SkywarnPlus/SOUNDS/TONES/CT-LOCAL
 ```
 Courtesy tone files are located in `SOUNDS/TONES` by default and are configured through `config.ini` and `rpt.conf`.
 
+# Pushover Integration
+
+SkywarnPlus can use the free Pushover API to send WX alert notifications and debug messages directly to your smartphone or other devices.
+1. Visit https://pushover.net/ to sign up for a free account.
+2. Find your UserKey on your main dashboard
+3. Scroll down and create an Application/API key for your node
+4. Add UserKey & API Key to `config.ini`
+
 # Control Script
 
 SkywarnPlus comes with a powerful control script (`CONTROL.sh`) that can be used to enable or disable certain SkywarnPlus functions. This script is particularly useful when you want to map DTMF control codes to these functions. An added advantage is that the script provides spoken feedback upon execution, making it even more suitable for DTMF control.
