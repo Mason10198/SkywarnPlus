@@ -170,22 +170,22 @@ To use the CONTROL.sh script, you need to call it with two parameters:
 
 2. The new value for the setting (either 'true' or 'false' or 'toggle').
 
-For example, to enable the SayAlert function, you would use: 
+For example, to completely disable SkywarnPlus, you would use:
 
 ```bash
-/usr/local/bin/SkywarnPlus/CONTROL.sh SayAlert true
+/usr/local/bin/SkywarnPlus/CONTROL.sh enable true
 ```
 
-And to disable it, you would use:
+And to reenable it, you would use:
 
 ```bash
-/usr/local/bin/SkywarnPlus/CONTROL.sh SayAlert false
+/usr/local/bin/SkywarnPlus/CONTROL.sh enable false
 ```
 
 And to toggle it, you would use:
 
 ```bash
-/usr/local/bin/SkywarnPlus/CONTROL.sh SayAlert toggle
+/usr/local/bin/SkywarnPlus/CONTROL.sh enable toggle
 ```
 
 ## Spoken Feedback
