@@ -55,7 +55,9 @@ if not os.path.exists(tmp_dir):
     os.makedirs(tmp_dir)
 
 # List of blocked events
-blocked_events = config["Blocking"].get("BlockedEvents").split(",")
+global_blocked_events = config["Blocking"].get("GlobalBlockedEvents").split(",")
+sayalert_blocked_events = config["Blocking"].get("SayAlertBlockedEvents").split(",")
+tailmessage_blocked_events = config["Blocking"].get("TailmessageBlockedEvents").split(",")
 # Configuration for tailmessage
 tailmessage_config = config["Tailmessage"]
 # Flag to enable/disable tailmessage
@@ -252,7 +254,7 @@ logger.debug("Base directory: {}".format(baseDir))
 logger.debug("Temporary directory: {}".format(tmp_dir))
 logger.debug("Sounds path: {}".format(sounds_path))
 logger.debug("Tailmessage path: {}".format(tailmessage_file))
-logger.debug("Blocked events: {}".format(blocked_events))
+logger.debug("Global Blocked events: {}".format(global_blocked_events))
 
 
 def getAlerts(countyCodes):
@@ -292,10 +294,10 @@ def getAlerts(countyCodes):
                     expires_time = parser.isoparse(expires)
                     if expires_time > current_time:
                         event = feature["properties"]["event"]
-                        for blocked_event in blocked_events:
-                            if fnmatch.fnmatch(event, blocked_event):
+                        for global_blocked_event in global_blocked_events:
+                            if fnmatch.fnmatch(event, global_blocked_event):
                                 logger.debug(
-                                    "Blocking {} as per configuration".format(event)
+                                    "Globally Blocking {} as per configuration".format(event)
                                 )
                                 break
                         else:
@@ -329,6 +331,11 @@ def sayAlert(alerts):
     )
 
     for alert in alerts:
+        # Check if alert is in the SayAlertBlockedEvents list
+        if alert in sayalert_blocked_events:
+            logger.debug("Alert blocked by SayAlertBlockedEvents: {}".format(alert))
+            continue
+
         try:
             index = WS.index(alert)
             audio_file = AudioSegment.from_wav(
