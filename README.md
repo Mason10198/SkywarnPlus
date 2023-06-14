@@ -8,7 +8,7 @@ Tested on ASL 1.01, ASL 2.0.0, and HAMVOIP 1.7-01.
 
 * **Human Speech**: Provides a library of recorded human speech for clearer, more understandable alerts.
 * **Performance**: Designed for minimal impact on internet bandwidth and storage, reducing unnecessary I/O operations.
-* **Alert Coverage**: Allows specifying multiple counties or zones for alerts, ensuring broad coverage.
+* **Alert Coverage**: Allows specifying multiple counties for alerts, ensuring broad coverage.
 * **Alert Filtering**: Provides advanced options to block or filter alerts using regular expressions and wildcards.
 * **Remote Control**: Includes a control script that can be mapped to DTMF commands, allowing instant over-the-air control of your system.
 * **Automatic Courtesy Tones**: Changes repeater courtesy tones based on active alerts.
@@ -27,7 +27,7 @@ SkywarnPlus is a Python-based weather alert system for Asterisk/app_rpt repeater
 
 2. **Data Parsing**: Upon receiving the API response, SkywarnPlus parses the JSON data to extract the information pertinent to weather alerts. This involves reading the structured JSON data and converting it into an internal format for further processing.
 
-3. **Data Filtering**: The extracted data is then filtered based on user-defined criteria set in the configuration file. This includes narrowing down the information to specific counties or zones of interest, as well as excluding certain types of alerts. The filtering mechanism supports regular expressions and wildcards for more sophisticated filtering rules.
+3. **Data Filtering**: The extracted data is then filtered based on user-defined criteria set in the configuration file. This includes narrowing down the information to specific counties of interest, as well as excluding certain types of alerts. The filtering mechanism supports regular expressions and wildcards for more sophisticated filtering rules.
 
 4. **Alert Management**: SkywarnPlus manages the filtered alerts intelligently, ensuring that each alert is unique and relevant. Duplicate alerts are automatically removed from the pool of active alerts to prevent repetition and alert fatigue.
 
@@ -106,7 +106,20 @@ Follow the steps below to install:
 
 # Configuration
 
-Update parameters in the [config.ini](config.ini) file according to your needs. This is where you will enter your NWS county/zone codes, etc.
+Edit the [config.ini](config.ini) file according to your needs. This is where you will enter your NWS codes, enable/disable specific functions, etc.
+
+You can find your area code(s) at https://alerts.weather.gov/. Select `County List` to the right of your state, and use the `County Code` associated with the area(s) you want SkywarnPlus to poll for WX alerts.
+
+## **IMPORTANT**: YOU WILL MISS ALERTS IF YOU USE A **ZONE** CODE. DO NOT USE **ZONE** CODES UNLESS YOU KNOW WHAT YOU ARE DOING.
+
+According to the official [NWS API documentation](https://www.weather.gov/documentation/services-web-api):
+> "...county based alerts are not mapped to zones but zone based alerts are mapped to counties."
+
+> "For large scale or longer lasting events, such as snow storms, fire threat, or heat events, alerts are issued
+by NWS public forecast zones or fire weather zones. These zones differ in size and can cross county
+boundaries."
+
+This means that if you use a County code, you will receive all alerts for both your County **AND** your Zone - but if you use a Zone code, you will **ONLY** recieve alerts that cover the entire Zone, and none of the alerts specific to your County.
 
 # Customizing the Audio Files
 
