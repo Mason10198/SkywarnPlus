@@ -173,13 +173,13 @@ To use the CONTROL.sh script, you need to call it with two parameters:
 For example, to completely disable SkywarnPlus, you would use:
 
 ```bash
-/usr/local/bin/SkywarnPlus/CONTROL.sh enable true
+/usr/local/bin/SkywarnPlus/CONTROL.sh enable false
 ```
 
 And to reenable it, you would use:
 
 ```bash
-/usr/local/bin/SkywarnPlus/CONTROL.sh enable false
+/usr/local/bin/SkywarnPlus/CONTROL.sh enable true
 ```
 
 And to toggle it, you would use:
