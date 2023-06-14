@@ -57,7 +57,9 @@ if not os.path.exists(tmp_dir):
 # List of blocked events
 global_blocked_events = config["Blocking"].get("GlobalBlockedEvents").split(",")
 sayalert_blocked_events = config["Blocking"].get("SayAlertBlockedEvents").split(",")
-tailmessage_blocked_events = config["Blocking"].get("TailmessageBlockedEvents").split(",")
+tailmessage_blocked_events = (
+    config["Blocking"].get("TailmessageBlockedEvents").split(",")
+)
 # Configuration for tailmessage
 tailmessage_config = config["Tailmessage"]
 # Flag to enable/disable tailmessage
@@ -255,6 +257,8 @@ logger.debug("Temporary directory: {}".format(tmp_dir))
 logger.debug("Sounds path: {}".format(sounds_path))
 logger.debug("Tailmessage path: {}".format(tailmessage_file))
 logger.debug("Global Blocked events: {}".format(global_blocked_events))
+logger.debug("SayAlert Blocked events: {}".format(sayalert_blocked_events))
+logger.debug("Tailmessage Blocked events: {}".format(tailmessage_blocked_events))
 
 
 def getAlerts(countyCodes):
@@ -297,7 +301,9 @@ def getAlerts(countyCodes):
                         for global_blocked_event in global_blocked_events:
                             if fnmatch.fnmatch(event, global_blocked_event):
                                 logger.debug(
-                                    "Globally Blocking {} as per configuration".format(event)
+                                    "Globally Blocking {} as per configuration".format(
+                                        event
+                                    )
                                 )
                                 break
                         else:
@@ -330,10 +336,12 @@ def sayAlert(alerts):
         os.path.join(sounds_path, "ALERTS", "SWP95.wav")
     )
 
+    alert_count = 0  # Counter for alerts added to combined_sound
+
     for alert in alerts:
         # Check if alert is in the SayAlertBlockedEvents list
         if alert in sayalert_blocked_events:
-            logger.debug("Alert blocked by SayAlertBlockedEvents: {}".format(alert))
+            logger.debug("SayAlert blocking {} as per configuration".format(alert))
             continue
 
         try:
@@ -343,6 +351,7 @@ def sayAlert(alerts):
             )
             combined_sound += sound_effect + audio_file
             logger.debug("Added {} (SWP{}.wav) to alert sound".format(alert, WA[index]))
+            alert_count += 1  # Increment the counter
         except ValueError:
             logger.error("Alert not found: {}".format(alert))
         except FileNotFoundError:
@@ -352,26 +361,29 @@ def sayAlert(alerts):
                 )
             )
 
-    logger.debug("Exporting alert sound to {}".format(alert_file))
-    converted_combined_sound = convert_audio(combined_sound)
-    converted_combined_sound.export(alert_file, format="wav")
+    if alert_count == 0:  # Check the counter instead of combined_sound.empty()
+        logger.debug("SayAlert: All alerts were blocked, not broadcasting any alerts.")
+    else:
+        logger.debug("Exporting alert sound to {}".format(alert_file))
+        converted_combined_sound = convert_audio(combined_sound)
+        converted_combined_sound.export(alert_file, format="wav")
 
-    logger.debug("Replacing tailmessage with silence")
-    silence = AudioSegment.silent(duration=100)
-    converted_silence = convert_audio(silence)
-    converted_silence.export(tailmessage_file, format="wav")
-    node_numbers = config["Asterisk"]["Nodes"].split(",")
+        logger.debug("Replacing tailmessage with silence")
+        silence = AudioSegment.silent(duration=100)
+        converted_silence = convert_audio(silence)
+        converted_silence.export(tailmessage_file, format="wav")
+        node_numbers = config["Asterisk"]["Nodes"].split(",")
 
-    for node_number in node_numbers:
-        logger.info("Broadcasting alert on node {}".format(node_number))
-        command = '/usr/sbin/asterisk -rx "rpt localplay {} {}"'.format(
-            node_number.strip(), os.path.splitext(os.path.abspath(alert_file))[0]
-        )
-        subprocess.run(command, shell=True)
+        for node_number in node_numbers:
+            logger.info("Broadcasting alert on node {}".format(node_number))
+            command = '/usr/sbin/asterisk -rx "rpt localplay {} {}"'.format(
+                node_number.strip(), os.path.splitext(os.path.abspath(alert_file))[0]
+            )
+            subprocess.run(command, shell=True)
 
-    # This keeps Asterisk from playing the tailmessage immediately after the alert
-    logger.info("Waiting 30 seconds for Asterisk to make announcement...")
-    time.sleep(30)
+        # This keeps Asterisk from playing the tailmessage immediately after the alert
+        logger.info("Waiting 30 seconds for Asterisk to make announcement...")
+        time.sleep(30)
 
 
 def sayAllClear():
@@ -408,6 +420,11 @@ def buildTailmessage(alerts):
         os.path.join(sounds_path, "ALERTS", "SWP95.wav")
     )
     for alert in alerts:
+        # Check if alert is in the TailmessageBlockedEvents list
+        if alert in tailmessage_blocked_events:
+            logger.debug("Alert blocked by TailmessageBlockedEvents: {}".format(alert))
+            continue
+
         try:
             index = WS.index(alert)
             audio_file = AudioSegment.from_wav(
@@ -423,6 +440,11 @@ def buildTailmessage(alerts):
                     sounds_path, WA[index]
                 )
             )
+    if combined_sound.empty():
+        logger.debug(
+            "BuildTailmessage: All alerts were blocked, creating silent tailmessage"
+        )
+        combined_sound = AudioSegment.silent(duration=100)
     logger.debug("Exporting tailmessage to {}".format(tailmessage_file))
     converted_combined_sound = convert_audio(combined_sound)
     converted_combined_sound.export(tailmessage_file, format="wav")
