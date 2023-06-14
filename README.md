@@ -6,18 +6,18 @@ Tested on ASL 1.01, ASL 2.0.0, and HAMVOIP 1.7-01.
 
 ## Features
 
-* **Human Speech**: Provides a library of recorded human speech for clearer, more understandable alerts.
-* **Performance**: Designed for minimal impact on internet bandwidth and storage, reducing unnecessary I/O operations.
-* **Alert Coverage**: Allows specifying multiple counties for alerts, ensuring broad coverage.
-* **Alert Filtering**: Provides advanced options to block or filter alerts using regular expressions and wildcards.
-* **Remote Control**: Includes a control script that can be mapped to DTMF commands, allowing instant over-the-air control of your system.
-* **Automatic Courtesy Tones**: Changes repeater courtesy tones based on active alerts.
-* **Duplicate Filtering**: Ensures the same alert is never broadcast twice.
-* **Selective Broadcasting**: Broadcasts alerts on weather conditions' onset or dissipation.
-* **Tailmessage Management**: Provides unobtrusive alerting if alert broadcasting is disabled.
-* **Pushover Integration**: Sends alerts and debug messages directly to your phone.
-* **Multiple Nodes**: Supports alert distribution to as many local node numbers as desired.
-* **Developer Options**: Provides a testing environment to inject manually defined alerts for testing how the system functions.
+- **Human Speech**: Provides a library of recorded human speech for clearer, more understandable alerts.
+- **Performance**: Designed for minimal impact on internet bandwidth and storage, reducing unnecessary I/O operations.
+- **Alert Coverage**: Allows specifying multiple counties for alerts, ensuring broad coverage.
+- **Alert Filtering**: Provides advanced options to block or filter alerts using regular expressions and wildcards.
+- **Remote Control**: Includes a control script that can be mapped to DTMF commands, allowing instant over-the-air control of your system.
+- **Automatic Courtesy Tones**: Changes repeater courtesy tones based on active alerts.
+- **Duplicate Filtering**: Ensures the same alert is never broadcast twice.
+- **Selective Broadcasting**: Broadcasts alerts on weather conditions' onset or dissipation.
+- **Tailmessage Management**: Provides unobtrusive alerting if alert broadcasting is disabled.
+- **Pushover Integration**: Sends alerts and debug messages directly to your phone.
+- **Multiple Nodes**: Supports alert distribution to as many local node numbers as desired.
+- **Developer Options**: Provides a testing environment to inject manually defined alerts for testing how the system functions.
 
 ## How It Works
 
@@ -51,82 +51,76 @@ Follow the steps below to install:
 
 1. **Dependencies**
 
-    Install the required dependencies using the following commands:
+   Install the required dependencies using the following commands:
 
-    **Debian (AllStarLink)**
-    ```bash
-    apt update
-    apt upgrade
-    apt install git python3 python3-pip ffmpeg
-    pip3 install requests python-dateutil pydub
-    ```
+   **Debian (AllStarLink)**
 
-    **Arch (HAMVOIP)**
-    ```bash
-    pacman -S ffmpeg
-    wget https://bootstrap.pypa.io/pip/3.5/get-pip.py
-    python get-pip.py
-    pip install requests python-dateutil pydub
-    ```
+   ```bash
+   apt update
+   apt upgrade
+   apt install git python3 python3-pip ffmpeg
+   pip3 install requests python-dateutil pydub
+   ```
+
+   **Arch (HAMVOIP)**
+
+   ```bash
+   pacman -S ffmpeg
+   wget https://bootstrap.pypa.io/pip/3.5/get-pip.py
+   python get-pip.py
+   pip install requests python-dateutil pydub
+   ```
 
 2. **Clone the Repository**
 
-    Clone the SkywarnPlus repository from GitHub to the `/usr/local/bin` directory:
+   Clone the SkywarnPlus repository from GitHub to the `/usr/local/bin` directory:
 
-    ```bash
-    cd /usr/local/bin
-    git clone https://github.com/mason10198/SkywarnPlus.git
-    ```
-    
+   ```bash
+   cd /usr/local/bin
+   git clone https://github.com/mason10198/SkywarnPlus.git
+   ```
+
 3. **Configure CONTROL.sh Permissions**
 
-    The CONTROL.sh script must be made executable. Use the chmod command to change the file permissions:
+   The CONTROL.sh script must be made executable. Use the chmod command to change the file permissions:
 
-    ```bash
-    sudo chmod +x /usr/local/bin/SkywarnPlus/CONTROL.sh
-    ```
+   ```bash
+   sudo chmod +x /usr/local/bin/SkywarnPlus/CONTROL.sh
+   ```
 
 4. **Edit Configuration**
 
-    Edit the configuration file to suit your system:
+    Edit the [config.ini](config.ini) file according to your needs. This is where you will enter your NWS codes, enable/disable specific functions, etc.
 
-    ```bash
-    sudo nano SkywarnPlus/config.ini
-    ```
+   ```bash
+   sudo nano SkywarnPlus/config.ini
+   ```
+
+    You can find your area code(s) at https://alerts.weather.gov/. Select `County List` to the right of your state, and use the `County Code` associated with the area(s) you want SkywarnPlus to poll for WX alerts.
+
+    ## **IMPORTANT**: YOU WILL MISS ALERTS IF YOU USE A **ZONE** CODE. DO NOT USE **ZONE** CODES UNLESS YOU KNOW WHAT YOU ARE DOING.
+
+    According to the official [NWS API documentation](https://www.weather.gov/documentation/services-web-api):
+
+    > "For large scale or longer lasting events, such as snow storms, fire threat, or heat events, alerts are issued
+    > by NWS public forecast zones or fire weather zones. These zones differ in size and can cross county
+    > boundaries."
+
+    > "...county based alerts are not mapped to zones but zone based alerts are mapped to counties."
+
+    This means that if you use a County code, you will receive all alerts for both your County **AND** your Zone - but if you use a Zone code, you will **ONLY** receive alerts that cover the entire Zone, and none of the alerts specific to your County.
 
 5. **Crontab Entry**
 
-    Add a crontab entry to call SkywarnPlus on an interval. Open your crontab file using the `crontab -e` command, and add the following line:
+   Add a crontab entry to call SkywarnPlus on an interval. Open your crontab file using the `crontab -e` command, and add the following line:
 
-    ```bash
-    * * * * * /usr/bin/python3 /usr/local/bin/SkywarnPlus/SkywarnPlus.py
-    ```
+   ```bash
+   * * * * * /usr/bin/python3 /usr/local/bin/SkywarnPlus/SkywarnPlus.py
+   ```
 
-    This command will execute SkywarnPlus (poll NWS API for data) every minute.
+   This command will execute SkywarnPlus (poll NWS API for data) every minute.
 
-# Configuration
-
-Edit the [config.ini](config.ini) file according to your needs. This is where you will enter your NWS codes, enable/disable specific functions, etc.
-
-You can find your area code(s) at https://alerts.weather.gov/. Select `County List` to the right of your state, and use the `County Code` associated with the area(s) you want SkywarnPlus to poll for WX alerts.
-
-## **IMPORTANT**: YOU WILL MISS ALERTS IF YOU USE A **ZONE** CODE. DO NOT USE **ZONE** CODES UNLESS YOU KNOW WHAT YOU ARE DOING.
-
-According to the official [NWS API documentation](https://www.weather.gov/documentation/services-web-api):
-
-> "For large scale or longer lasting events, such as snow storms, fire threat, or heat events, alerts are issued
-by NWS public forecast zones or fire weather zones. These zones differ in size and can cross county
-boundaries."
-
-> "...county based alerts are not mapped to zones but zone based alerts are mapped to counties."
-
-This means that if you use a County code, you will receive all alerts for both your County **AND** your Zone - but if you use a Zone code, you will **ONLY** receive alerts that cover the entire Zone, and none of the alerts specific to your County.
-
-# Customizing the Audio Files
-
-SkywarnPlus comes with a library of audio files that can be replaced with any 8kHz mono PCM16 WAV files you want. These are found in the `SOUNDS/` directory by default, along with `DICTIONARY.txt` which explains audio file assignments.
-
-# Tailmessage and Courtesy Tones
+# Tailmessage and Automatic Courtesy Tones
 
 SkywarnPlus offers functionalities such as Tailmessage management and Automatic Courtesy Tones, which require specific configurations in the `rpt.conf` file.
 
@@ -154,11 +148,13 @@ ct1 = /usr/local/bin/SkywarnPlus/SOUNDS/TONES/CT-LOCAL
 ct2 = /usr/local/bin/SkywarnPlus/SOUNDS/TONES/CT-LINK
 remotetx = /usr/local/bin/SkywarnPlus/SOUNDS/TONES/CT-LOCAL
 ```
+
 Courtesy tone files are located in `SOUNDS/TONES` by default and are configured through `config.ini` and `rpt.conf`.
 
 # Pushover Integration
 
 SkywarnPlus can use the free Pushover API to send WX alert notifications and debug messages directly to your smartphone or other devices.
+
 1. Visit https://pushover.net/ to sign up for a free account.
 2. Find your UserKey on your main dashboard
 3. Scroll down and create an Application/API key for your node
@@ -168,17 +164,17 @@ SkywarnPlus can use the free Pushover API to send WX alert notifications and deb
 
 SkywarnPlus comes with a powerful control script (`CONTROL.sh`) that can be used to enable or disable certain SkywarnPlus functions. This script is particularly useful when you want to map DTMF control codes to these functions. An added advantage is that the script provides spoken feedback upon execution, making it even more suitable for DTMF control.
 
-## Usage 
+## Usage
 
 To use the CONTROL.sh script, you need to call it with two parameters:
 
 1. The name of the setting you want to change (case insensitive).
 
-    - Enable (Completely enable/disable SkywarnPlus)
-    - SayAlert
-    - SayAllClear
-    - TailMessage
-    - CourtesyTone
+   - Enable (Completely enable/disable SkywarnPlus)
+   - SayAlert
+   - SayAllClear
+   - TailMessage
+   - CourtesyTone
 
 2. The new value for the setting (either 'true' or 'false' or 'toggle').
 
@@ -217,6 +213,10 @@ You can map the CONTROL.sh script to DTMF control codes in the `rpt.conf` file o
 ```
 
 With this setup, you can control SkywarnPlus' functionality using DTMF commands.
+
+# Customizing the Audio Files
+
+SkywarnPlus comes with a library of audio files that can be replaced with any 8kHz mono PCM16 WAV files you want. These are found in the `SOUNDS/` directory by default, along with `DICTIONARY.txt` which explains audio file assignments.
 
 # Testing
 
@@ -272,7 +272,7 @@ SkywarnPlus is actively maintained by a single individual who dedicates their sp
 
 If you encounter any issues with SkywarnPlus, please check back to the [SkywarnPlus GitHub Repository](https://github.com/mason10198/SkywarnPlus) to see if there have been any updates or fixes since the last time you downloaded it. New commits are made regularly to enhance the system's performance and rectify any known issues.
 
-Bug reporting is greatly appreciated as it helps to improve SkywarnPlus. If you spot a bug, please raise an issue in the GitHub repository detailing the problem. Include as much information as possible, such as error messages, screenshots, and steps to reproduce the issue. This will assist in quickly understanding and resolving the issue. 
+Bug reporting is greatly appreciated as it helps to improve SkywarnPlus. If you spot a bug, please raise an issue in the GitHub repository detailing the problem. Include as much information as possible, such as error messages, screenshots, and steps to reproduce the issue. This will assist in quickly understanding and resolving the issue.
 
 Thank you for your understanding and assistance in making SkywarnPlus a more robust and reliable system for all.
 
