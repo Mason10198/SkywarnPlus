@@ -31,6 +31,7 @@ fi
 
 # Get the directory of the script
 SCRIPT_DIR=$(dirname $(readlink -f $0))
+CONFIG_FILE="${SCRIPT_DIR}/config.ini"
 
 # Convert the input key into lowercase
 KEY=$(echo "$1" | tr '[:upper:]' '[:lower:]')
@@ -38,9 +39,9 @@ KEY=$(echo "$1" | tr '[:upper:]' '[:lower:]')
 # Convert the first character of the value to uppercase
 VALUE=$(echo "$2" | awk '{for(i=1;i<=NF;i++)sub(/./,toupper(substr($i,1,1)),$i)}1')
 
-# Make sure the provided value is either 'True' or 'False'
-if [[ "${VALUE^^}" != "TRUE" && "${VALUE^^}" != "FALSE" ]]; then
-    echo "Invalid value. Please provide either 'true' or 'false'."
+# Make sure the provided value is either 'True' or 'False' or 'Toggle'
+if [[ "${VALUE^^}" != "TRUE" && "${VALUE^^}" != "FALSE" && "${VALUE^^}" != "TOGGLE" ]]; then
+    echo "Invalid value. Please provide either 'true' or 'false' or 'toggle'."
     exit 1
 fi
 
@@ -65,6 +66,33 @@ if [[ ${ARGUMENTS[$KEY]+_} ]]; then
     
     # Get the section that the key belongs to
     SECTION=${SECTIONS[$KEY]}
+    
+    if [[ "${VALUE^^}" = "TOGGLE" ]]; then
+        CONFIG_VALUE=$(awk -F "=" -v section="$SECTION" -v key="$KEY" '
+        BEGIN {RS=";"; FS="="}
+        $0 ~ "\\[" section "\\]" {flag=1}
+        flag && $1 ~ key {gsub(/ /, "", $2); print toupper($2); exit}
+        $0 ~ "\\[" && $0 !~ "\\[" section "\\]" {flag=0}' "$CONFIG_FILE")
+        
+        echo "DEBUG: Config value of '$KEY' as read by AWK: '$CONFIG_VALUE'"
+        
+        # Remove leading and trailing whitespace
+        CURRENT_VALUE=$(echo $CONFIG_VALUE | xargs)
+        
+        echo "Current value of '$KEY' is '$CURRENT_VALUE'"
+        
+        if [ "$CURRENT_VALUE" == "TRUE" ]; then
+            NEW_VALUE="False"
+            elif [ "$CURRENT_VALUE" == "FALSE" ]; then
+            NEW_VALUE="True"
+        else
+            echo "Could not determine current value. Exiting."
+            exit 1
+        fi
+        echo "New value of '$KEY' is $NEW_VALUE"
+        VALUE=$NEW_VALUE
+        echo "DEBUG: Value of '$KEY' will be changed to '$VALUE'"
+    fi
     
     # Update the value of the key in the configuration file
     sed -i "/^\[${SECTION}\]/,/^\[/{s/^${CONFIG_KEY} = .*/${CONFIG_KEY} = ${VALUE}/}" "${SCRIPT_DIR}/config.ini"
