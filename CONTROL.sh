@@ -20,6 +20,11 @@
 # - tailmessage: Enable or disable building of tail message. (Section: Tailmessage)
 # - courtesytone: Enable or disable automatic courtesy tones. (Section: CourtesyTones)
 #
+# Supported values:
+# - true: Enable the feature.
+# - false: Disable the feature.
+# - toggle: Toggle the feature.
+#
 # All changes will be made in the config.ini file located in the same directory as the script.
 
 # First, we need to check if the correct number of arguments are passed
@@ -74,12 +79,8 @@ if [[ ${ARGUMENTS[$KEY]+_} ]]; then
         flag && $1 ~ key {gsub(/ /, "", $2); print toupper($2); exit}
         $0 ~ "\\[" && $0 !~ "\\[" section "\\]" {flag=0}' "$CONFIG_FILE")
         
-        echo "DEBUG: Config value of '$KEY' as read by AWK: '$CONFIG_VALUE'"
-        
         # Remove leading and trailing whitespace
         CURRENT_VALUE=$(echo $CONFIG_VALUE | xargs)
-        
-        echo "Current value of '$KEY' is '$CURRENT_VALUE'"
         
         if [ "$CURRENT_VALUE" == "TRUE" ]; then
             NEW_VALUE="False"
@@ -89,9 +90,7 @@ if [[ ${ARGUMENTS[$KEY]+_} ]]; then
             echo "Could not determine current value. Exiting."
             exit 1
         fi
-        echo "New value of '$KEY' is $NEW_VALUE"
         VALUE=$NEW_VALUE
-        echo "DEBUG: Value of '$KEY' will be changed to '$VALUE'"
     fi
     
     # Update the value of the key in the configuration file
