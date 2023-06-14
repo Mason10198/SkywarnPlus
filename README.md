@@ -113,11 +113,12 @@ You can find your area code(s) at https://alerts.weather.gov/. Select `County Li
 ## **IMPORTANT**: YOU WILL MISS ALERTS IF YOU USE A **ZONE** CODE. DO NOT USE **ZONE** CODES UNLESS YOU KNOW WHAT YOU ARE DOING.
 
 According to the official [NWS API documentation](https://www.weather.gov/documentation/services-web-api):
-> "...county based alerts are not mapped to zones but zone based alerts are mapped to counties."
 
 > "For large scale or longer lasting events, such as snow storms, fire threat, or heat events, alerts are issued
 by NWS public forecast zones or fire weather zones. These zones differ in size and can cross county
 boundaries."
+
+> "...county based alerts are not mapped to zones but zone based alerts are mapped to counties."
 
 This means that if you use a County code, you will receive all alerts for both your County **AND** your Zone - but if you use a Zone code, you will **ONLY** recieve alerts that cover the entire Zone, and none of the alerts specific to your County.
 
