@@ -197,11 +197,11 @@ Upon the successful execution of a control command, the `CONTROL.sh` script will
 You can map the CONTROL.sh script to DTMF control codes in the `rpt.conf` file of your AllStar node. Here is an example of how to do this:
 
 ```bash
-901 = cmd,/usr/local/bin/SkywarnPlus/CONTROL.sh enable toggle ; Toggles SkywarnPlus
-902 = cmd,/usr/local/bin/SkywarnPlus/CONTROL.sh sayalert toggle ; Toggles SayAlert
-903 = cmd,/usr/local/bin/SkywarnPlus/CONTROL.sh sayallclear toggle ; Toggles SayAllClear
-904 = cmd,/usr/local/bin/SkywarnPlus/CONTROL.sh tailmessage toggle ; Toggles TailMessage
-905 = cmd,/usr/local/bin/SkywarnPlus/CONTROL.sh courtesytone toggle ; Toggles CourtesyTone
+801 = cmd,/usr/local/bin/SkywarnPlus/CONTROL.sh enable toggle ; Toggles SkywarnPlus
+802 = cmd,/usr/local/bin/SkywarnPlus/CONTROL.sh sayalert toggle ; Toggles SayAlert
+803 = cmd,/usr/local/bin/SkywarnPlus/CONTROL.sh sayallclear toggle ; Toggles SayAllClear
+804 = cmd,/usr/local/bin/SkywarnPlus/CONTROL.sh tailmessage toggle ; Toggles TailMessage
+805 = cmd,/usr/local/bin/SkywarnPlus/CONTROL.sh courtesytone toggle ; Toggles CourtesyTone
 ```
 
 With this setup, you can control SkywarnPlus' functionality using DTMF commands.
