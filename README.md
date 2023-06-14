@@ -6,16 +6,17 @@ Tested on ASL 1.01, ASL 2.0.0, and HAMVOIP 1.7-01.
 
 ## Features
 
-* **Human Speech Alerts**: Provides a library of recorded human speech for clearer, more understandable alerts.
+* **Human Speech**: Provides a library of recorded human speech for clearer, more understandable alerts.
 * **Performance**: Designed for minimal impact on internet bandwidth and storage, reducing unnecessary I/O operations.
 * **Alert Coverage**: Allows specifying multiple counties or zones for alerts, ensuring broad coverage.
 * **Alert Filtering**: Provides advanced options to block or filter alerts using regular expressions and wildcards.
-* **Courtesy Tone Changes**: Changes repeater courtesy tones based on active alerts.
-* **Duplicate Alert Removal**: Ensures you receive unique and relevant alerts by automatically removing duplicates.
+* **Remote Control**: Includes a control script that can be mapped to DTMF commands, allowing instant over-the-air control of your system.
+* **Automatic Courtesy Tones**: Changes repeater courtesy tones based on active alerts.
+* **Duplicate Filtering**: Ensures the same alert is never broadcast twice.
 * **Selective Broadcasting**: Broadcasts alerts on weather conditions' onset or dissipation.
 * **Tailmessage Management**: Provides unobtrusive alerting if alert broadcasting is disabled.
 * **Pushover Integration**: Sends alerts and debug messages directly to your phone.
-* **Multiple Local Nodes**: Supports alert distribution to as many local node numbers as desired.
+* **Multiple Nodes**: Supports alert distribution to as many local node numbers as desired.
 * **Developer Options**: Provides a testing environment to inject manually defined alerts for testing how the system functions.
 
 ## How It Works
