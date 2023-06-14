@@ -201,9 +201,9 @@ And to toggle it, you would use:
 
 Upon the successful execution of a control command, the `CONTROL.sh` script will provide spoken feedback that corresponds to the change made. For instance, if you execute a command to enable the SayAlert function, the script will play an audio message stating that SayAlert has been enabled. This feature enhances user experience and confirms that the desired changes have been effected.
 
-## Mapping to DTMF Control Codes
+## Mapping to DTMF Commands
 
-You can map the CONTROL.sh script to DTMF control codes in the `rpt.conf` file of your node. Here is an example of how to do this:
+You can map the CONTROL.sh script to DTMF commands in the `rpt.conf` file of your node. Here is an example of how to do this:
 
 ```bash
 801 = cmd,/usr/local/bin/SkywarnPlus/CONTROL.sh enable toggle ; Toggles SkywarnPlus
