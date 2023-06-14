@@ -168,7 +168,7 @@ To use the CONTROL.sh script, you need to call it with two parameters:
     - TailMessage
     - CourtesyTone
 
-2. The new value for the setting (either 'true' or 'false').
+2. The new value for the setting (either 'true' or 'false' or 'toggle').
 
 For example, to enable the SayAlert function, you would use: 
 
@@ -182,6 +182,12 @@ And to disable it, you would use:
 /usr/local/bin/SkywarnPlus/CONTROL.sh SayAlert false
 ```
 
+And to toggle it, you would use:
+
+```bash
+/usr/local/bin/SkywarnPlus/CONTROL.sh SayAlert toggle
+```
+
 ## Spoken Feedback
 
 Upon the successful execution of a control command, the `CONTROL.sh` script will provide spoken feedback that corresponds to the change made. For instance, if you execute a command to enable the SayAlert function, the script will play an audio message stating that SayAlert has been enabled. This feature enhances user experience and confirms that the desired changes have been effected.
@@ -191,19 +197,14 @@ Upon the successful execution of a control command, the `CONTROL.sh` script will
 You can map the CONTROL.sh script to DTMF control codes in the `rpt.conf` file of your AllStar node. Here is an example of how to do this:
 
 ```bash
-901 = cmd,/usr/local/bin/SkywarnPlus/CONTROL.sh enable true ; Enables SkywarnPlus
-902 = cmd,/usr/local/bin/SkywarnPlus/CONTROL.sh enable false ; Disables SkywarnPlus
-903 = cmd,/usr/local/bin/SkywarnPlus/CONTROL.sh sayalert true ; Enables SayAlert
-904 = cmd,/usr/local/bin/SkywarnPlus/CONTROL.sh sayalert false ; Disables SayAlert
-905 = cmd,/usr/local/bin/SkywarnPlus/CONTROL.sh sayallclear true ; Enables SayAllClear
-906 = cmd,/usr/local/bin/SkywarnPlus/CONTROL.sh sayallclear false ; Disables SayAllClear
-907 = cmd,/usr/local/bin/SkywarnPlus/CONTROL.sh tailmessage true ; Enables TailMessage
-908 = cmd,/usr/local/bin/SkywarnPlus/CONTROL.sh tailmessage false ; Disables TailMessage
-909 = cmd,/usr/local/bin/SkywarnPlus/CONTROL.sh courtesytone true ; Enables CourtesyTone
-910 = cmd,/usr/local/bin/SkywarnPlus/CONTROL.sh courtesytone false ; Disables CourtesyTone
+901 = cmd,/usr/local/bin/SkywarnPlus/CONTROL.sh enable toggle ; Toggles SkywarnPlus
+902 = cmd,/usr/local/bin/SkywarnPlus/CONTROL.sh sayalert toggle ; Toggles SayAlert
+903 = cmd,/usr/local/bin/SkywarnPlus/CONTROL.sh sayallclear toggle ; Toggles SayAllClear
+904 = cmd,/usr/local/bin/SkywarnPlus/CONTROL.sh tailmessage toggle ; Toggles TailMessage
+905 = cmd,/usr/local/bin/SkywarnPlus/CONTROL.sh courtesytone toggle ; Toggles CourtesyTone
 ```
 
-With this setup, you can control SkywarnPlus' functionality using DTMF commands from your node.
+With this setup, you can control SkywarnPlus' functionality using DTMF commands.
 
 # Testing
 
