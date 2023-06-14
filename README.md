@@ -285,3 +285,5 @@ SkywarnPlus is open-source and welcomes contributions. If you'd like to contribu
 SkywarnPlus is open-sourced software licensed under the [MIT license](LICENSE).
 
 Created by Mason Nelson (N5LSN/WRKF394)
+
+Audio Library voiced by Rachel Nelson
