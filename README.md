@@ -10,7 +10,7 @@ Tested on ASL 1.01, ASL 2.0.0, and HAMVOIP 1.7-01.
 - **Performance**: Designed for minimal impact on internet bandwidth and storage, reducing unnecessary I/O operations.
 - **Alert Coverage**: Allows specifying multiple counties for alerts, ensuring broad coverage.
 - **Alert Priority**: Alerts are automatically sorted by severity (Warning, Watch, Advisory, Statement), so you always hear the most important alerts first.
-- **Alert Filtering**: Provides advanced options to block or filter alerts using regular expressions and wildcards.
+- **Alert Filtering**: Provides advanced options to block or filter alerts from specific functions using regular expressions and wildcards.
 - **Remote Control**: Includes a control script that can be mapped to DTMF commands, allowing instant over-the-air control of your system.
 - **Automatic Courtesy Tones**: Changes repeater courtesy tones based on active alerts.
 - **Duplicate Filtering**: Ensures the same alert is never broadcast twice.
