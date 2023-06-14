@@ -2,6 +2,8 @@
 
 SkywarnPlus is an optimized, powerful weather alert system designed for Asterisk/app_rpt repeater controller systems such as [AllStarLink](https://allstarlink.org/) and [HAMVOIP](https://hamvoip.org/). It's written in Python and utilizes the new [NWS CAP v1.2 JSON API](https://www.weather.gov/documentation/services-web-api). SkywarnPlus is optimized to be resource-efficient and offers customization options to suit various user needs.
 
+Tested on ASL 1.01, ASL 2.0.0, and HAMVOIP 1.7-01.
+
 ## Features
 
 * **Human Speech Alerts**: Provides a library of recorded human speech for clearer, more understandable alerts.
