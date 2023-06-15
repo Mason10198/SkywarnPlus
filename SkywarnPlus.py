@@ -292,8 +292,7 @@ def getAlerts(countyCodes):
     logger.debug("Checking for alerts in {}".format(countyCodes))
     for countyCode in countyCodes:
         logger.debug("Checking for alerts in {}".format(countyCode))
-        # url = "https://api.weather.gov/alerts/active?zone={}".format(countyCode)
-        url = "https://api.weather.gov/alerts/active?area=AR" # THIS RETURNS ALL ACTIVE ALERTS IN THE US
+        url = "https://api.weather.gov/alerts/active?zone={}".format(countyCode)
         logger.debug("Requesting {}".format(url))
         response = requests.get(url)
         logger.debug("Response: {}\n\n".format(response.text))
@@ -332,8 +331,8 @@ def getAlerts(countyCodes):
                 )
             )
 
-    # Convert list to set to eliminate duplicates, then convert back to list
-    alerts = list(set(alerts))
+    # Eliminate duplicates in a way that preserves order
+    alerts = [x for i, x in enumerate(alerts) if alerts.index(x) == i]
 
     # Sort by both API-provided severity and 'words' severity
     alerts.sort(
