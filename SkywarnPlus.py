@@ -292,7 +292,8 @@ def getAlerts(countyCodes):
     logger.debug("Checking for alerts in {}".format(countyCodes))
     for countyCode in countyCodes:
         logger.debug("Checking for alerts in {}".format(countyCode))
-        url = "https://api.weather.gov/alerts/active?zone={}".format(countyCode)
+        # url = "https://api.weather.gov/alerts/active?zone={}".format(countyCode)
+        url = "https://api.weather.gov/alerts/active?area=AR" # THIS RETURNS ALL ACTIVE ALERTS IN THE US
         logger.debug("Requesting {}".format(url))
         response = requests.get(url)
         logger.debug("Response: {}\n\n".format(response.text))
@@ -324,7 +325,6 @@ def getAlerts(countyCodes):
                             else:
                                 severity = severity_mapping_api.get(severity, 0)
                             alerts.append((event, severity))  # Add event to list as a tuple
-                            logger.debug("{}: {} with severity {}".format(countyCode, event, severity))
         else:
             logger.error(
                 "Failed to retrieve alerts for {}, HTTP status code {}, response: {}".format(
@@ -332,12 +332,26 @@ def getAlerts(countyCodes):
                 )
             )
 
-    # Sort alerts by severity (highest to lowest) and only keep the events
-    alerts.sort(key=lambda x: x[1], reverse=True)
+    # Convert list to set to eliminate duplicates, then convert back to list
+    alerts = list(set(alerts))
+
+    # Sort by both API-provided severity and 'words' severity
+    alerts.sort(
+        key=lambda x: (
+            x[1],  # API-provided severity
+            severity_mapping_words.get(x[0].split()[-1], 0)  # 'words' severity
+        ),
+        reverse=True
+    )
+
+    logger.debug("Sorted alerts: (alert), (severity)")
+    for alert in alerts:
+        logger.debug(alert)
+
+    # Only keep the events (not the severities)
     alerts = [alert[0] for alert in alerts[:max_alerts]]  # Only keep the first 'max_alerts' alerts
 
     return alerts
-
 
 
 def sayAlert(alerts):
@@ -358,8 +372,8 @@ def sayAlert(alerts):
     alert_count = 0  # Counter for alerts added to combined_sound
 
     for alert in alerts:
-        # Check if alert is in the SayAlertBlockedEvents list
-        if alert in sayalert_blocked_events:
+        # Check if alert matches any pattern in the SayAlertBlockedEvents list
+        if any(fnmatch.fnmatch(alert, blocked_event) for blocked_event in sayalert_blocked_events):
             logger.debug("SayAlert blocking {} as per configuration".format(alert))
             continue
 
@@ -439,8 +453,8 @@ def buildTailmessage(alerts):
         os.path.join(sounds_path, "ALERTS", "SWP95.wav")
     )
     for alert in alerts:
-        # Check if alert is in the TailmessageBlockedEvents list
-        if alert in tailmessage_blocked_events:
+        # Check if alert matches any pattern in the TailmessageBlockedEvents list
+        if any(fnmatch.fnmatch(alert, blocked_event) for blocked_event in tailmessage_blocked_events):
             logger.debug("Alert blocked by TailmessageBlockedEvents: {}".format(alert))
             continue
 
