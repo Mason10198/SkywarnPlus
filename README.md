@@ -59,11 +59,13 @@ Follow the steps below to install:
    ```bash
    apt update
    apt upgrade
-   apt install git python3 python3-pip ffmpeg
+   apt install python3 python3-pip ffmpeg
    pip3 install requests python-dateutil pydub
    ```
 
    **Arch (HAMVOIP)**
+
+   It is a good idea to first update your HAMVOIP system using **Option 1** in the HAMVOIP menu before installing the dependencies.
 
    ```bash
    pacman -S ffmpeg
@@ -72,13 +74,15 @@ Follow the steps below to install:
    pip install requests python-dateutil pydub
    ```
 
-2. **Clone the Repository**
+2. **Download SkywarnPlus**
 
-   Clone the SkywarnPlus repository from GitHub to the `/usr/local/bin` directory:
+   Download the latest release of SkywarnPlus from GitHub
 
    ```bash
    cd /usr/local/bin
-   git clone https://github.com/mason10198/SkywarnPlus.git
+   wget https://github.com/Mason10198/SkywarnPlus/releases/latest/download/SkywarnPlus.zip
+   unzip SkywarnPlus.zip
+   rm SkywarnPlus.zip
    ```
 
 3. **Configure CONTROL.sh Permissions**
@@ -86,7 +90,8 @@ Follow the steps below to install:
    The CONTROL.sh script must be made executable. Use the chmod command to change the file permissions:
 
    ```bash
-   sudo chmod +x /usr/local/bin/SkywarnPlus/CONTROL.sh
+   cd SkywarnPlus
+   chmod +x CONTROL.sh
    ```
 
 4. **Edit Configuration**
@@ -94,7 +99,7 @@ Follow the steps below to install:
     Edit the [config.ini](config.ini) file according to your needs. This is where you will enter your NWS codes, enable/disable specific functions, etc.
 
    ```bash
-   sudo nano SkywarnPlus/config.ini
+   nano config.ini
    ```
 
     You can find your area code(s) at https://alerts.weather.gov/. Select `County List` to the right of your state, and use the `County Code` associated with the area(s) you want SkywarnPlus to poll for WX alerts.
