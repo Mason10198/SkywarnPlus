@@ -59,7 +59,7 @@ Follow the steps below to install:
    ```bash
    apt update
    apt upgrade
-   apt install python3 python3-pip ffmpeg
+   apt install unzip python3 python3-pip ffmpeg
    pip3 install requests python-dateutil pydub
    ```
 
