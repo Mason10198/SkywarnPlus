@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-SkywarnPlus by Mason Nelson (N5LSN/WRKF394)
+SkywarnPlus v0.1.0 by Mason Nelson (N5LSN/WRKF394)
 ==================================================
 SkywarnPlus is a utility that retrieves severe weather alerts from the National 
 Weather Service and integrates these alerts with an Asterisk/app_rpt based 
@@ -276,7 +276,13 @@ def getAlerts(countyCodes):
         alerts (list): List of active weather alerts.
     """
     # Severity mappings
-    severity_mapping_api = {"Extreme": 4, "Severe": 3, "Moderate": 2, "Minor": 1, "Unknown": 0}
+    severity_mapping_api = {
+        "Extreme": 4,
+        "Severe": 3,
+        "Moderate": 2,
+        "Minor": 1,
+        "Unknown": 0,
+    }
     severity_mapping_words = {"Warning": 4, "Watch": 3, "Advisory": 2, "Statement": 1}
 
     if config.getboolean("DEV", "INJECT", fallback=False):
@@ -323,7 +329,9 @@ def getAlerts(countyCodes):
                                 severity = severity_mapping_words.get(last_word, 0)
                             else:
                                 severity = severity_mapping_api.get(severity, 0)
-                            alerts.append((event, severity))  # Add event to list as a tuple
+                            alerts.append(
+                                (event, severity)
+                            )  # Add event to list as a tuple
         else:
             logger.error(
                 "Failed to retrieve alerts for {}, HTTP status code {}, response: {}".format(
@@ -338,9 +346,9 @@ def getAlerts(countyCodes):
     alerts.sort(
         key=lambda x: (
             x[1],  # API-provided severity
-            severity_mapping_words.get(x[0].split()[-1], 0)  # 'words' severity
+            severity_mapping_words.get(x[0].split()[-1], 0),  # 'words' severity
         ),
-        reverse=True
+        reverse=True,
     )
 
     logger.debug("Sorted alerts: (alert), (severity)")
@@ -348,7 +356,9 @@ def getAlerts(countyCodes):
         logger.debug(alert)
 
     # Only keep the events (not the severities)
-    alerts = [alert[0] for alert in alerts[:max_alerts]]  # Only keep the first 'max_alerts' alerts
+    alerts = [
+        alert[0] for alert in alerts[:max_alerts]
+    ]  # Only keep the first 'max_alerts' alerts
 
     return alerts
 
@@ -372,7 +382,10 @@ def sayAlert(alerts):
 
     for alert in alerts:
         # Check if alert matches any pattern in the SayAlertBlockedEvents list
-        if any(fnmatch.fnmatch(alert, blocked_event) for blocked_event in sayalert_blocked_events):
+        if any(
+            fnmatch.fnmatch(alert, blocked_event)
+            for blocked_event in sayalert_blocked_events
+        ):
             logger.debug("SayAlert blocking {} as per configuration".format(alert))
             continue
 
@@ -453,7 +466,10 @@ def buildTailmessage(alerts):
     )
     for alert in alerts:
         # Check if alert matches any pattern in the TailmessageBlockedEvents list
-        if any(fnmatch.fnmatch(alert, blocked_event) for blocked_event in tailmessage_blocked_events):
+        if any(
+            fnmatch.fnmatch(alert, blocked_event)
+            for blocked_event in tailmessage_blocked_events
+        ):
             logger.debug("Alert blocked by TailmessageBlockedEvents: {}".format(alert))
             continue
 

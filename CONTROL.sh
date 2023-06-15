@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # CONTROL.sh
-# A Control Script for SkywarnPlus
+# A Control Script for SkywarnPlus v0.1.0
 # by Mason Nelson (N5LSN/WRKF394)
 #
 #
