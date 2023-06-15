@@ -60,6 +60,10 @@ sayalert_blocked_events = config["Blocking"].get("SayAlertBlockedEvents").split(
 tailmessage_blocked_events = (
     config["Blocking"].get("TailmessageBlockedEvents").split(",")
 )
+
+# Maximum number of alerts to process
+max_alerts = config["Alerting"].getint("MaxAlerts", fallback=99)
+
 # Configuration for tailmessage
 tailmessage_config = config["Tailmessage"]
 # Flag to enable/disable tailmessage
@@ -271,7 +275,10 @@ def getAlerts(countyCodes):
     Returns:
         alerts (list): List of active weather alerts.
     """
-    # Check if we need to inject alerts from the config
+    # Severity mappings
+    severity_mapping_api = {"Extreme": 4, "Severe": 3, "Moderate": 2, "Minor": 1, "Unknown": 0}
+    severity_mapping_words = {"Warning": 4, "Watch": 3, "Advisory": 2, "Statement": 1}
+
     if config.getboolean("DEV", "INJECT", fallback=False):
         logger.debug("DEV Alert Injection Enabled")
         alerts = [
@@ -280,12 +287,13 @@ def getAlerts(countyCodes):
         logger.debug("Injecting alerts: {}".format(alerts))
         return alerts
 
-    alerts = set()  # Change list to set to automatically avoid duplicate alerts
+    alerts = []
     current_time = datetime.now(timezone.utc)
     logger.debug("Checking for alerts in {}".format(countyCodes))
     for countyCode in countyCodes:
         logger.debug("Checking for alerts in {}".format(countyCode))
-        url = "https://api.weather.gov/alerts/active?zone={}".format(countyCode)
+        # url = "https://api.weather.gov/alerts/active?zone={}".format(countyCode)
+        url = "https://api.weather.gov/alerts/active?area=AR" # THIS RETURNS ALL ACTIVE ALERTS IN THE US
         logger.debug("Requesting {}".format(url))
         response = requests.get(url)
         logger.debug("Response: {}\n\n".format(response.text))
@@ -293,10 +301,12 @@ def getAlerts(countyCodes):
         if response.status_code == 200:
             alert_data = response.json()
             for feature in alert_data["features"]:
+                effective = feature["properties"].get("effective")
                 expires = feature["properties"].get("expires")
-                if expires:
+                if effective and expires:
+                    effective_time = parser.isoparse(effective)
                     expires_time = parser.isoparse(expires)
-                    if expires_time > current_time:
+                    if effective_time <= current_time < expires_time:
                         event = feature["properties"]["event"]
                         for global_blocked_event in global_blocked_events:
                             if fnmatch.fnmatch(event, global_blocked_event):
@@ -307,8 +317,14 @@ def getAlerts(countyCodes):
                                 )
                                 break
                         else:
-                            alerts.add(event)  # Add event to set
-                            logger.debug("{}: {}".format(countyCode, event))
+                            severity = feature["properties"].get("severity")
+                            if severity is None:
+                                # Determine severity from the last word of the event if not provided
+                                last_word = event.split()[-1]
+                                severity = severity_mapping_words.get(last_word, 0)
+                            else:
+                                severity = severity_mapping_api.get(severity, 0)
+                            alerts.append((event, severity))  # Add event to list as a tuple
         else:
             logger.error(
                 "Failed to retrieve alerts for {}, HTTP status code {}, response: {}".format(
@@ -316,8 +332,25 @@ def getAlerts(countyCodes):
                 )
             )
 
-    alerts = list(alerts)  # Convert set back to list
-    alerts.sort(key=lambda x: WS.index(x) if x in WS else len(WS))
+    # Convert list to set to eliminate duplicates, then convert back to list
+    alerts = list(set(alerts))
+
+    # Sort by both API-provided severity and 'words' severity
+    alerts.sort(
+        key=lambda x: (
+            x[1],  # API-provided severity
+            severity_mapping_words.get(x[0].split()[-1], 0)  # 'words' severity
+        ),
+        reverse=True
+    )
+
+    logger.debug("Sorted alerts: (alert), (severity)")
+    for alert in alerts:
+        logger.debug(alert)
+
+    # Only keep the events (not the severities)
+    alerts = [alert[0] for alert in alerts[:max_alerts]]  # Only keep the first 'max_alerts' alerts
+
     return alerts
 
 
@@ -339,8 +372,8 @@ def sayAlert(alerts):
     alert_count = 0  # Counter for alerts added to combined_sound
 
     for alert in alerts:
-        # Check if alert is in the SayAlertBlockedEvents list
-        if alert in sayalert_blocked_events:
+        # Check if alert matches any pattern in the SayAlertBlockedEvents list
+        if any(fnmatch.fnmatch(alert, blocked_event) for blocked_event in sayalert_blocked_events):
             logger.debug("SayAlert blocking {} as per configuration".format(alert))
             continue
 
@@ -420,8 +453,8 @@ def buildTailmessage(alerts):
         os.path.join(sounds_path, "ALERTS", "SWP95.wav")
     )
     for alert in alerts:
-        # Check if alert is in the TailmessageBlockedEvents list
-        if alert in tailmessage_blocked_events:
+        # Check if alert matches any pattern in the TailmessageBlockedEvents list
+        if any(fnmatch.fnmatch(alert, blocked_event) for blocked_event in tailmessage_blocked_events):
             logger.debug("Alert blocked by TailmessageBlockedEvents: {}".format(alert))
             continue
 
