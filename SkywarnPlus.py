@@ -1,7 +1,7 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 """
-SkywarnPlus v0.2.0 by Mason Nelson (N5LSN/WRKF394)
+SkywarnPlus v0.1.0 by Mason Nelson (N5LSN/WRKF394)
 ==================================================
 SkywarnPlus is a utility that retrieves severe weather alerts from the National 
 Weather Service and integrates these alerts with an Asterisk/app_rpt based 
@@ -24,77 +24,58 @@ import os
 import json
 import logging
 import requests
+import configparser
 import shutil
 import fnmatch
 import subprocess
 import time
-import yaml
 from datetime import datetime, timezone
 from dateutil import parser
 from pydub import AudioSegment
 
-# Directories and Paths
+# Configuration file handling
 baseDir = os.path.dirname(os.path.realpath(__file__))
-configPath = os.path.join(baseDir, "config.yaml")
+configPath = os.path.join(baseDir, "config.ini")
+config = configparser.ConfigParser()
+config.read_file(open(configPath, "r"))
 
-# Open and read configuration file
-with open(configPath, "r") as config_file:
-    config = yaml.safe_load(config_file)
-
-# Check if SkywarnPlus is enabled
-master_enable = config.get("SKYWARNPLUS", {}).get("Enable", False)
+# Fetch values from configuration file
+master_enable = config["SKYWARNPLUS"].getboolean("Enable", fallback=False)
 if not master_enable:
-    print("SkywarnPlus is disabled in config.yaml, exiting...")
+    print("SkywarnPlus is disabled in config.ini, exiting...")
     exit()
+tmp_dir = config["DEV"].get("TmpDir", fallback="/tmp/SkywarnPlus")
+sounds_path = config["Alerting"].get("SoundsPath", fallback="./SOUNDS")
+if sounds_path == "./SOUNDS":
+    sounds_path = os.path.join(baseDir, "SOUNDS")
+countyCodes = config["Alerting"]["CountyCodes"].split(",")
 
-# Define tmp_dir and sounds_path
-tmp_dir = config.get("DEV", {}).get("TmpDir", "/tmp/SkywarnPlus")
-sounds_path = config.get("Alerting", {}).get("SoundsPath", os.path.join(baseDir, "SOUNDS"))
+# If temporary directory doesn't exist, create it
+if not os.path.exists(tmp_dir):
+    os.makedirs(tmp_dir)
 
-# Define countyCodes
-countyCodes = config.get("Alerting", {}).get("CountyCodes", [])
-
-# Create tmp_dir if it doesn't exist
-if tmp_dir:
-    os.makedirs(tmp_dir, exist_ok=True)
-else:
-    print("Error: tmp_dir is not set.")
-
-# Define Blocked events
-global_blocked_events = (
-    config.get("Blocking", {}).get("GlobalBlockedEvents", [])
-)
-if global_blocked_events is None:
-    global_blocked_events = []
-sayalert_blocked_events = (
-    config.get("Blocking", {}).get("SayAlertBlockedEvents", [])
-)
-if sayalert_blocked_events is None:
-    sayalert_blocked_events = []
+# List of blocked events
+global_blocked_events = config["Blocking"].get("GlobalBlockedEvents").split(",")
+sayalert_blocked_events = config["Blocking"].get("SayAlertBlockedEvents").split(",")
 tailmessage_blocked_events = (
-    config.get("Blocking", {}).get("TailmessageBlockedEvents", [])
+    config["Blocking"].get("TailmessageBlockedEvents").split(",")
 )
-if tailmessage_blocked_events is None:
-    tailmessage_blocked_events = []
 
-# Define Max Alerts
-max_alerts = config.get("Alerting", {}).get("MaxAlerts", 99)
+# Maximum number of alerts to process
+max_alerts = config["Alerting"].getint("MaxAlerts", fallback=99)
 
-# Define Tailmessage configuration
-tailmessage_config = config.get("Tailmessage", {})
-enable_tailmessage = tailmessage_config.get("Enable", False)
+# Configuration for tailmessage
+tailmessage_config = config["Tailmessage"]
+# Flag to enable/disable tailmessage
+enable_tailmessage = tailmessage_config.getboolean("Enable", fallback=False)
+# Path to tailmessage file
 tailmessage_file = tailmessage_config.get(
-    "TailmessagePath", os.path.join(sounds_path, "wx-tail.wav")
+    "TailmessagePath", fallback="./SOUNDS/wx-tail.wav"
 )
+if tailmessage_file == "./SOUNDS/wx-tail.wav":
+    tailmessage_file = os.path.join(baseDir, "SOUNDS/wx-tail.wav")
 
-# Define IDChange configuration
-idchange_config = config.get("IDChange", {})
-enable_idchange = idchange_config.get("Enable", False)
-
-# Data file path
-data_file = os.path.join(tmp_dir, "data.json")
-
-# Define Warning and Announcement strings
+# Warning and announcement strings
 WS = [
     "Hurricane Force Wind Warning",
     "Severe Thunderstorm Warning",
@@ -254,77 +235,34 @@ WA = [
     "99",
 ]
 
-# Test if the script needs to start from a clean slate
-CLEANSLATE = config.get("DEV", {}).get("CLEANSLATE", False)
-if CLEANSLATE:
+# Cleanup flag for testing
+CLEANSLATE = config["DEV"].get("CLEANSLATE")
+if CLEANSLATE == "True":
     shutil.rmtree(tmp_dir)
     os.mkdir(tmp_dir)
 
-# Logging setup
-log_config = config.get("Logging", {})
-enable_debug = log_config.get("Debug", False)
-log_file = log_config.get("LogPath", os.path.join(tmp_dir, "SkywarnPlus.log"))
-
-# Set up logging
+# Configure logging
+log_config = config["Logging"]
+enable_debug = log_config.getboolean("Debug", fallback=False)
+log_file = log_config.get("LogPath", fallback="{}/SkywarnPlus.log".format(tmp_dir))
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG if enable_debug else logging.INFO)
-
-# Set up log message formatting
-log_formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
-
-# Set up console log handler
 c_handler = logging.StreamHandler()
-c_handler.setFormatter(log_formatter)
-logger.addHandler(c_handler)
-
-# Set up file log handler
 f_handler = logging.FileHandler(log_file)
-f_handler.setFormatter(log_formatter)
+c_format = f_format = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
+c_handler.setFormatter(c_format)
+f_handler.setFormatter(f_format)
+logger.addHandler(c_handler)
 logger.addHandler(f_handler)
 
-# Log some debugging information
-logger.debug("Base directory: %s", baseDir)
-logger.debug("Temporary directory: %s", tmp_dir)
-logger.debug("Sounds path: %s", sounds_path)
-logger.debug("Tailmessage path: %s", tailmessage_file)
-logger.debug("Global Blocked events: %s", global_blocked_events)
-logger.debug("SayAlert Blocked events: %s", sayalert_blocked_events)
-logger.debug("Tailmessage Blocked events: %s", tailmessage_blocked_events)
-
-
-def load_state():
-    """
-    Load the state from the state file if it exists, else return an initial state.
-
-    Returns:
-        dict: A dictionary containing courtesy tone (ct), identifier (id) and alerts.
-    """
-    if os.path.exists(data_file):
-        with open(data_file, "r") as file:
-            state = json.load(file)
-            # state["alertscript_alerts"] = set(state["alertscript_alerts"])
-            # state["last_alerts"] = set(state["last_alerts"])
-            return state
-    else:
-        return {
-            "ct": None,
-            "id": None,
-            "alertscript_alerts": set(),
-            "last_alerts": set(),
-        }
-
-
-def save_state(state):
-    """
-    Save the state to the state file.
-
-    Args:
-        state (dict): A dictionary containing courtesy tone (ct), identifier (id) and alerts.
-    """
-    state["alertscript_alerts"] = list(state["alertscript_alerts"])
-    state["last_alerts"] = list(state["last_alerts"])
-    with open(data_file, "w") as file:
-        json.dump(state, file)
+# Debugging stuff
+logger.debug("Base directory: {}".format(baseDir))
+logger.debug("Temporary directory: {}".format(tmp_dir))
+logger.debug("Sounds path: {}".format(sounds_path))
+logger.debug("Tailmessage path: {}".format(tailmessage_file))
+logger.debug("Global Blocked events: {}".format(global_blocked_events))
+logger.debug("SayAlert Blocked events: {}".format(sayalert_blocked_events))
+logger.debug("Tailmessage Blocked events: {}".format(tailmessage_blocked_events))
 
 
 def getAlerts(countyCodes):
@@ -336,9 +274,8 @@ def getAlerts(countyCodes):
 
     Returns:
         alerts (list): List of active weather alerts.
-                       In case of alert injection from the config, return the injected alerts.
     """
-    # Mapping for severity for API response and the 'words' severity
+    # Severity mappings
     severity_mapping_api = {
         "Extreme": 4,
         "Severe": 3,
@@ -348,22 +285,23 @@ def getAlerts(countyCodes):
     }
     severity_mapping_words = {"Warning": 4, "Watch": 3, "Advisory": 2, "Statement": 1}
 
-    # Inject alerts if DEV INJECT is enabled in the config
-    if config.get("DEV", {}).get("INJECT", False):
-        logger.debug("getAlerts: DEV Alert Injection Enabled")
+    if config.getboolean("DEV", "INJECT", fallback=False):
+        logger.debug("DEV Alert Injection Enabled")
         alerts = [
-            alert.strip() for alert in config["DEV"].get("INJECTALERTS", [])
+            alert.strip() for alert in config["DEV"].get("INJECTALERTS").split(",")
         ]
-        logger.debug("getAlerts: Injecting alerts: %s", alerts)
+        logger.debug("Injecting alerts: {}".format(alerts))
         return alerts
 
     alerts = []
     current_time = datetime.now(timezone.utc)
-
+    logger.debug("Checking for alerts in {}".format(countyCodes))
     for countyCode in countyCodes:
+        logger.debug("Checking for alerts in {}".format(countyCode))
         url = "https://api.weather.gov/alerts/active?zone={}".format(countyCode)
-        logger.debug("getAlerts: Checking for alerts in %s at URL: %s", countyCode, url)
+        logger.debug("Requesting {}".format(url))
         response = requests.get(url)
+        logger.debug("Response: {}\n\n".format(response.text))
 
         if response.status_code == 200:
             alert_data = response.json()
@@ -378,13 +316,15 @@ def getAlerts(countyCodes):
                         for global_blocked_event in global_blocked_events:
                             if fnmatch.fnmatch(event, global_blocked_event):
                                 logger.debug(
-                                    "getAlerts: Globally Blocking %s as per configuration",
-                                    event,
+                                    "Globally Blocking {} as per configuration".format(
+                                        event
+                                    )
                                 )
                                 break
                         else:
-                            severity = feature["properties"].get("severity", None)
+                            severity = feature["properties"].get("severity")
                             if severity is None:
+                                # Determine severity from the last word of the event if not provided
                                 last_word = event.split()[-1]
                                 severity = severity_mapping_words.get(last_word, 0)
                             else:
@@ -394,14 +334,15 @@ def getAlerts(countyCodes):
                             )  # Add event to list as a tuple
         else:
             logger.error(
-                "Failed to retrieve alerts for %s, HTTP status code %s, response: %s",
-                countyCode,
-                response.status_code,
-                response.text,
+                "Failed to retrieve alerts for {}, HTTP status code {}, response: {}".format(
+                    countyCode, response.status_code, response.text
+                )
             )
 
-    alerts = list(dict.fromkeys(alerts))
+    # Eliminate duplicates in a way that preserves order
+    alerts = [x for i, x in enumerate(alerts) if alerts.index(x) == i]
 
+    # Sort by both API-provided severity and 'words' severity
     alerts.sort(
         key=lambda x: (
             x[1],  # API-provided severity
@@ -410,11 +351,14 @@ def getAlerts(countyCodes):
         reverse=True,
     )
 
-    logger.debug("getAlerts: Sorted alerts - (alert), (severity)")
+    logger.debug("Sorted alerts: (alert), (severity)")
     for alert in alerts:
         logger.debug(alert)
 
-    alerts = [alert[0] for alert in alerts[:max_alerts]]
+    # Only keep the events (not the severities)
+    alerts = [
+        alert[0] for alert in alerts[:max_alerts]
+    ]  # Only keep the first 'max_alerts' alerts
 
     return alerts
 
@@ -426,9 +370,7 @@ def sayAlert(alerts):
     Args:
         alerts (list): List of active weather alerts.
     """
-    # Define the path of the alert file
     alert_file = "{}/alert.wav".format(sounds_path)
-
     combined_sound = AudioSegment.from_wav(
         os.path.join(sounds_path, "ALERTS", "SWP97.wav")
     )
@@ -436,14 +378,15 @@ def sayAlert(alerts):
         os.path.join(sounds_path, "ALERTS", "SWP95.wav")
     )
 
-    alert_count = 0
+    alert_count = 0  # Counter for alerts added to combined_sound
 
     for alert in alerts:
+        # Check if alert matches any pattern in the SayAlertBlockedEvents list
         if any(
             fnmatch.fnmatch(alert, blocked_event)
             for blocked_event in sayalert_blocked_events
         ):
-            logger.debug("sayAlert: blocking %s as per configuration", alert)
+            logger.debug("SayAlert blocking {} as per configuration".format(alert))
             continue
 
         try:
@@ -452,39 +395,38 @@ def sayAlert(alerts):
                 os.path.join(sounds_path, "ALERTS", "SWP{}.wav".format(WA[index]))
             )
             combined_sound += sound_effect + audio_file
-            logger.debug(
-                "sayAlert: Added %s (SWP%s.wav) to alert sound", alert, WA[index]
-            )
-            alert_count += 1
+            logger.debug("Added {} (SWP{}.wav) to alert sound".format(alert, WA[index]))
+            alert_count += 1  # Increment the counter
         except ValueError:
-            logger.error("sayAlert: Alert not found: %s", alert)
+            logger.error("Alert not found: {}".format(alert))
         except FileNotFoundError:
             logger.error(
-                "sayAlert: Audio file not found: %s/ALERTS/SWP%s.wav",
-                sounds_path,
-                WA[index],
+                "Audio file not found: {}/ALERTS/SWP{}.wav".format(
+                    sounds_path, WA[index]
+                )
             )
 
-    if alert_count == 0:
-        logger.debug("sayAlert: All alerts were blocked, not broadcasting any alerts.")
+    if alert_count == 0:  # Check the counter instead of combined_sound.empty()
+        logger.debug("SayAlert: All alerts were blocked, not broadcasting any alerts.")
     else:
-        logger.debug("sayAlert: Exporting alert sound to %s", alert_file)
-        converted_combined_sound = convertAudio(combined_sound)
+        logger.debug("Exporting alert sound to {}".format(alert_file))
+        converted_combined_sound = convert_audio(combined_sound)
         converted_combined_sound.export(alert_file, format="wav")
 
-        logger.debug("sayAlert: Replacing tailmessage with silence")
+        logger.debug("Replacing tailmessage with silence")
         silence = AudioSegment.silent(duration=100)
-        converted_silence = convertAudio(silence)
+        converted_silence = convert_audio(silence)
         converted_silence.export(tailmessage_file, format="wav")
+        node_numbers = config["Asterisk"]["Nodes"].split(",")
 
-        node_numbers = config.get("Asterisk", {}).get("Nodes", [])
         for node_number in node_numbers:
-            logger.info("Broadcasting alert on node %s", node_number)
+            logger.info("Broadcasting alert on node {}".format(node_number))
             command = '/usr/sbin/asterisk -rx "rpt localplay {} {}"'.format(
-                node_number, os.path.splitext(os.path.abspath(alert_file))[0]
+                node_number.strip(), os.path.splitext(os.path.abspath(alert_file))[0]
             )
             subprocess.run(command, shell=True)
 
+        # This keeps Asterisk from playing the tailmessage immediately after the alert
         logger.info("Waiting 30 seconds for Asterisk to make announcement...")
         time.sleep(30)
 
@@ -494,12 +436,12 @@ def sayAllClear():
     Generate and broadcast 'all clear' message on Asterisk.
     """
     alert_clear = os.path.join(sounds_path, "ALERTS", "SWP96.wav")
+    node_numbers = config["Asterisk"]["Nodes"].split(",")
 
-    node_numbers = config.get("Asterisk", {}).get("Nodes", [])
     for node_number in node_numbers:
-        logger.info("Broadcasting all clear message on node %s", node_number)
+        logger.info("Broadcasting all clear message on node {}".format(node_number))
         command = '/usr/sbin/asterisk -rx "rpt localplay {} {}"'.format(
-            node_number, os.path.splitext(os.path.abspath(alert_clear))[0]
+            node_number.strip(), os.path.splitext(os.path.abspath(alert_clear))[0]
         )
         subprocess.run(command, shell=True)
 
@@ -513,25 +455,22 @@ def buildTailmessage(alerts):
         alerts (list): List of active weather alerts.
     """
     if not alerts:
-        logger.debug("buildTailMessage: No alerts, creating silent tailmessage")
+        logger.debug("No alerts, creating silent tailmessage")
         silence = AudioSegment.silent(duration=100)
-        converted_silence = convertAudio(silence)
+        converted_silence = convert_audio(silence)
         converted_silence.export(tailmessage_file, format="wav")
         return
-
     combined_sound = AudioSegment.empty()
     sound_effect = AudioSegment.from_wav(
         os.path.join(sounds_path, "ALERTS", "SWP95.wav")
     )
-
     for alert in alerts:
+        # Check if alert matches any pattern in the TailmessageBlockedEvents list
         if any(
             fnmatch.fnmatch(alert, blocked_event)
             for blocked_event in tailmessage_blocked_events
         ):
-            logger.debug(
-                "buildTailMessage: Alert blocked by TailmessageBlockedEvents: %s", alert
-            )
+            logger.debug("Alert blocked by TailmessageBlockedEvents: {}".format(alert))
             continue
 
         try:
@@ -540,234 +479,99 @@ def buildTailmessage(alerts):
                 os.path.join(sounds_path, "ALERTS", "SWP{}.wav".format(WA[index]))
             )
             combined_sound += sound_effect + audio_file
-            logger.debug(
-                "buildTailMessage: Added %s (SWP%s.wav) to tailmessage",
-                alert,
-                WA[index],
-            )
+            logger.debug("Added {} (SWP{}.wav) to tailmessage".format(alert, WA[index]))
         except ValueError:
-            logger.error("Alert not found: %s", alert)
+            logger.error("Alert not found: {}".format(alert))
         except FileNotFoundError:
             logger.error(
-                "Audio file not found: %s/ALERTS/SWP%s.wav",
-                sounds_path,
-                WA[index],
+                "Audio file not found: {}/ALERTS/SWP{}.wav".format(
+                    sounds_path, WA[index]
+                )
             )
-
     if combined_sound.empty():
         logger.debug(
-            "buildTailMessage: All alerts were blocked, creating silent tailmessage"
+            "BuildTailmessage: All alerts were blocked, creating silent tailmessage"
         )
         combined_sound = AudioSegment.silent(duration=100)
-
-    logger.debug("buildTailMessage: Exporting tailmessage to %s", tailmessage_file)
-    converted_combined_sound = convertAudio(combined_sound)
+    logger.debug("Exporting tailmessage to {}".format(tailmessage_file))
+    converted_combined_sound = convert_audio(combined_sound)
     converted_combined_sound.export(tailmessage_file, format="wav")
 
 
 def changeCT(ct):
     """
     Change the current Courtesy Tone (CT) to the one specified.
-
-    This function first checks if the specified CT is already in use. If so, it does not make any changes.
+    The function first checks if the specified CT is already in use, and if it is, it returns without making any changes.
     If the CT needs to be changed, it replaces the current CT files with the new ones and updates the state file.
+    If no CT is specified, the function logs an error message and returns.
 
     Args:
         ct (str): The name of the new CT to use. This should be one of the CTs specified in the config file.
 
     Returns:
         bool: True if the CT was changed, False otherwise.
-
-    Raises:
-        FileNotFoundError: If the specified CT files are not found.
     """
-    state = load_state()
-    current_ct = state["ct"]
-    tone_dir = config["CourtesyTones"].get("ToneDir", os.path.join(sounds_path, "TONES"))
-    local_ct = config["CourtesyTones"]["Tones"]["LocalCT"]
-    link_ct = config["CourtesyTones"]["Tones"]["LinkCT"]
-    wx_ct = config["CourtesyTones"]["Tones"]["WXCT"]
-    rpt_local_ct = config["CourtesyTones"]["Tones"]["RptLocalCT"]
-    rpt_link_ct = config["CourtesyTones"]["Tones"]["RptLinkCT"]
+    tone_dir = config["CourtesyTones"].get("ToneDir", fallback="./SOUNDS/TONES")
+    if tone_dir == "./SOUNDS/TONES":
+        tone_dir = os.path.join(sounds_path, "TONES")
+    local_ct = config["CourtesyTones"].get("LocalCT")
+    link_ct = config["CourtesyTones"].get("LinkCT")
+    wx_ct = config["CourtesyTones"].get("WXCT")
+    rpt_local_ct = config["CourtesyTones"].get("RptLocalCT")
+    rpt_link_ct = config["CourtesyTones"].get("RptLinkCT")
+    ct_state_file = os.path.join(tmp_dir, "ct_state.txt")
 
-    logger.debug("changeCT: Tone directory: %s", tone_dir)
-    logger.debug("changeCT: Local CT: %s", local_ct)
-    logger.debug("changeCT: Link CT: %s", link_ct)
-    logger.debug("changeCT: WX CT: %s", wx_ct)
-    logger.debug("changeCT: Rpt Local CT: %s", rpt_local_ct)
-    logger.debug("changeCT: Rpt Link CT: %s", rpt_link_ct)
-    logger.debug("changeCT: CT argument: %s", ct)
+    logger.debug("Tone directory: {}".format(tone_dir))
+    logger.debug("CT argument: {}".format(ct))
 
     if not ct:
-        logger.error("changeCT: called with no CT specified")
+        logger.error("ChangeCT called with no CT specified")
         return
 
     current_ct = None
-    if state:
-        current_ct = state["ct"]
+    if os.path.exists(ct_state_file):
+        with open(ct_state_file, "r") as file:
+            current_ct = file.read().strip()
 
-    logger.debug("changeCT: Current CT - %s", current_ct)
+    logger.debug("Current CT: {}".format(current_ct))
 
     if ct == current_ct:
-        logger.debug("changeCT: Courtesy tones are already %s, no changes made.", ct)
+        logger.debug("Courtesy tones are already {}, no changes made.".format(ct))
         return False
 
     if ct == "NORMAL":
         logger.info("Changing to NORMAL courtesy tones")
-        src_file = os.path.join(tone_dir, local_ct)
-        dest_file = os.path.join(tone_dir, rpt_local_ct)
-        logger.debug("changeCT: Copying %s to %s", src_file, dest_file)
+        src_file = tone_dir + "/" + local_ct
+        dest_file = tone_dir + "/" + rpt_local_ct
+        logger.debug("Copying {} to {}".format(src_file, dest_file))
         shutil.copyfile(src_file, dest_file)
 
-        src_file = os.path.join(tone_dir, link_ct)
-        dest_file = os.path.join(tone_dir, rpt_link_ct)
-        logger.debug("changeCT: Copying %s to %s", src_file, dest_file)
+        src_file = tone_dir + "/" + link_ct
+        dest_file = tone_dir + "/" + rpt_link_ct
+        logger.debug("Copying {} to {}".format(src_file, dest_file))
         shutil.copyfile(src_file, dest_file)
     else:
-        logger.info("Changing to %s courtesy tone", ct)
-        src_file = os.path.join(tone_dir, wx_ct)
-        dest_file = os.path.join(tone_dir, rpt_local_ct)
-        logger.debug("changeCT: Copying %s to %s", src_file, dest_file)
+        logger.info("Changing to {} courtesy tone".format(ct))
+        src_file = tone_dir + "/" + wx_ct
+        dest_file = tone_dir + "/" + rpt_local_ct
+        logger.debug("Copying {} to {}".format(src_file, dest_file))
         shutil.copyfile(src_file, dest_file)
 
-        src_file = os.path.join(tone_dir, wx_ct)
-        dest_file = os.path.join(tone_dir, rpt_link_ct)
-        logger.debug("changeCT: Copying %s to %s", src_file, dest_file)
+        src_file = tone_dir + "/" + wx_ct
+        dest_file = tone_dir + "/" + rpt_link_ct
+        logger.debug("Copying {} to {}".format(src_file, dest_file))
         shutil.copyfile(src_file, dest_file)
 
-    state["ct"] = ct
-    save_state(state)
+    with open(ct_state_file, "w") as file:
+        file.write(ct)
 
     return True
 
 
-def changeID(id):
+def send_pushover_notification(message, title=None, priority=0):
     """
-    Change the current Identifier (ID) to the one specified.
-
-    This function first checks if the specified ID is already in use. If so, it does not make any changes.
-    If the ID needs to be changed, it replaces the current ID files with the new ones and updates the state file.
-
-    Args:
-        id (str): The name of the new ID to use. This should be one of the IDs specified in the config file.
-
-    Returns:
-        bool: True if the ID was changed, False otherwise.
-
-    Raises:
-        FileNotFoundError: If the specified ID files are not found.
-    """
-    state = load_state()
-    current_id = state["id"]
-    id_dir = config["IDChange"].get("IDDir", os.path.join(sounds_path, "ID"))
-    normal_id = config["IDChange"]["IDs"]["NormalID"]
-    wx_id = config["IDChange"]["IDs"]["WXID"]
-    rpt_id = config["IDChange"]["IDs"]["RptID"]
-
-    logger.debug("changeID: ID directory: %s", id_dir)
-    logger.debug("changeID: ID argument: %s", id)
-
-    if not id:
-        logger.error("changeID: called with no ID specified")
-        return
-
-    current_id = None
-    if state:
-        current_id = state["id"]
-
-    logger.debug("changeID: Current ID - %s", current_id)
-
-    if id == current_id:
-        logger.debug("changeID: ID is already %s, no changes made.", id)
-        return False
-
-    if id == "NORMAL":
-        logger.info("Changing to NORMAL ID")
-        src_file = os.path.join(id_dir, normal_id)
-        dest_file = os.path.join(id_dir, rpt_id)
-        logger.debug("changeID: Copying %s to %s", src_file, dest_file)
-        shutil.copyfile(src_file, dest_file)
-
-    else:
-        logger.info("Changing to %s ID", id)
-        src_file = os.path.join(id_dir, wx_id)
-        dest_file = os.path.join(id_dir, rpt_id)
-        logger.debug("changeID: Copying %s to %s", src_file, dest_file)
-        shutil.copyfile(src_file, dest_file)
-
-    state["id"] = id
-    save_state(state)
-
-    return True
-
-
-def alertScript(alerts):
-    """
-    This function reads a list of alerts, then performs actions based
-    on the alert triggers defined in the global configuration file.
-
-    :param alerts: List of alerts to process
-    :type alerts: list[str]
-    """
-    # Fetch AlertScript configuration from global_config
-    alertScript_config = config.get("AlertScript", {})
-    logger.debug("AlertScript configuration: %s", alertScript_config)
-
-    # Fetch Mappings from AlertScript configuration
-    mappings = alertScript_config.get("Mappings", [])
-    if mappings is None:
-        mappings = []
-    logger.debug("Mappings: %s", mappings)
-
-    # Iterate over each mapping
-    for mapping in mappings:
-        logger.debug("Processing mapping: %s", mapping)
-
-        triggers = mapping.get("Triggers", [])
-        commands = mapping.get("Commands", [])
-        nodes = mapping.get("Nodes", [])
-        match_type = mapping.get("Match", "ANY").upper()
-
-        matched_alerts = []
-        for alert in alerts:
-            for trigger in triggers:
-                if fnmatch.fnmatch(alert, trigger):
-                    logger.debug(
-                        'Match found: Alert "%s" matches trigger "%s"', alert, trigger
-                    )
-                    matched_alerts.append(alert)
-
-        # Check if alerts matched the triggers as per the match type
-        if (
-            match_type == "ANY"
-            and matched_alerts
-            or match_type == "ALL"
-            and len(matched_alerts) == len(triggers)
-        ):
-            logger.debug(
-                'Alerts matched the triggers as per the match type "%s"', match_type
-            )
-
-            # Execute commands based on the Type of mapping
-            if mapping.get("Type") == "BASH":
-                logger.debug('Mapping type is "BASH"')
-                for cmd in commands:
-                    logger.debug("Executing BASH command: %s", cmd)
-                    subprocess.run(cmd, shell=True)
-            elif mapping.get("Type") == "DTMF":
-                logger.debug('Mapping type is "DTMF"')
-                for node in nodes:
-                    for cmd in commands:
-                        dtmf_cmd = 'asterisk -rx "rpt fun {} {}"'.format(node, cmd)
-                        logger.debug("Executing DTMF command: %s", dtmf_cmd)
-                        subprocess.run(dtmf_cmd, shell=True)
-
-
-def sendPushover(message, title=None, priority=0):
-    """
-    Send a push notification via the Pushover service.
-
-    This function constructs the payload for the request, including the user key, API token, message, title, and priority.
+    Send a push notification via Pushover service.
+    The function constructs the payload for the request, including the user key, API token, message, title, and priority.
     The payload is then sent to the Pushover API endpoint. If the request fails, an error message is logged.
 
     Args:
@@ -775,8 +579,8 @@ def sendPushover(message, title=None, priority=0):
         title (str, optional): The title of the push notification. Defaults to None.
         priority (int, optional): The priority of the push notification. Defaults to 0.
 
-    Raises:
-        requests.exceptions.HTTPError: If an error occurs while sending the notification.
+    Returns:
+        None
     """
     pushover_config = config["Pushover"]
     user_key = pushover_config.get("UserKey")
@@ -797,10 +601,10 @@ def sendPushover(message, title=None, priority=0):
     response = requests.post(url, data=payload)
 
     if response.status_code != 200:
-        logger.error("Failed to send Pushover notification: %s", response.text)
+        logger.error("Failed to send Pushover notification: {}".format(response.text))
 
 
-def convertAudio(audio):
+def convert_audio(audio):
     """
     Convert audio file to 8000Hz mono for compatibility with Asterisk.
 
@@ -813,149 +617,88 @@ def convertAudio(audio):
     return audio.set_frame_rate(8000).set_channels(1)
 
 
-def change_and_log_CT_or_ID(
-    alerts,
-    specified_alerts,
-    auto_change_enabled,
-    alert_type,
-    pushover_debug,
-    pushover_message,
-):
-    """
-    Check whether the CT or ID needs to be changed, performs the change, and logs the process.
-
-    Args:
-        alerts (list): The new alerts that have been fetched.
-        specified_alerts (list): The alerts that require a change in CT or ID.
-        auto_change_enabled (bool): Whether auto change is enabled for CT or ID.
-        alert_type (str): "CT" for Courtesy Tones and "ID" for Identifiers.
-        pushover_debug (bool): Whether to include debug information in pushover notifications.
-        pushover_message (str): The current pushover message to which any updates will be added.
-    """
-    if auto_change_enabled:
-        logger.debug(
-            "%s auto change is enabled, alerts that require a %s change: %s",
-            alert_type,
-            alert_type,
-            specified_alerts,
-        )
-        # Check if any alert matches specified_alerts
-        if set(alerts).intersection(specified_alerts):
-            for alert in alerts:
-                if alert in specified_alerts:
-                    logger.debug("Alert %s requires a %s change", alert, alert_type)
-                    if (
-                        changeCT("WX") if alert_type == "CT" else changeID("WX")
-                    ):  # If the CT/ID was actually changed
-                        if pushover_debug:
-                            pushover_message += "Changed {} to WX\n".format(alert_type)
-                    break
-        else:  # No alerts require a CT/ID change, revert back to normal
-            logger.debug(
-                "No alerts require a %s change, reverting to normal.", alert_type
-            )
-            if (
-                changeCT("NORMAL") if alert_type == "CT" else changeID("NORMAL")
-            ):  # If the CT/ID was actually changed
-                if pushover_debug:
-                    pushover_message += "Changed {} to NORMAL\n".format(alert_type)
-    else:
-        logger.debug("%s auto change is not enabled", alert_type)
-
-
 def main():
     """
-    The main function that orchestrates the entire process of fetching and
-    processing severe weather alerts, then integrating these alerts into
-    an Asterisk/app_rpt based radio repeater system.
-
-    Key Steps:
-    1. Fetch the configuration from the local setup.
-    2. Get the new alerts based on the provided county codes.
-    3. Compare the new alerts with the previously stored alerts.
-    4. If there's a change, store the new alerts and process them accordingly.
-    5. Check each alert against a set of specified alert types and perform actions accordingly.
-    6. Send notifications if enabled.
+    Main function of the script, that fetches and processes severe weather
+    alerts, then integrates these alerts into an Asterisk/app_rpt based radio
+    repeater system.
     """
-    # Fetch configurations
-    say_alert_enabled = config["Alerting"].get("SayAlert", False)
-    say_all_clear_enabled = config["Alerting"].get("SayAllClear", False)
-    alertscript_enabled = config["AlertScript"].get("Enable", False)
+    say_alert_enabled = config["Alerting"].getboolean("SayAlert", fallback=False)
+    say_all_clear_enabled = config["Alerting"].getboolean("SayAllClear", fallback=False)
+    alerts = getAlerts(countyCodes)
+    tmp_file = "{}/alerts.json".format(tmp_dir)
 
-    # Fetch state
-    state = load_state()
+    if os.path.exists(tmp_file):
+        with open(tmp_file, "r") as file:
+            old_alerts = json.load(file)
+    else:
+        old_alerts = ["init"]
+        logger.info("No previous alerts file found, starting fresh.")
 
-    # Load old alerts
-    last_alerts = state["last_alerts"]
+    if old_alerts != alerts:
+        with open(tmp_file, "w") as file:
+            json.dump(alerts, file)
 
-    # Fetch new alerts
-    alerts = getAlerts(config.get("CountyCodes", []))
-
-    # If new alerts differ from old ones, process new alerts
-    if last_alerts != alerts:
-        state["last_alerts"] = alerts
-        save_state(state)
-
-        ct_alerts = config["CourtesyTones"].get("CTAlerts", [])
-        enable_ct_auto_change = config["CourtesyTones"].get("Enable", False)
-
-        id_alerts = config["IDChange"].get("IDAlerts", [])
-        enable_id_auto_change = config["IDChange"].get("Enable", False)
-
-        pushover_enabled = config["Pushover"].get("Enable", False)
-        pushover_debug = config["Pushover"].get("Debug", False)
-
-        # Initialize pushover message
-        pushover_message = (
-            "Alerts Cleared\n" if len(alerts) == 0 else "\n".join(alerts) + "\n"
+        ct_alerts = [
+            alert.strip()
+            for alert in config["CourtesyTones"].get("CTAlerts").split(",")
+        ]
+        enable_ct_auto_change = config["CourtesyTones"].getboolean(
+            "Enable", fallback=False
         )
 
-        # Check if Courtesy Tones (CT) or ID needs to be changed
-        change_and_log_CT_or_ID(
-            alerts,
-            ct_alerts,
-            enable_ct_auto_change,
-            "CT",
-            pushover_debug,
-            pushover_message,
-        )
-        change_and_log_CT_or_ID(
-            alerts,
-            id_alerts,
-            enable_id_auto_change,
-            "ID",
-            pushover_debug,
-            pushover_message,
-        )
+        pushover_enabled = config["Pushover"].getboolean("Enable", fallback=False)
+        pushover_debug = config["Pushover"].getboolean("Debug", fallback=False)
 
-        # Check if alerts need to be communicated
         if len(alerts) == 0:
             logger.info("No alerts found")
+            pushover_message = "Alerts Cleared\n"
+            if not os.path.exists(tmp_file):
+                with open(tmp_file, "w") as file:
+                    json.dump([], file)
             if say_all_clear_enabled:
                 sayAllClear()
         else:
-            logger.info("Alerts found: %s", alerts)
-            if alertscript_enabled:
-                alertScript(alerts)
+            logger.info("Alerts found: {}".format(alerts))
             if say_alert_enabled:
                 sayAlert(alerts)
+            pushover_message = "\n".join(alerts) + "\n"
 
-        # Check if tailmessage needs to be built
-        enable_tailmessage = config.get("Tailmessage", {}).get("Enable", False)
+        if enable_ct_auto_change:
+            logger.debug(
+                "CT auto change is enabled, alerts that require a CT change: {}".format(
+                    ct_alerts
+                )
+            )
+            # Check if any alert matches ct_alerts
+            if set(alerts).intersection(ct_alerts):
+                for alert in alerts:
+                    if alert in ct_alerts:
+                        logger.debug("Alert {} requires a CT change".format(alert))
+                        if changeCT("WX"):  # If the CT was actually changed
+                            if pushover_debug:
+                                pushover_message += "Changed courtesy tones to WX\n"
+                        break
+            else:  # No alerts require a CT change, revert back to normal
+                logger.debug("No alerts require a CT change, reverting to normal.")
+                if changeCT("NORMAL"):  # If the CT was actually changed
+                    if pushover_debug:
+                        pushover_message += "Changed courtesy tones to NORMAL\n"
+        else:
+            logger.debug("CT auto change is not enabled")
+
         if enable_tailmessage:
             buildTailmessage(alerts)
             if pushover_debug:
-                pushover_message += (
-                    "WX tailmessage removed\n"
-                    if not alerts
-                    else "Built WX tailmessage\n"
-                )
+                if not alerts:
+                    pushover_message += "WX tailmessage removed\n"
+                else:
+                    pushover_message += "Built WX tailmessage\n"
 
-        # Send pushover notification
         if pushover_enabled:
             pushover_message = pushover_message.rstrip("\n")
-            logger.debug("Sending pushover notification: %s", pushover_message)
-            sendPushover(pushover_message, title="Alerts Changed")
+            logger.debug("Sending pushover notification: {}".format(pushover_message))
+            send_pushover_notification(pushover_message, title="Alerts Changed")
     else:
         logger.debug("No change in alerts")
 
