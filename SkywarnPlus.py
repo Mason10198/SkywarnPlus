@@ -158,21 +158,6 @@ WS = [
     "Freeze Watch",
     "Dense Smoke Advisory",
     "Avalanche Warning",
-    "SkywarnPlus Enabled",
-    "SkywarnPlus Disabled",
-    "SayAlert Enabled",
-    "SayAlert Disabled",
-    "SayAllClear Enabled",
-    "SayAllClear Disabled",
-    "Tailmessage Enabled",
-    "Tailmessage Disabled",
-    "CourtesyTone Enabled",
-    "CourtesyTone Disabled",
-    "Tic Sound Effect",
-    "All Clear Message",
-    "Updated Weather Information Message",
-    "Error Sound Effect",
-    "Word Space Silence",
 ]
 WA = [
     "01",
@@ -237,21 +222,6 @@ WA = [
     "60",
     "61",
     "62",
-    "85",
-    "86",
-    "87",
-    "88",
-    "89",
-    "90",
-    "91",
-    "92",
-    "93",
-    "94",
-    "95",
-    "96",
-    "97",
-    "98",
-    "99",
 ]
 
 # Test if the script needs to start from a clean slate
@@ -584,18 +554,18 @@ def changeCT(ct):
     state = load_state()
     current_ct = state["ct"]
     tone_dir = config["CourtesyTones"].get("ToneDir", os.path.join(sounds_path, "TONES"))
-    local_ct = config["CourtesyTones"]["Tones"]["LocalCT"]
-    link_ct = config["CourtesyTones"]["Tones"]["LinkCT"]
+    ct1 = config["CourtesyTones"]["Tones"]["CT1"]
+    ct2 = config["CourtesyTones"]["Tones"]["CT2"]
     wx_ct = config["CourtesyTones"]["Tones"]["WXCT"]
-    rpt_local_ct = config["CourtesyTones"]["Tones"]["RptLocalCT"]
-    rpt_link_ct = config["CourtesyTones"]["Tones"]["RptLinkCT"]
+    rpt_ct1 = config["CourtesyTones"]["Tones"]["RptCT1"]
+    rpt_ct2 = config["CourtesyTones"]["Tones"]["RptCT2"]
 
     logger.debug("changeCT: Tone directory: %s", tone_dir)
-    logger.debug("changeCT: Local CT: %s", local_ct)
-    logger.debug("changeCT: Link CT: %s", link_ct)
+    logger.debug("changeCT: Local CT: %s", ct1)
+    logger.debug("changeCT: Link CT: %s", ct2)
     logger.debug("changeCT: WX CT: %s", wx_ct)
-    logger.debug("changeCT: Rpt Local CT: %s", rpt_local_ct)
-    logger.debug("changeCT: Rpt Link CT: %s", rpt_link_ct)
+    logger.debug("changeCT: Rpt Local CT: %s", rpt_ct1)
+    logger.debug("changeCT: Rpt Link CT: %s", rpt_ct2)
     logger.debug("changeCT: CT argument: %s", ct)
 
     if not ct:
@@ -614,24 +584,24 @@ def changeCT(ct):
 
     if ct == "NORMAL":
         logger.info("Changing to NORMAL courtesy tones")
-        src_file = os.path.join(tone_dir, local_ct)
-        dest_file = os.path.join(tone_dir, rpt_local_ct)
+        src_file = os.path.join(tone_dir, ct1)
+        dest_file = os.path.join(tone_dir, rpt_ct1)
         logger.debug("changeCT: Copying %s to %s", src_file, dest_file)
         shutil.copyfile(src_file, dest_file)
 
-        src_file = os.path.join(tone_dir, link_ct)
-        dest_file = os.path.join(tone_dir, rpt_link_ct)
+        src_file = os.path.join(tone_dir, ct2)
+        dest_file = os.path.join(tone_dir, rpt_ct2)
         logger.debug("changeCT: Copying %s to %s", src_file, dest_file)
         shutil.copyfile(src_file, dest_file)
     else:
         logger.info("Changing to %s courtesy tone", ct)
         src_file = os.path.join(tone_dir, wx_ct)
-        dest_file = os.path.join(tone_dir, rpt_local_ct)
+        dest_file = os.path.join(tone_dir, rpt_ct1)
         logger.debug("changeCT: Copying %s to %s", src_file, dest_file)
         shutil.copyfile(src_file, dest_file)
 
         src_file = os.path.join(tone_dir, wx_ct)
-        dest_file = os.path.join(tone_dir, rpt_link_ct)
+        dest_file = os.path.join(tone_dir, rpt_ct2)
         logger.debug("changeCT: Copying %s to %s", src_file, dest_file)
         shutil.copyfile(src_file, dest_file)
 

@@ -137,16 +137,16 @@ unlinkedct = ct1
 remotect = ct1
 linkunkeyct = ct2
 [telemetry]
-ct1 = /usr/local/bin/SkywarnPlus/SOUNDS/TONES/CT-LOCAL
-ct2 = /usr/local/bin/SkywarnPlus/SOUNDS/TONES/CT-LINK
-remotetx = /usr/local/bin/SkywarnPlus/SOUNDS/TONES/CT-LOCAL
+ct1 = /usr/local/bin/SkywarnPlus/SOUNDS/TONES/CT1
+ct2 = /usr/local/bin/SkywarnPlus/SOUNDS/TONES/CT2
+remotetx = /usr/local/bin/SkywarnPlus/SOUNDS/TONES/CT1
 ```
 
 ## CW / Voice IDs
 SkywarnPlus can automatically change the node ID whenever certain weather alerts are active. The configuration for this is based on your `rpt.conf` file setup. Here's an example:
 ```ini
 [NODENUMBER]
-idrecording = /usr/local/bin/SkywarnPlus/SOUNDS/ID/ID
+idrecording = /usr/local/bin/SkywarnPlus/SOUNDS/ID/RPTID
 ```
 
 # Pushover Integration
@@ -173,7 +173,7 @@ To use the `SkyControl.py` script, you need to call it with two parameters:
    - SayAllClear
    - TailMessage
    - CourtesyTone
-   - 
+   - AlertScript
 
 2. The new value for the setting (either 'true' or 'false' or 'toggle').
 
@@ -195,6 +195,15 @@ And to toggle it, you would use:
 /usr/local/bin/SkywarnPlus/SkyControl.py enable toggle
 ```
 
+You can also use `SkyControl.py` to manually force the state of Courtesy Tones or IDs:
+
+```bash
+/usr/local/bin/SkywarnPlus/SkyControl.py changect normal
+/usr/local/bin/SkywarnPlus/SkyControl.py changect wx
+/usr/local/bin/SkywarnPlus/SkyControl.py changeid normal
+/usr/local/bin/SkywarnPlus/SkyControl.py changect wx
+```
+
 ## Spoken Feedback
 
 Upon the successful execution of a control command, the `SkyControl.py` script will provide spoken feedback that corresponds to the change made. For instance, if you execute a command to enable the SayAlert function, the script will play an audio message stating that SayAlert has been enabled. This feature enhances user experience and confirms that the desired changes have been effected.
@@ -211,6 +220,8 @@ You can map the `SkyControl.py` script to DTMF commands in the `rpt.conf` file o
 805 = cmd,/usr/local/bin/SkywarnPlus/SkyControl.py courtesytone toggle ; Toggles CourtesyTone
 806 = cmd,/usr/local/bin/SkywarnPlus/SkyControl.py alertscript toggle ; Toggles AlertScript
 807 = cmd,/usr/local/bin/SkywarnPlus/SkyControl.py idchange toggle ; Toggles IDChange
+808 = cmd,/usr/local/bin/SkywarnPlus/SkyControl.py changect normal ; Forces CT to "normal" mode
+809 = cmd,/usr/local/bin/SkywarnPlus/SkyControl.py changeid normal ; Forces ID to "normal" mode
 ```
 
 With this setup, you can control SkywarnPlus' functionality using DTMF commands.

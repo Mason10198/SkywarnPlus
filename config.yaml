@@ -90,18 +90,18 @@ CourtesyTones:
   # ToneDir:
   # Define the sound files for various types of courtesy tones.
   Tones:
-    # Normal local courtesy tone.
-    LocalCT: BOOP.ulaw
-    # Normal link courtesy tone.
-    LinkCT: BEEP.ulaw
-    # Weather courtesy tone (both local and link).
-    WXCT: WX-CT.ulaw
-    # rpt.conf file's local courtesy tone.
-    RptLocalCT: CT-LOCAL.ulaw
-    # rpt.conf file's link courtesy tone.
-    RptLinkCT: CT-LINK.ulaw
+    # Audio file to feed Asterisk as ct1 in "normal" mode
+    CT1: Boop.ulaw
+    # Audio file to feed Asterisk as ct2 in "normal" mode
+    CT2: Beep.ulaw
+    # Audio file to feed Asterisk as ct1 AND ct2 in "wx" mode
+    WXCT: Stardust.ulaw
+    # The file rpt.conf is looking for as ct1
+    RptCT1: CT1.ulaw
+    # The file rpt.conf is looking for as ct2
+    RptCT2: CT2.ulaw
   # Define the alerts that trigger the weather courtesy tone.
-  # Use a case-sensitive list. One alert per line for better readability.
+  # Use a case-sensitive list. One alert per line.
   CTAlerts:
     - Hurricane Force Wind Warning
     - Severe Thunderstorm Warning
@@ -129,12 +129,14 @@ IDChange:
   # IDDir:
   # Define the sound files for normal ID and weather ID.
   IDs:
-    NormalID: ID.ulaw
+    # Audio file to feed Asterisk as ID in "normal" mode
+    NormalID: NORMALID.ulaw
+    # Audio file to feed Asterisk as ID in "wx" mode
     WXID: WXID.ulaw
-    # Define the sound file rpt.conf is looking for as normal ID.
+    # Audio file rpt.conf is looking for as ID
     RptID: RPTID.ulaw
   # Define the alerts that trigger the weather ID.
-  # Use a case-sensitive list. One alert per line for better readability.
+  # Use a case-sensitive list. One alert per line.
   IDAlerts:
     - Hurricane Force Wind Warning
     - Severe Thunderstorm Warning
@@ -250,7 +252,7 @@ DEV:
   TmpDir: /tmp/SkywarnPlus
   # Enable test alert injection instead of calling the NWS API by setting 'INJECT' to 'True'.
   INJECT: false
-  # List the test alerts to inject. Use a case-sensitive list. One alert per line for better readability.
+  # List the test alerts to inject. Use a case-sensitive list. One alert per line.
   INJECTALERTS:
     - Tornado Warning
     - Tornado Watch

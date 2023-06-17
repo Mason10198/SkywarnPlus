@@ -68,6 +68,10 @@ SWP59.wav: Heat Watch
 SWP60.wav: Freeze Watch
 SWP61.wav: Dense Smoke Advisory
 SWP62.wav: Avalanche Warning
+SWP77.wav: ID Set To Normal
+SWP78.wav: ID Set To Weather
+SWP79.wav: Courtesy Tones Set To Normal
+SWP80.wav: Courtesy Tones Set To Weather
 SWP81.wav: AlertScript Enabled
 SWP82.wav: AlertScript Disabled
 SWP83.wav: IDChange Enabled
