@@ -1,48 +1,34 @@
-# SkywarnPlus
+# SkywarnPlus: Your Advanced Weather Alert System
 
-SkywarnPlus is an optimized, powerful weather alert system designed for Asterisk/app_rpt repeater controller systems such as [AllStarLink](https://allstarlink.org/) and [HAMVOIP](https://hamvoip.org/). It's written in Python and utilizes the new [NWS CAP v1.2 JSON API](https://www.weather.gov/documentation/services-web-api). SkywarnPlus is optimized to be resource-efficient and offers customization options to suit various user needs.
+SkywarnPlus is a sophisticated software solution that works hand-in-hand with your AllStarLink (Debian) or HAMVOIP (Arch) node to keep you informed and ready for whatever the weather brings. Combining weather data with intuitive features, SkywarnPlus optimizes the efficiency and functionality of your node. 
 
-Tested on ASL 1.01, ASL 2.0.0, and HAMVOIP 1.7-01.
+## Key Features
 
-## Features
+- **Seamless Integration:** SkywarnPlus operates on a Debian (AllStarLink) or Arch (HAMVOIP) node.
 
-- **Human Speech**: Provides a library of recorded human speech for clearer, more understandable alerts.
-- **Performance**: Designed for minimal impact on internet bandwidth and storage, reducing unnecessary I/O operations.
-- **Alert Coverage**: Allows specifying multiple counties for alerts, ensuring broad coverage.
-- **Alert Priority**: Alerts are automatically sorted by severity (Warning, Watch, Advisory, Statement), so you always hear the most important alerts first.
-- **Alert Filtering**: Provides advanced options to block or filter alerts from specific functions using regular expressions and wildcards.
-- **Remote Control**: Includes a control script that can be mapped to DTMF commands, allowing instant over-the-air control of your system.
-- **Automatic Courtesy Tones**: Changes repeater courtesy tones based on active alerts.
-- **Duplicate Filtering**: Ensures the same alert is never broadcast twice.
-- **Selective Broadcasting**: Broadcasts alerts on weather conditions' onset or dissipation.
-- **Tailmessage Management**: Provides unobtrusive alerting if alert broadcasting is disabled.
-- **Pushover Integration**: Sends alerts and debug messages directly to your phone.
-- **Multiple Nodes**: Supports alert distribution to as many local node numbers as desired.
-- **Developer Options**: Provides a testing environment to inject manually defined alerts for testing how the system functions.
+- **Real-Time Weather Alerts:** The software checks the NWS CAP v1.2 API for live weather alerts for user-defined areas.
 
-## How It Works
+- **Unlimited Area & Node Numbers:** Users can define as many areas and local node numbers as desired.
 
-SkywarnPlus is a Python-based weather alert system for Asterisk/app_rpt repeater controller systems, leveraging the National Weather Service's (NWS) CAP v1.2 JSON API. The system follows several key steps to deliver timely and accurate weather alerts:
+- **Automatic Announcements:** Weather alerts, including when all warnings have been cleared, are announced automatically on the node.
 
-1. **Data Fetching**: The system performs regular API calls to the NWS CAP v1.2 API, which provides comprehensive, real-time data on the latest weather conditions and alerts. The frequency of these calls can be adjusted according to user needs.
+- **Tailmessage Creation:** The software generates tailmessages for the node to continuously inform listeners about active alerts after the initial broadcast.
 
-2. **Data Parsing**: Upon receiving the API response, SkywarnPlus parses the JSON data to extract the information pertinent to weather alerts. This involves reading the structured JSON data and converting it into an internal format for further processing.
+- **Dynamic Changes to Node:** Courtesy tones and node CW / voice ID automatically change according to user-defined alerts, optimizing communication during severe weather.
 
-3. **Data Filtering**: The extracted data is then filtered based on user-defined criteria set in the configuration file. This includes narrowing down the information to specific counties of interest, as well as excluding certain types of alerts. The filtering mechanism supports regular expressions and wildcards for more sophisticated filtering rules.
+- **Human Speech:** Announcements are delivered in a natural, human speech for easier understanding.
 
-4. **Alert Management**: SkywarnPlus manages the filtered alerts intelligently, ensuring that each alert is unique and relevant. Duplicate alerts are automatically removed from the pool of active alerts to prevent repetition and alert fatigue.
+- **Efficiency & Speed:** SkywarnPlus is optimized for speed and efficiency to provide real-time information without delay.
 
-5. **Alert Broadcasting**: The system then broadcasts the alerts according to user-defined settings. You can customize these settings to broadcast alerts when new weather conditions are detected or when existing conditions dissipate. This ensures timely communication of weather changes.
+- **Preserves Hardware:** SkywarnPlus limits I/O to the physical disk, preventing SD card burnout in Raspberry Pi devices.
 
-6. **Tailmessage and Courtesy Tones**: In addition to broadcasting alerts, SkywarnPlus also automatically updates tailmessages and changes the repeater courtesy tones when specific alerts are active. These changes add a level of customization and context-awareness to the alert system and can be tailored to individual preferences.
+- **Remote Control:** Functions can be mapped to DTMF commands for remote over-the-air control.
 
-7. **Pushover Integration**: SkywarnPlus integrates with Pushover, a mobile notification service, to send alerts and debug messages directly to your phone. This provides a direct and immediate communication channel, keeping you constantly updated on the latest weather conditions.
+- **Highly Customizable:** SkywarnPlus is extremely customizable, offering advanced filtering parameters to block certain alerts or types of alerts from different functions. Users can even map DTMF macros or shell commands to specified weather alerts, expanding the software's capabilities according to user needs.
 
-8. **Real Human Speech**: To enhance clarity and improve user experience, SkywarnPlus uses a library of real female human speech recordings for alerts. This creates a more natural listening experience compared to synthetic speech and aids in clear communication of alert messages.
+- **Pushover Integration:** With Pushover integration, SkywarnPlus can send weather alert notifications directly to your phone or other devices.
 
-9. **Maintenance and Resource Management**: Designed with efficiency in mind, SkywarnPlus minimizes its impact on internet bandwidth and physical storage. The system conducts its operations mindful of resource usage, making it particularly suitable for devices with limited resources, such as Raspberry Pi.
-
-This combination of steps ensures SkywarnPlus provides reliable, timely, and accurate weather alerts, while respecting your system's resources and providing extensive customization options.
+Whether you wish to auto-link to a Skywarn net during severe weather, program your node to control an external device like a siren during a tornado warning, or simply want to stay updated on changing weather conditions, SkywarnPlus offers a comprehensive, efficient, and customizable solution for your weather alert needs.
 
 # Installation
 
@@ -60,7 +46,7 @@ Follow the steps below to install:
    apt update
    apt upgrade
    apt install unzip python3 python3-pip ffmpeg
-   pip3 install requests python-dateutil pydub
+   pip3 install pyyaml requests python-dateutil pydub
    ```
 
    **Arch (HAMVOIP)**
@@ -71,7 +57,7 @@ Follow the steps below to install:
    pacman -S ffmpeg
    wget https://bootstrap.pypa.io/pip/3.5/get-pip.py
    python get-pip.py
-   pip install requests python-dateutil pydub
+   pip install pyyaml requests python-dateutil pydub
    ```
 
 2. **Download SkywarnPlus**
@@ -85,21 +71,22 @@ Follow the steps below to install:
    rm SkywarnPlus.zip
    ```
 
-3. **Configure CONTROL.sh Permissions**
+3. **Configure Permissions**
 
-   The CONTROL.sh script must be made executable. Use the chmod command to change the file permissions:
+   The scripts must be made executable. Use the chmod command to change the file permissions:
 
    ```bash
    cd SkywarnPlus
-   chmod +x CONTROL.sh
+   chmod +x SkywarnPlus.py
+   chmod +x SkyControl.py
    ```
 
 4. **Edit Configuration**
 
-    Edit the [config.ini](config.ini) file according to your needs. This is where you will enter your NWS codes, enable/disable specific functions, etc.
+    Edit the [config.yaml](config.yaml) file according to your needs. This is where you will enter your NWS codes, enable/disable specific functions, etc.
 
    ```bash
-   nano config.ini
+   nano config.yaml
    ```
 
     You can find your area code(s) at https://alerts.weather.gov/. Select `County List` to the right of your state, and use the `County Code` associated with the area(s) you want SkywarnPlus to poll for WX alerts.
@@ -121,18 +108,18 @@ Follow the steps below to install:
    Add a crontab entry to call SkywarnPlus on an interval. Open your crontab file using the `crontab -e` command, and add the following line:
 
    ```bash
-   * * * * * /usr/bin/python3 /usr/local/bin/SkywarnPlus/SkywarnPlus.py
+   * * * * * /usr/local/bin/SkywarnPlus/SkywarnPlus.py
    ```
 
    This command will execute SkywarnPlus (poll NWS API for data) every minute.
 
-# Tailmessage and Automatic Courtesy Tones
+# Tailmessage, Courtesy Tones, & IDs
 
-SkywarnPlus offers functionalities such as Tailmessage management and Automatic Courtesy Tones, which require specific configurations in the `rpt.conf` file.
+SkywarnPlus can automatically change and manage tailmessages, courtesy tones, and CW / voice IDs on your node. These functions require specific configurations in the `rpt.conf` file.
 
 ## Tailmessage
 
-Tailmessage functionality requires the `rpt.conf` to be properly set up. Here's an example:
+SkywarnPlus can automatically create, manage, and remove a tailmessage whenever certain weather alerts are active to keep listeners informed throught the duration of active alerts. The configuration for this is based on your `rpt.conf` file setup. Here's an example:
 
 ```ini
 tailmessagetime = 600000
@@ -140,9 +127,9 @@ tailsquashedtime = 30000
 tailmessagelist = /usr/local/bin/SkywarnPlus/SOUNDS/wx-tail
 ```
 
-## Automatic Courtesy Tones
+## Courtesy Tones
 
-SkywarnPlus can automatically change the repeater courtesy tone whenever certain weather alerts are active. The configuration for this is based on your `rpt.conf` file setup. Here's an example:
+SkywarnPlus can automatically change the node courtesy tone whenever certain weather alerts are active. The configuration for this is based on your `rpt.conf` file setup. Here's an example:
 
 ```ini
 [NODENUMBER]
@@ -155,7 +142,12 @@ ct2 = /usr/local/bin/SkywarnPlus/SOUNDS/TONES/CT-LINK
 remotetx = /usr/local/bin/SkywarnPlus/SOUNDS/TONES/CT-LOCAL
 ```
 
-Courtesy tone files are located in `SOUNDS/TONES` by default and are configured through `config.ini` and `rpt.conf`.
+## CW / Voice IDs
+SkywarnPlus can automatically change the node ID whenever certain weather alerts are active. The configuration for this is based on your `rpt.conf` file setup. Here's an example:
+```ini
+[NODENUMBER]
+idrecording = /usr/local/bin/SkywarnPlus/SOUNDS/ID/ID
+```
 
 # Pushover Integration
 
@@ -164,15 +156,15 @@ SkywarnPlus can use the free Pushover API to send WX alert notifications and deb
 1. Visit https://pushover.net/ to sign up for a free account.
 2. Find your UserKey on your main dashboard
 3. Scroll down and create an Application/API key for your node
-4. Add UserKey & API Key to `config.ini`
+4. Add UserKey & API Key to `config.yaml`
 
 # Control Script
 
-SkywarnPlus comes with a powerful control script (`CONTROL.sh`) that can be used to enable or disable certain SkywarnPlus functions. This script is particularly useful when you want to map DTMF control codes to these functions. An added advantage is that the script provides spoken feedback upon execution, making it even more suitable for DTMF control.
+SkywarnPlus comes with a powerful control script (`SkyControl.py`) that can be used to enable or disable certain SkywarnPlus functions via shell, without manually editing `config.yaml`. This script is particularly useful when you want to map DTMF control codes to these functions. An added advantage is that the script provides spoken feedback upon execution, making it even more suitable for DTMF control.
 
 ## Usage
 
-To use the CONTROL.sh script, you need to call it with two parameters:
+To use the `SkyControl.py` script, you need to call it with two parameters:
 
 1. The name of the setting you want to change (case insensitive).
 
@@ -181,77 +173,122 @@ To use the CONTROL.sh script, you need to call it with two parameters:
    - SayAllClear
    - TailMessage
    - CourtesyTone
+   - 
 
 2. The new value for the setting (either 'true' or 'false' or 'toggle').
 
 For example, to completely disable SkywarnPlus, you would use:
 
 ```bash
-/usr/local/bin/SkywarnPlus/CONTROL.sh enable false
+/usr/local/bin/SkywarnPlus/SkyControl.py enable false
 ```
 
 And to reenable it, you would use:
 
 ```bash
-/usr/local/bin/SkywarnPlus/CONTROL.sh enable true
+/usr/local/bin/SkywarnPlus/SkyControl.py enable true
 ```
 
 And to toggle it, you would use:
 
 ```bash
-/usr/local/bin/SkywarnPlus/CONTROL.sh enable toggle
+/usr/local/bin/SkywarnPlus/SkyControl.py enable toggle
 ```
 
 ## Spoken Feedback
 
-Upon the successful execution of a control command, the `CONTROL.sh` script will provide spoken feedback that corresponds to the change made. For instance, if you execute a command to enable the SayAlert function, the script will play an audio message stating that SayAlert has been enabled. This feature enhances user experience and confirms that the desired changes have been effected.
+Upon the successful execution of a control command, the `SkyControl.py` script will provide spoken feedback that corresponds to the change made. For instance, if you execute a command to enable the SayAlert function, the script will play an audio message stating that SayAlert has been enabled. This feature enhances user experience and confirms that the desired changes have been effected.
 
 ## Mapping to DTMF Commands
 
-You can map the CONTROL.sh script to DTMF commands in the `rpt.conf` file of your node. Here is an example of how to do this:
+You can map the `SkyControl.py` script to DTMF commands in the `rpt.conf` file of your node. Here is an example of how to do this:
 
 ```bash
-801 = cmd,/usr/local/bin/SkywarnPlus/CONTROL.sh enable toggle ; Toggles SkywarnPlus
-802 = cmd,/usr/local/bin/SkywarnPlus/CONTROL.sh sayalert toggle ; Toggles SayAlert
-803 = cmd,/usr/local/bin/SkywarnPlus/CONTROL.sh sayallclear toggle ; Toggles SayAllClear
-804 = cmd,/usr/local/bin/SkywarnPlus/CONTROL.sh tailmessage toggle ; Toggles TailMessage
-805 = cmd,/usr/local/bin/SkywarnPlus/CONTROL.sh courtesytone toggle ; Toggles CourtesyTone
+801 = cmd,/usr/local/bin/SkywarnPlus/SkyControl.py enable toggle ; Toggles SkywarnPlus
+802 = cmd,/usr/local/bin/SkywarnPlus/SkyControl.py sayalert toggle ; Toggles SayAlert
+803 = cmd,/usr/local/bin/SkywarnPlus/SkyControl.py sayallclear toggle ; Toggles SayAllClear
+804 = cmd,/usr/local/bin/SkywarnPlus/SkyControl.py tailmessage toggle ; Toggles TailMessage
+805 = cmd,/usr/local/bin/SkywarnPlus/SkyControl.py courtesytone toggle ; Toggles CourtesyTone
+806 = cmd,/usr/local/bin/SkywarnPlus/SkyControl.py alertscript toggle ; Toggles AlertScript
+807 = cmd,/usr/local/bin/SkywarnPlus/SkyControl.py idchange toggle ; Toggles IDChange
 ```
 
 With this setup, you can control SkywarnPlus' functionality using DTMF commands.
+
+# AlertScript
+
+SkywarnPlus's `AlertScript` feature is an immensely flexible tool that provides the ability to program your node to respond to specific alerts in unique ways. By enabling you to map alerts to DTMF commands or bash scripts, `AlertScript` offers you the versatility to design your own extensions to SkywarnPlus, modifying its functionalities to perfectly fit your needs.
+
+With `AlertScript`, you can outline actions to be executed when specific alerts are activated. For instance, you might want to broadcast a unique sound, deliver a particular message, or initiate any other action your hardware can perform and that can be activated by a DTMF command or bash script.
+
+## Understanding AlertScript
+
+To utilize `AlertScript`, you define the mapping of alerts to either DTMF commands or bash scripts in the `config.yaml` file under the `AlertScript` section.
+
+Here are examples of how to map alerts to DTMF commands or bash scripts:
+
+```yaml
+AlertScript:
+  Enable: true
+  Mappings:
+    - Type: DTMF
+      Nodes:
+        - <NODE_NUMBERS>
+      Commands:
+        - '<DTMF_COMMAND>'
+      Triggers: 
+        - <ALERTS>
+      Match: ALL # or ANY
+    - Type: BASH
+      Commands:
+        - '<BASH_COMMAND>'
+      Triggers: 
+        - <ALERTS>
+```
+
+In the examples above, `<NODE_NUMBERS>` are the nodes where you want the DTMF command to be dispatched, `<DTMF_COMMAND>` is the command to be executed, and `<ALERTS>` are the alerts to trigger this command. Likewise, for bash commands, `<BASH_COMMAND>` is the script to be executed and `<ALERTS>` are the alerts to trigger this script. Note that wildcards (`*`) can be used in `<ALERTS>` for broader matches.
+
+## The Power of YOU
+
+`AlertScript` derives its power from its versatility and extensibility. By providing the capacity to directly interface with your node's functionality through DTMF commands or bash scripts, you can effectively program the node to do virtually anything in response to a specific weather alert.
+
+Fancy activating a siren when a tornado warning is received? You can do that. Want to send an email notification when there's a severe thunderstorm warning? You can do that too. The only limit is the capability of your node and connected systems.
+
+In essence, `AlertScript` unleashes a world of customization possibilities, empowering you to add new capabilities to SkywarnPlus, create your own extensions, and modify your setup to align with your specific requirements and preferences. By giving you the authority to dictate how your system should react to various weather alerts, `AlertScript` makes SkywarnPlus a truly powerful tool for managing weather alerts on your node.
 
 # Customizing the Audio Files
 
 SkywarnPlus comes with a library of audio files that can be replaced with any 8kHz mono PCM16 WAV files you want. These are found in the `SOUNDS/` directory by default, along with `DICTIONARY.txt` which explains audio file assignments.
 
+If you'd like to enable IDChange, you must create your own ID audio files. Follow **[this guide](https://wiki.allstarlink.org/images/d/dd/RecordingSoundFiles.pdf)** on how to create audio files for use with Asterisk/app_rpt.
+
 # Testing
 
 SkywarnPlus provides the ability to inject predefined alerts, bypassing the call to the NWS API. This feature is extremely useful for testing SkywarnPlus.
 
-To enable this option, modify the following settings in the `[DEV]` section of your `config.ini` file:
+To enable this option, modify the following settings in the `[DEV]` section of your `config.yaml` file:
 
-```ini
-; Enable to inject the below list of test alerts instead of calling the NWS API
-INJECT = True
-
-; CASE SENSITIVE, comma & newline separated list of alerts to inject
-INJECTALERTS = Tornado Warning,
-               Tornado Watch,
-               Severe Thunderstorm Warning
+```yaml
+# Enable test alert injection instead of calling the NWS API by setting 'INJECT' to 'True'.
+INJECT: false
+# List the test alerts to inject. Use a case-sensitive list. One alert per line for better readability.
+INJECTALERTS:
+   - Tornado Warning
+   - Tornado Watch
+   - Severe Thunderstorm Warning
 ```
 
 # Debugging
 
 Debugging is an essential part of diagnosing issues with SkywarnPlus. To facilitate this, SkywarnPlus provides a built-in debugging feature. Here's how to use it:
 
-1. **Enable Debugging**: The debugging feature can be enabled in the `config.ini` file. Open this file and set the `debug` option under the `[SkywarnPlus]` section to `true`.
+1. **Enable Debugging**: The debugging feature can be enabled in the `config.yaml` file. Open this file and set the `debug` option under the `[SkywarnPlus]` section to `true`.
 
-```ini
-; Logging Options
-[Logging]
-; Enable more verbose logging
-; Either True or False
-Debug = False
+```yaml
+Logging:
+  # Configuration for logging options.
+  # Enable verbose logging by setting 'Debug' to 'True'.
+  Debug: false
 ```
 
 This will allow the program to output detailed information about its operations, which is helpful for identifying any issues or errors.
