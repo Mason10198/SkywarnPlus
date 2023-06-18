@@ -173,6 +173,7 @@ To use the `SkyControl.py` script, you need to call it with two parameters:
    - SayAllClear
    - TailMessage
    - CourtesyTone
+   - IDChange
    - AlertScript
 
 2. The new value for the setting (either 'true' or 'false' or 'toggle').

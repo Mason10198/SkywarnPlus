@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # SkyControl.py
-# A Control Script for SkywarnPlus v0.2.0
+# A Control Script for SkywarnPlus v0.2.2
 # by Mason Nelson (N5LSN/WRKF394)
 #
 # This script allows you to change the value of specific keys in the SkywarnPlus config.yaml file.
@@ -18,9 +18,12 @@ import yaml
 import subprocess
 from pathlib import Path
 
+
 # Define a function to change the CT
 def changeCT(ct):
-    tone_dir = config["CourtesyTones"].get("ToneDir", os.path.join(str(SCRIPT_DIR), "SOUNDS/TONES"))
+    tone_dir = config["CourtesyTones"].get(
+        "ToneDir", os.path.join(str(SCRIPT_DIR), "SOUNDS/TONES")
+    )
     ct1 = config["CourtesyTones"]["Tones"]["CT1"]
     ct2 = config["CourtesyTones"]["Tones"]["CT2"]
     wx_ct = config["CourtesyTones"]["Tones"]["WXCT"]
@@ -49,6 +52,7 @@ def changeCT(ct):
         print("Invalid CT value. Please provide either 'wx' or 'normal'.")
         sys.exit(1)
 
+
 # Define a function to change the ID
 def changeID(id):
     id_dir = config["IDChange"].get("IDDir", os.path.join(SCRIPT_DIR, "ID"))
@@ -70,16 +74,65 @@ def changeID(id):
         print("Invalid ID value. Please provide either 'wx' or 'normal'.")
         sys.exit(1)
 
+
 # Define valid keys and corresponding audio files
 VALID_KEYS = {
-    "enable": {"key": "Enable", "section": "SKYWARNPLUS", "true_file": "SWP85.wav", "false_file": "SWP86.wav"},
-    "sayalert": {"key": "SayAlert", "section": "Alerting", "true_file": "SWP87.wav", "false_file": "SWP88.wav"},
-    "sayallclear": {"key": "SayAllClear", "section": "Alerting", "true_file": "SWP89.wav", "false_file": "SWP90.wav"},
-    "tailmessage": {"key": "Enable", "section": "Tailmessage", "true_file": "SWP91.wav", "false_file": "SWP92.wav"},
-    "courtesytone": {"key": "Enable", "section": "CourtesyTones", "true_file": "SWP93.wav", "false_file": "SWP94.wav"},
-    "alertscript": {"key": "Enable", "section": "AlertScript", "true_file": "SWP81.wav", "false_file": "SWP82.wav"},
-    "changect": {"key": "", "section": "", "true_file": "SWP79.wav", "false_file": "SWP80.wav", "available_values": ['wx', 'normal']},
-    "changeid": {"key": "", "section": "", "true_file": "SWP77.wav", "false_file": "SWP78.wav", "available_values": ['WX', 'NORMAL']},
+    "enable": {
+        "key": "Enable",
+        "section": "SKYWARNPLUS",
+        "true_file": "SWP85.wav",
+        "false_file": "SWP86.wav",
+    },
+    "sayalert": {
+        "key": "SayAlert",
+        "section": "Alerting",
+        "true_file": "SWP87.wav",
+        "false_file": "SWP88.wav",
+    },
+    "sayallclear": {
+        "key": "SayAllClear",
+        "section": "Alerting",
+        "true_file": "SWP89.wav",
+        "false_file": "SWP90.wav",
+    },
+    "tailmessage": {
+        "key": "Enable",
+        "section": "Tailmessage",
+        "true_file": "SWP91.wav",
+        "false_file": "SWP92.wav",
+    },
+    "courtesytone": {
+        "key": "Enable",
+        "section": "CourtesyTones",
+        "true_file": "SWP93.wav",
+        "false_file": "SWP94.wav",
+    },
+    "idchange": {
+        "key": "Enable",
+        "section": "IDChange",
+        "true_file": "SWP83.wav",
+        "false_file": "SWP84.wav",
+    },
+    "alertscript": {
+        "key": "Enable",
+        "section": "AlertScript",
+        "true_file": "SWP81.wav",
+        "false_file": "SWP82.wav",
+    },
+    "changect": {
+        "key": "",
+        "section": "",
+        "true_file": "SWP79.wav",
+        "false_file": "SWP80.wav",
+        "available_values": ["wx", "normal"],
+    },
+    "changeid": {
+        "key": "",
+        "section": "",
+        "true_file": "SWP77.wav",
+        "false_file": "SWP78.wav",
+        "available_values": ["WX", "NORMAL"],
+    },
 }
 
 # Get the directory of the script
@@ -102,45 +155,59 @@ if key not in VALID_KEYS:
     print("The provided key does not match any configurable item.")
     sys.exit(1)
 
-# Validate the provided value 
+# Validate the provided value
 if key in ["changect", "changeid"]:
     if value not in VALID_KEYS[key]["available_values"]:
-        print("Invalid value for {}. Please provide either {} or {}".format(key, VALID_KEYS[key]['available_values'][0], VALID_KEYS[key]['available_values'][1]))
+        print(
+            "Invalid value for {}. Please provide either {} or {}".format(
+                key,
+                VALID_KEYS[key]["available_values"][0],
+                VALID_KEYS[key]["available_values"][1],
+            )
+        )
         sys.exit(1)
 else:
-    if value not in ['true', 'false', 'toggle']:
+    if value not in ["true", "false", "toggle"]:
         print("Invalid value. Please provide either 'true' or 'false' or 'toggle'.")
         sys.exit(1)
 
 # Load the config file
-with open(str(CONFIG_FILE), 'r') as f:
+with open(str(CONFIG_FILE), "r") as f:
     config = yaml.safe_load(f)
 
-if key == 'changect':
+if key == "changect":
     value = changeCT(value)
-elif key == 'changeid':
+elif key == "changeid":
     value = changeID(value)
 else:
     # Convert the input value to boolean if not 'toggle'
-    if value != 'toggle':
-        value = value.lower() == 'true'
+    if value != "toggle":
+        value = value.lower() == "true"
 
     # Check if toggle is required
-    if value == 'toggle':
-        current_value = config[VALID_KEYS[key]['section']][VALID_KEYS[key]['key']]
+    if value == "toggle":
+        current_value = config[VALID_KEYS[key]["section"]][VALID_KEYS[key]["key"]]
         value = not current_value
 
     # Update the key in the config
-    config[VALID_KEYS[key]['section']][VALID_KEYS[key]['key']] = value
+    config[VALID_KEYS[key]["section"]][VALID_KEYS[key]["key"]] = value
 
     # Save the updated config back to the file
-    with open(str(CONFIG_FILE), 'w') as f:
+    with open(str(CONFIG_FILE), "w") as f:
         yaml.dump(config, f)
 
 # Get the correct audio file based on the new value
-audio_file = VALID_KEYS[key]['true_file'] if value else VALID_KEYS[key]['false_file']
+audio_file = VALID_KEYS[key]["true_file"] if value else VALID_KEYS[key]["false_file"]
 
 # Play the corresponding audio message on all nodes
-nodes = config['Asterisk']['Nodes']
+nodes = config["Asterisk"]["Nodes"]
 for node in nodes:
-    subprocess.run(['/usr/sbin/asterisk', '-rx', 'rpt localplay {} {}/SOUNDS/ALERTS/{}'.format(node, SCRIPT_DIR, audio_file.rsplit(".", 1)[0])])
+    subprocess.run(
+        [
+            "/usr/sbin/asterisk",
+            "-rx",
+            "rpt localplay {} {}/SOUNDS/ALERTS/{}".format(
+                node, SCRIPT_DIR, audio_file.rsplit(".", 1)[0]
+            ),
+        ]
+    )
