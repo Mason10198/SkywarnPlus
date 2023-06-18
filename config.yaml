@@ -59,8 +59,8 @@ Blocking:
   # Example:
   # GlobalBlockedEvents: 
   #   - Flood Watch
-  #   - *Statement
-  #   - *Advisory
+  #   - '*Statement'
+  #   - '*Advisory'
   GlobalBlockedEvents:
   # List of events blocked from being announced when received. These alerts will still be added to the tail message.
   # Use a case-sensitive list.
@@ -186,7 +186,7 @@ AlertScript:
   #     - '/home/repeater/testscript.sh'
   #     - '/home/repeater/saytime.sh'
   #   Triggers: 
-  #     - *Statement
+  #     - '*Statement'
   #
   # This entry will execute the bash command 'asterisk -rx "rpt fun 1998 *123*456*789"'
   # and the bash command 'asterisk -rx "rpt fun 1999 *123*456*789"' when an alert
