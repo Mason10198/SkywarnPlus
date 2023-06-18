@@ -859,7 +859,7 @@ def main():
     last_alerts = state["last_alerts"]
 
     # Fetch new alerts
-    alerts = getAlerts(config.get("CountyCodes", []))
+    alerts = getAlerts(countyCodes)
 
     # If new alerts differ from old ones, process new alerts
     if last_alerts != alerts:
