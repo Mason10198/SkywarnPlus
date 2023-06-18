@@ -1,6 +1,6 @@
 # SkywarnPlus: Your Advanced Weather Alert System
 
-SkywarnPlus is a sophisticated software solution that works hand-in-hand with your AllStarLink (Debian) or HAMVOIP (Arch) node to keep you informed and ready for whatever the weather brings. Combining weather data with intuitive features, SkywarnPlus optimizes the efficiency and functionality of your node. 
+SkywarnPlus is a sophisticated software solution that works hand-in-hand with your AllStarLink (Debian) or HAMVOIP (Arch) node to keep you informed and ready for whatever the weather brings. Combining weather data with intuitive features, SkywarnPlus optimizes the efficiency and functionality of your node.
 
 ## Key Features
 
@@ -333,6 +333,12 @@ Thank you for your understanding and assistance in making SkywarnPlus a more rob
 # Contributing
 
 SkywarnPlus is open-source and welcomes contributions. If you'd like to contribute, please fork the repository and use a feature branch. Pull requests are warmly welcome.
+
+If the spare time I put into the development of SkywarnPlus has helped you, please consider supporting!
+
+<center><a href="https://www.paypal.com/donate/?business=93AJFB9BAVSJL&no_recurring=0&item_name=Thank+you+so+much+for+your+support%21+I+put+a+lot+of+my+spare+time+into+this%2C+and+I+sincerely+appreciate+YOU%21&currency_code=USD">
+  <img src="https://raw.githubusercontent.com/stefan-niedermann/paypal-donate-button/master/paypal-donate-button.png" width=300px alt="Donate with PayPal" />
+</a></center>
 
 # License
 
