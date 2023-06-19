@@ -17,6 +17,8 @@ import sys
 import subprocess
 from pathlib import Path
 from ruamel.yaml import YAML
+
+# Use ruamel.yaml instead of PyYAML to preserve comments in the config file
 yaml = YAML()
 
 # Define a function to change the CT

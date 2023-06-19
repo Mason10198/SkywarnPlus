@@ -28,10 +28,14 @@ import shutil
 import fnmatch
 import subprocess
 import time
-import yaml
 from datetime import datetime, timezone
 from dateutil import parser
 from pydub import AudioSegment
+from ruamel.yaml import YAML
+from collections import OrderedDict
+
+# Use ruamel.yaml instead of PyYAML
+yaml = YAML()
 
 # Directories and Paths
 baseDir = os.path.dirname(os.path.realpath(__file__))
@@ -39,7 +43,7 @@ configPath = os.path.join(baseDir, "config.yaml")
 
 # Open and read configuration file
 with open(configPath, "r") as config_file:
-    config = yaml.safe_load(config_file)
+    config = yaml.load(config_file)
 
 # Check if SkywarnPlus is enabled
 master_enable = config.get("SKYWARNPLUS", {}).get("Enable", False)
@@ -270,13 +274,18 @@ def load_state():
     Load the state from the state file if it exists, else return an initial state.
 
     Returns:
-        dict: A dictionary containing data.
+        OrderedDict: A dictionary containing data.
     """
     if os.path.exists(data_file):
         with open(data_file, "r") as file:
             state = json.load(file)
-            state["alertscript_alerts"] = state["alertscript_alerts"]
-            state["last_alerts"] = state["last_alerts"]
+            state["alertscript_alerts"] = state.get("alertscript_alerts", [])
+            last_alerts = state.get("last_alerts", [])
+            last_alerts = [
+                (tuple(x[0]), x[1]) if isinstance(x[0], list) else x
+                for x in last_alerts
+            ]
+            state["last_alerts"] = OrderedDict(last_alerts)
             state["last_sayalert"] = state.get("last_sayalert", [])
             return state
     else:
@@ -284,7 +293,7 @@ def load_state():
             "ct": None,
             "id": None,
             "alertscript_alerts": [],
-            "last_alerts": [],
+            "last_alerts": OrderedDict(),
             "last_sayalert": [],
         }
 
@@ -294,13 +303,13 @@ def save_state(state):
     Save the state to the state file.
 
     Args:
-        state (dict): A dictionary containing data.
+        state (OrderedDict): A dictionary containing data.
     """
     state["alertscript_alerts"] = list(state["alertscript_alerts"])
-    state["last_alerts"] = list(state["last_alerts"])
+    state["last_alerts"] = list(state["last_alerts"].items())
     state["last_sayalert"] = list(state["last_sayalert"])
     with open(data_file, "w") as file:
-        json.dump(state, file)
+        json.dump(state, file, ensure_ascii=False, indent=4)
 
 
 def getAlerts(countyCodes):
@@ -312,7 +321,7 @@ def getAlerts(countyCodes):
 
     Returns:
         alerts (list): List of active weather alerts.
-                       In case of alert injection from the config, return the injected alerts.
+        descriptions (dict): Dictionary of alert descriptions.
     """
     # Mapping for severity for API response and the 'words' severity
     severity_mapping_api = {
@@ -327,15 +336,20 @@ def getAlerts(countyCodes):
     # Inject alerts if DEV INJECT is enabled in the config
     if config.get("DEV", {}).get("INJECT", False):
         logger.debug("getAlerts: DEV Alert Injection Enabled")
-        alerts = [alert.strip() for alert in config["DEV"].get("INJECTALERTS", [])]
-        logger.debug("getAlerts: Injecting alerts: %s", alerts)
+        injected_alerts = [
+            alert.strip() for alert in config["DEV"].get("INJECTALERTS", [])
+        ]
+        logger.debug("getAlerts: Injecting alerts: %s", injected_alerts)
+        alerts = OrderedDict((alert, "Injected manually") for alert in injected_alerts)
         return alerts
 
-    alerts = []
+    alerts = OrderedDict()
+    seen_alerts = set()  # Store seen alerts
     current_time = datetime.now(timezone.utc)
 
     for countyCode in countyCodes:
-        url = "https://api.weather.gov/alerts/active?zone={}".format(countyCode)
+        # url = "https://api.weather.gov/alerts/active?zone={}".format(countyCode)
+        url = "https://api.weather.gov/alerts/active"
         logger.debug("getAlerts: Checking for alerts in %s at URL: %s", countyCode, url)
         response = requests.get(url)
 
@@ -349,6 +363,9 @@ def getAlerts(countyCodes):
                     expires_time = parser.isoparse(expires)
                     if effective_time <= current_time < expires_time:
                         event = feature["properties"]["event"]
+                        # Check if alert has already been seen
+                        if event in seen_alerts:
+                            continue
                         for global_blocked_event in global_blocked_events:
                             if fnmatch.fnmatch(event, global_blocked_event):
                                 logger.debug(
@@ -358,14 +375,14 @@ def getAlerts(countyCodes):
                                 break
                         else:
                             severity = feature["properties"].get("severity", None)
+                            description = feature["properties"].get("description", "")
                             if severity is None:
                                 last_word = event.split()[-1]
                                 severity = severity_mapping_words.get(last_word, 0)
                             else:
                                 severity = severity_mapping_api.get(severity, 0)
-                            alerts.append(
-                                (event, severity)
-                            )  # Add event to list as a tuple
+                alerts[(event, severity)] = description
+                seen_alerts.add(event)
         else:
             logger.error(
                 "Failed to retrieve alerts for %s, HTTP status code %s, response: %s",
@@ -374,21 +391,18 @@ def getAlerts(countyCodes):
                 response.text,
             )
 
-    alerts = list(dict.fromkeys(alerts))
-
-    alerts.sort(
-        key=lambda x: (
-            x[1],  # API-provided severity
-            severity_mapping_words.get(x[0].split()[-1], 0),  # 'words' severity
-        ),
-        reverse=True,
+    alerts = OrderedDict(
+        sorted(
+            alerts.items(),
+            key=lambda item: (
+                item[0][1],  # API-provided severity
+                severity_mapping_words.get(item[0][0].split()[-1], 0),  # Words severity
+            ),
+            reverse=True,
+        )
     )
 
-    logger.debug("getAlerts: Sorted alerts - (alert), (severity)")
-    for alert in alerts:
-        logger.debug(alert)
-
-    alerts = [alert[0] for alert in alerts[:max_alerts]]
+    alerts = OrderedDict(list(alerts.items())[:max_alerts])
 
     return alerts
 
@@ -398,7 +412,7 @@ def sayAlert(alerts):
     Generate and broadcast severe weather alert sounds on Asterisk.
 
     Args:
-        alerts (list): List of active weather alerts.
+        alerts (OrderedDict): OrderedDict of active weather alerts and their descriptions.
     """
     # Define the path of the alert file
     state = load_state()
@@ -867,14 +881,6 @@ def main():
     The main function that orchestrates the entire process of fetching and
     processing severe weather alerts, then integrating these alerts into
     an Asterisk/app_rpt based radio repeater system.
-
-    Key Steps:
-    1. Fetch the configuration from the local setup.
-    2. Get the new alerts based on the provided county codes.
-    3. Compare the new alerts with the previously stored alerts.
-    4. If there's a change, store the new alerts and process them accordingly.
-    5. Check each alert against a set of specified alert types and perform actions accordingly.
-    6. Send notifications if enabled.
     """
     # Fetch configurations
     say_alert_enabled = config["Alerting"].get("SayAlert", False)
@@ -891,9 +897,10 @@ def main():
     alerts = getAlerts(countyCodes)
 
     # If new alerts differ from old ones, process new alerts
-    logger.debug("Last alerts: %s", last_alerts)
-    logger.debug("New alerts: %s", alerts)
-    if last_alerts != alerts:
+
+    if last_alerts.keys() != alerts.keys():
+        new_alerts = [x for x in alerts.keys() if x not in last_alerts.keys()]
+        logger.info("New alerts: %s", new_alerts)
         state["last_alerts"] = alerts
         save_state(state)
 
@@ -908,7 +915,9 @@ def main():
 
         # Initialize pushover message
         pushover_message = (
-            "Alerts Cleared\n" if len(alerts) == 0 else "\n".join(alerts) + "\n"
+            "Alerts Cleared\n"
+            if len(alerts) == 0
+            else "\n".join(str(key) for key in alerts.keys()) + "\n"
         )
 
         # Check if Courtesy Tones (CT) or ID needs to be changed
@@ -935,7 +944,6 @@ def main():
             if say_all_clear_enabled:
                 sayAllClear()
         else:
-            logger.info("Alerts found: %s", alerts)
             if alertscript_enabled:
                 alertScript(alerts)
             if say_alert_enabled:

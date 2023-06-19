@@ -22,7 +22,7 @@ Asterisk:
   #   - 1998
   #   - 1999
   Nodes:
-    - YOUR_NODE_NUMBER_HERE
+    - 1999
 
 ################################################################################################################################
 
@@ -35,7 +35,7 @@ Alerting:
   #   - ARC121
   #   - ARC021
   CountyCodes:
-    - YOUR_COUNTY_CODE_HERE
+    - ARC125
   # Enable instant voice announcement when new weather alerts are issued.
   # Set to 'True' for enabling or 'False' for disabling.
   # Example: SayAlert: true
@@ -156,6 +156,12 @@ IDChange:
 
 ################################################################################################################################
 
+SkyDescribe:
+  Enable: false
+  APIKey:
+
+################################################################################################################################
+
 AlertScript:
   # Completely enable/disable AlertScript
   Enable: false
@@ -239,7 +245,7 @@ Pushover:
 
 Logging:
   # Enable verbose logging
-  Debug: false
+  Debug: true
   # Specify an alternative log file path. 
   # LogPath:
 
@@ -249,7 +255,7 @@ DEV:
   # Delete cached data on startup
   CLEANSLATE: false
   # Specify the TMP directory. 
-  TmpDir: /tmp/SkywarnPlus
+  TmpDir: C:\Users\Mason\Desktop\SWP_TMP
   # Enable test alert injection instead of calling the NWS API by setting 'INJECT' to 'True'.
   INJECT: false
   # List the test alerts to inject. Use a case-sensitive list. One alert per line.
