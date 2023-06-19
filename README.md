@@ -95,7 +95,7 @@ Follow the steps below to install:
    apt update
    apt upgrade
    apt install unzip python3 python3-pip ffmpeg
-   pip3 install pyyaml requests python-dateutil pydub
+   pip3 install pyyaml runamel.yaml requests python-dateutil pydub
    ```
 
    **Arch (HAMVOIP)**
@@ -107,6 +107,7 @@ Follow the steps below to install:
    wget https://bootstrap.pypa.io/pip/3.5/get-pip.py
    python get-pip.py
    pip install pyyaml requests python-dateutil pydub
+   pip install ruamel.yaml==0.15.100
    ```
 
 2. **Download SkywarnPlus**

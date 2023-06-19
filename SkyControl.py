@@ -14,10 +14,11 @@
 import os
 import shutil
 import sys
-import yaml
+#import yaml
 import subprocess
 from pathlib import Path
-
+from ruamel.yaml import YAML
+yaml = YAML()
 
 # Define a function to change the CT
 def changeCT(ct):
@@ -177,7 +178,7 @@ else:
 
 # Load the config file
 with open(str(CONFIG_FILE), "r") as f:
-    config = yaml.safe_load(f)
+    config = yaml.load(f)
 
 if key == "changect":
     value = changeCT(value)
@@ -198,7 +199,7 @@ else:
 
     # Save the updated config back to the file
     with open(str(CONFIG_FILE), "w") as f:
-        yaml.dump(config, f, sort_keys=False)
+        yaml.dump(config, f)
 
 # Get the correct audio file based on the new value
 audio_file = VALID_KEYS[key]["true_file"] if value else VALID_KEYS[key]["false_file"]
