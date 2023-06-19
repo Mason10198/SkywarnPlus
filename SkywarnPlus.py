@@ -92,135 +92,140 @@ enable_idchange = idchange_config.get("Enable", False)
 # Data file path
 data_file = os.path.join(tmp_dir, "data.json")
 
-# Define Warning and Announcement strings
+# Define possible alert strings
 WS = [
+    "911 Telephone Outage Emergency",
+    "Administrative Message",
+    "Air Quality Alert",
+    "Air Stagnation Advisory",
+    "Arroyo And Small Stream Flood Advisory",
+    "Ashfall Advisory",
+    "Ashfall Warning",
+    "Avalanche Advisory",
+    "Avalanche Warning",
+    "Avalanche Watch",
+    "Beach Hazards Statement",
+    "Blizzard Warning",
+    "Blizzard Watch",
+    "Blowing Dust Advisory",
+    "Blowing Dust Warning",
+    "Brisk Wind Advisory",
+    "Child Abduction Emergency",
+    "Civil Danger Warning",
+    "Civil Emergency Message",
+    "Coastal Flood Advisory",
+    "Coastal Flood Statement",
+    "Coastal Flood Warning",
+    "Coastal Flood Watch",
+    "Dense Fog Advisory",
+    "Dense Smoke Advisory",
+    "Dust Advisory",
+    "Dust Storm Warning",
+    "Earthquake Warning",
+    "Evacuation - Immediate",
+    "Excessive Heat Warning",
+    "Excessive Heat Watch",
+    "Extreme Cold Warning",
+    "Extreme Cold Watch",
+    "Extreme Fire Danger",
+    "Extreme Wind Warning",
+    "Fire Warning",
+    "Fire Weather Watch",
+    "Flash Flood Statement",
+    "Flash Flood Warning",
+    "Flash Flood Watch",
+    "Flood Advisory",
+    "Flood Statement",
+    "Flood Warning",
+    "Flood Watch",
+    "Freeze Warning",
+    "Freeze Watch",
+    "Freezing Fog Advisory",
+    "Freezing Rain Advisory",
+    "Freezing Spray Advisory",
+    "Frost Advisory",
+    "Gale Warning",
+    "Gale Watch",
+    "Hard Freeze Warning",
+    "Hard Freeze Watch",
+    "Hazardous Materials Warning",
+    "Hazardous Seas Warning",
+    "Hazardous Seas Watch",
+    "Hazardous Weather Outlook",
+    "Heat Advisory",
+    "Heavy Freezing Spray Warning",
+    "Heavy Freezing Spray Watch",
+    "High Surf Advisory",
+    "High Surf Warning",
+    "High Wind Warning",
+    "High Wind Watch",
     "Hurricane Force Wind Warning",
+    "Hurricane Force Wind Watch",
+    "Hurricane Local Statement",
+    "Hurricane Warning",
+    "Hurricane Watch",
+    "Hydrologic Advisory",
+    "Hydrologic Outlook",
+    "Ice Storm Warning",
+    "Lake Effect Snow Advisory",
+    "Lake Effect Snow Warning",
+    "Lake Effect Snow Watch",
+    "Lake Wind Advisory",
+    "Lakeshore Flood Advisory",
+    "Lakeshore Flood Statement",
+    "Lakeshore Flood Warning",
+    "Lakeshore Flood Watch",
+    "Law Enforcement Warning",
+    "Local Area Emergency",
+    "Low Water Advisory",
+    "Marine Weather Statement",
+    "Nuclear Power Plant Warning",
+    "Radiological Hazard Warning",
+    "Red Flag Warning",
+    "Rip Current Statement",
     "Severe Thunderstorm Warning",
     "Severe Thunderstorm Watch",
-    "Winter Weather Advisory",
-    "Tropical Storm Warning",
-    "Special Marine Warning",
-    "Freezing Rain Advisory",
-    "Special Weather Statement",
-    "Excessive Heat Warning",
-    "Coastal Flood Advisory",
-    "Coastal Flood Warning",
-    "Winter Storm Warning",
-    "Tropical Storm Watch",
-    "Thunderstorm Warning",
-    "Small Craft Advisory",
-    "Extreme Wind Warning",
-    "Excessive Heat Watch",
-    "Wind Chill Advisory",
-    "Storm Surge Warning",
-    "River Flood Warning",
-    "Flash Flood Warning",
-    "Coastal Flood Watch",
-    "Winter Storm Watch",
-    "Wind Chill Warning",
-    "Thunderstorm Watch",
-    "Fire Weather Watch",
-    "Dense Fog Advisory",
-    "Storm Surge Watch",
-    "River Flood Watch",
-    "Ice Storm Warning",
-    "Hurricane Warning",
-    "High Wind Warning",
-    "Flash Flood Watch",
-    "Red Flag Warning",
-    "Blizzard Warning",
-    "Tornado Warning",
-    "Hurricane Watch",
-    "High Wind Watch",
-    "Frost Advisory",
-    "Freeze Warning",
-    "Wind Advisory",
-    "Tornado Watch",
-    "Storm Warning",
-    "Heat Advisory",
-    "Flood Warning",
-    "Gale Warning",
-    "Freeze Watch",
-    "Flood Watch",
-    "Flood Advisory",
-    "Hurricane Local Statement",
-    "Beach Hazards Statement",
-    "Air Quality Alert",
     "Severe Weather Statement",
-    "Winter Storm Advisory",
-    "Tropical Storm Advisory",
-    "Blizzard Watch",
-    "Dust Storm Warning",
-    "High Surf Advisory",
-    "Heat Watch",
-    "Freeze Watch",
-    "Dense Smoke Advisory",
-    "Avalanche Warning",
+    "Shelter In Place Warning",
+    "Short Term Forecast",
+    "Small Craft Advisory",
+    "Small Craft Advisory For Hazardous Seas",
+    "Small Craft Advisory For Rough Bar",
+    "Small Craft Advisory For Winds",
+    "Small Stream Flood Advisory",
+    "Snow Squall Warning",
+    "Special Marine Warning",
+    "Special Weather Statement",
+    "Storm Surge Warning",
+    "Storm Surge Watch",
+    "Storm Warning",
+    "Storm Watch",
+    "Test",
+    "Tornado Warning",
+    "Tornado Watch",
+    "Tropical Depression Local Statement",
+    "Tropical Storm Local Statement",
+    "Tropical Storm Warning",
+    "Tropical Storm Watch",
+    "Tsunami Advisory",
+    "Tsunami Warning",
+    "Tsunami Watch",
+    "Typhoon Local Statement",
+    "Typhoon Warning",
+    "Typhoon Watch",
+    "Urban And Small Stream Flood Advisory",
+    "Volcano Warning",
+    "Wind Advisory",
+    "Wind Chill Advisory",
+    "Wind Chill Warning",
+    "Wind Chill Watch",
+    "Winter Storm Warning",
+    "Winter Storm Watch",
+    "Winter Weather Advisory",
 ]
-WA = [
-    "01",
-    "02",
-    "03",
-    "04",
-    "05",
-    "06",
-    "07",
-    "08",
-    "09",
-    "10",
-    "11",
-    "12",
-    "13",
-    "14",
-    "15",
-    "16",
-    "17",
-    "18",
-    "19",
-    "20",
-    "21",
-    "22",
-    "23",
-    "24",
-    "25",
-    "26",
-    "27",
-    "28",
-    "29",
-    "30",
-    "31",
-    "32",
-    "33",
-    "34",
-    "35",
-    "36",
-    "37",
-    "38",
-    "39",
-    "40",
-    "41",
-    "42",
-    "43",
-    "44",
-    "45",
-    "46",
-    "47",
-    "48",
-    "49",
-    "50",
-    "51",
-    "52",
-    "53",
-    "54",
-    "55",
-    "56",
-    "57",
-    "58",
-    "59",
-    "60",
-    "61",
-    "62",
-]
+
+# Generate the WA list based on the length of WS
+WA = [str(i + 1) for i in range(len(WS))]
 
 # Test if the script needs to start from a clean slate
 CLEANSLATE = config.get("DEV", {}).get("CLEANSLATE", False)
@@ -421,10 +426,10 @@ def sayAlert(alerts):
     alert_file = "{}/alert.wav".format(sounds_path)
 
     combined_sound = AudioSegment.from_wav(
-        os.path.join(sounds_path, "ALERTS", "SWP97.wav")
+        os.path.join(sounds_path, "ALERTS", "SWP_149.wav")
     )
     sound_effect = AudioSegment.from_wav(
-        os.path.join(sounds_path, "ALERTS", "SWP95.wav")
+        os.path.join(sounds_path, "ALERTS", "SWP_147.wav")
     )
 
     alert_count = 0
@@ -432,18 +437,18 @@ def sayAlert(alerts):
         try:
             index = WS.index(alert)
             audio_file = AudioSegment.from_wav(
-                os.path.join(sounds_path, "ALERTS", "SWP{}.wav".format(WA[index]))
+                os.path.join(sounds_path, "ALERTS", "SWP_{}.wav".format(WA[index]))
             )
             combined_sound += sound_effect + audio_file
             logger.debug(
-                "sayAlert: Added %s (SWP%s.wav) to alert sound", alert, WA[index]
+                "sayAlert: Added %s (SWP_%s.wav) to alert sound", alert, WA[index]
             )
             alert_count += 1
         except ValueError:
             logger.error("sayAlert: Alert not found: %s", alert)
         except FileNotFoundError:
             logger.error(
-                "sayAlert: Audio file not found: %s/ALERTS/SWP%s.wav",
+                "sayAlert: Audio file not found: %s/ALERTS/SWP_%s.wav",
                 sounds_path,
                 WA[index],
             )
@@ -482,7 +487,7 @@ def sayAllClear():
     state["last_sayalert"] = []
     save_state(state)
 
-    alert_clear = os.path.join(sounds_path, "ALERTS", "SWP96.wav")
+    alert_clear = os.path.join(sounds_path, "ALERTS", "SWP_148.wav")
 
     node_numbers = config.get("Asterisk", {}).get("Nodes", [])
     for node_number in node_numbers:
@@ -510,7 +515,7 @@ def buildTailmessage(alerts):
 
     combined_sound = AudioSegment.empty()
     sound_effect = AudioSegment.from_wav(
-        os.path.join(sounds_path, "ALERTS", "SWP95.wav")
+        os.path.join(sounds_path, "ALERTS", "SWP_147.wav")
     )
 
     for alert in alerts:
@@ -526,11 +531,11 @@ def buildTailmessage(alerts):
         try:
             index = WS.index(alert)
             audio_file = AudioSegment.from_wav(
-                os.path.join(sounds_path, "ALERTS", "SWP{}.wav".format(WA[index]))
+                os.path.join(sounds_path, "ALERTS", "SWP_{}.wav".format(WA[index]))
             )
             combined_sound += sound_effect + audio_file
             logger.debug(
-                "buildTailMessage: Added %s (SWP%s.wav) to tailmessage",
+                "buildTailMessage: Added %s (SWP_%s.wav) to tailmessage",
                 alert,
                 WA[index],
             )
@@ -538,7 +543,7 @@ def buildTailmessage(alerts):
             logger.error("Alert not found: %s", alert)
         except FileNotFoundError:
             logger.error(
-                "Audio file not found: %s/ALERTS/SWP%s.wav",
+                "Audio file not found: %s/ALERTS/SWP_%s.wav",
                 sounds_path,
                 WA[index],
             )
