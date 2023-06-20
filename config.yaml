@@ -271,9 +271,9 @@ AlertScript:
   # announce the full details of a Tornado Warning when it is detected.
     - Type: BASH
       Commands:
-        - '/usr/local/bin/SkywarnPlus/SkyDescribe.py "Flood Warning"'
+        - '/usr/local/bin/SkywarnPlus/SkyDescribe.py "Tornado Warning"'
       Triggers: 
-        - Flood Warning
+        - Tornado Warning
 
 ################################################################################################################################
 
