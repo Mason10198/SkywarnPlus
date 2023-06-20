@@ -111,7 +111,7 @@ def load_state():
         }
 
 
-def modify_description(description, alert_title):
+def modify_description(description):
     """
     Modify the description to make it more suitable for conversion to audio.
 
@@ -122,11 +122,6 @@ def modify_description(description, alert_title):
     Returns:
         str: The modified description text.
     """
-    # Add the alert title at the beginning
-    description = (
-        "Detailed alert information for {}. ".format(alert_title) + description
-    )
-
     # Remove newline characters and replace multiple spaces with a single space
     description = description.replace("\n", " ")
     description = re.sub(r"\s+", " ", description)
@@ -249,7 +244,8 @@ def convert_to_audio(api_key, text):
     }
 
     logger.debug(
-        "SkyDescribe: Voice RSS API URL: %s", base_url + "?" + urllib.parse.urlencode(params)
+        "SkyDescribe: Voice RSS API URL: %s",
+        base_url + "?" + urllib.parse.urlencode(params),
     )
 
     response = requests.get(base_url, params=params)
@@ -276,9 +272,15 @@ def main(index_or_title):
     # Determine if the argument is an index or a title
     try:
         index = int(index_or_title) - 1
-        alert, description = alerts[
-            index
-        ]  # Each item in alerts is a tuple: (alert, description)
+        if index >= len(alerts):
+            logger.error("SkyDescribe: No alert found at index %d.", index + 1)
+            description = "Sky Describe error, no alert found at index {}.".format(
+                index + 1
+            )
+        else:
+            alert, description = alerts[
+                index
+            ]  # Each item in alerts is a tuple: (alert, description)
     except ValueError:
         # Argument is not an index, assume it's a title
         title = index_or_title
@@ -290,14 +292,22 @@ def main(index_or_title):
                 break
         else:
             logger.error("SkyDescribe: No alert with title %s found.", title)
-            sys.exit(1)
+            description = "Sky Describe error, no alert found with title {}.".format(
+                title
+            )
 
     logger.debug("\n\nSkyDescribe: Original description: %s", description)
-    alert_title = alert[0]  # Extract only the title from the alert tuple
-    logger.info("SkyDescribe: Generating description for alert: %s", alert_title)
-    description = modify_description(
-        description, alert_title
-    )  # Pass the alert title to the function
+
+    # If the description is not an error message, extract the alert title
+    if not "Sky Describe error" in description:
+        alert_title = alert[0]  # Extract only the title from the alert tuple
+        logger.info("SkyDescribe: Generating description for alert: %s", alert_title)
+        # Add the alert title at the beginning
+        description = (
+            "Detailed alert information for {}. ".format(alert_title) + description
+        )
+        description = modify_description(description)
+
     logger.debug("\n\nSkyDescribe: Modified description: %s\n\n", description)
 
     audio_file = convert_to_audio(api_key, description)
@@ -310,7 +320,7 @@ def main(index_or_title):
 
     nodes = config["Asterisk"]["Nodes"]
     for node in nodes:
-        logger.info("SkyDescribe: Broadcasting description of %s on node %s.", alert_title, node)
+        logger.info("SkyDescribe: Broadcasting description on node %s.", node)
         command = "/usr/sbin/asterisk -rx 'rpt localplay {} {}'".format(
             node, audio_file.rsplit(".", 1)[0]
         )

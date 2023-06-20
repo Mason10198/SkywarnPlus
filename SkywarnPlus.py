@@ -345,6 +345,7 @@ def getAlerts(countyCodes):
         ]
         logger.debug("getAlerts: Injecting alerts: %s", injected_alerts)
         alerts = OrderedDict((alert, "Injected manually") for alert in injected_alerts)
+        alerts = OrderedDict(list(alerts.items())[:max_alerts])
         return alerts
 
     alerts = OrderedDict()
@@ -352,8 +353,7 @@ def getAlerts(countyCodes):
     current_time = datetime.now(timezone.utc)
 
     for countyCode in countyCodes:
-        # url = "https://api.weather.gov/alerts/active?zone={}".format(countyCode)
-        url = "https://api.weather.gov/alerts/active"
+        url = "https://api.weather.gov/alerts/active?zone={}".format(countyCode)
         logger.debug("getAlerts: Checking for alerts in %s at URL: %s", countyCode, url)
         response = requests.get(url)
 
@@ -367,26 +367,35 @@ def getAlerts(countyCodes):
                     expires_time = parser.isoparse(expires)
                     if effective_time <= current_time < expires_time:
                         event = feature["properties"]["event"]
+                        description = feature["properties"].get("description", "")
+                        severity = feature["properties"].get("severity", None)
                         # Check if alert has already been seen
                         if event in seen_alerts:
                             continue
+
+                        # Initialize a flag to check if the event is globally blocked
+                        is_blocked = False
                         for global_blocked_event in global_blocked_events:
                             if fnmatch.fnmatch(event, global_blocked_event):
                                 logger.debug(
                                     "getAlerts: Globally Blocking %s as per configuration",
                                     event,
                                 )
+                                is_blocked = True
                                 break
+
+                        # Skip to the next feature if the event is globally blocked
+                        if is_blocked:
+                            continue
+
+                        if severity is None:
+                            last_word = event.split()[-1]
+                            severity = severity_mapping_words.get(last_word, 0)
                         else:
-                            severity = feature["properties"].get("severity", None)
-                            description = feature["properties"].get("description", "")
-                            if severity is None:
-                                last_word = event.split()[-1]
-                                severity = severity_mapping_words.get(last_word, 0)
-                            else:
-                                severity = severity_mapping_api.get(severity, 0)
-                alerts[(event, severity)] = description
-                seen_alerts.add(event)
+                            severity = severity_mapping_api.get(severity, 0)
+                        alerts[(event, severity)] = description
+                        seen_alerts.add(event)
+
         else:
             logger.error(
                 "Failed to retrieve alerts for %s, HTTP status code %s, response: %s",
@@ -496,14 +505,17 @@ def sayAlert(alerts):
         subprocess.run(command, shell=True)
 
     # Get the duration of the alert_file
-    with contextlib.closing(wave.open(alert_file, 'r')) as f:
+    with contextlib.closing(wave.open(alert_file, "r")) as f:
         frames = f.getnframes()
         rate = f.getframerate()
         duration = math.ceil(frames / float(rate))
-    
+
     wait_time = duration + 5
 
-    logger.info("sayAlert: Waiting %s seconds for Asterisk to make announcement to avoid doubling alerts with tailmessage...", wait_time)
+    logger.info(
+        "Waiting %s seconds for Asterisk to make announcement to avoid doubling alerts with tailmessage...",
+        wait_time,
+    )
     time.sleep(wait_time)
 
 
@@ -540,7 +552,7 @@ def buildTailmessage(alerts):
     alert_names = [alert[0] for alert in alerts.keys()]
 
     if not alerts:
-        logger.debug("buildTailMessage: No alerts, creating silent tailmessage")
+        logger.info("buildTailMessage: No alerts, creating silent tailmessage")
         silence = AudioSegment.silent(duration=100)
         converted_silence = convertAudio(silence)
         converted_silence.export(tailmessage_file, format="wav")
@@ -587,6 +599,7 @@ def buildTailmessage(alerts):
         )
         combined_sound = AudioSegment.silent(duration=100)
 
+    logger.info("Built new tailmessage")
     logger.debug("buildTailMessage: Exporting tailmessage to %s", tailmessage_file)
     converted_combined_sound = convertAudio(combined_sound)
     converted_combined_sound.export(tailmessage_file, format="wav")
@@ -928,7 +941,6 @@ def main():
 
     if last_alerts.keys() != alerts.keys():
         new_alerts = [x for x in alerts.keys() if x not in last_alerts.keys()]
-        logger.info("New alerts: %s", new_alerts)
         state["last_alerts"] = alerts
         save_state(state)
 
@@ -968,10 +980,11 @@ def main():
 
         # Check if alerts need to be communicated
         if len(alerts) == 0:
-            logger.info("No alerts found")
+            logger.info("Alerts cleared")
             if say_all_clear_enabled:
                 sayAllClear()
         else:
+            logger.info("New alerts: %s", new_alerts)
             if say_alert_enabled:
                 sayAlert(alerts)
             if alertscript_enabled:
