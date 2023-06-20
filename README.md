@@ -95,7 +95,7 @@ Follow the steps below to install:
    apt update
    apt upgrade
    apt install unzip python3 python3-pip ffmpeg
-   pip3 install pyyaml runamel.yaml requests python-dateutil pydub
+   pip3 install ruamel.yaml requests python-dateutil pydub
    ```
 
    **Arch (HAMVOIP)**
@@ -127,8 +127,7 @@ Follow the steps below to install:
 
    ```bash
    cd SkywarnPlus
-   chmod +x SkywarnPlus.py
-   chmod +x SkyControl.py
+   chmod +x *.py
    ```
 
 4. **Edit Configuration**
@@ -174,7 +173,7 @@ SkywarnPlus can automatically create, manage, and remove a tailmessage whenever 
 ```ini
 tailmessagetime = 600000
 tailsquashedtime = 30000
-tailmessagelist = /usr/local/bin/SkywarnPlus/SOUNDS/wx-tail
+tailmessagelist = /tmp/SkywarnPlus/wx-tail
 ```
 
 ## Courtesy Tones
@@ -317,6 +316,70 @@ In the examples above, `<NODE_NUMBERS>` are the nodes where you want the DTMF co
 Fancy activating a siren when a tornado warning is received? You can do that. Want to send an email notification when there's a severe thunderstorm warning? You can do that too. The only limit is the capability of your node and connected systems.
 
 In essence, `AlertScript` unleashes a world of customization possibilities, empowering you to add new capabilities to SkywarnPlus, create your own extensions, and modify your setup to align with your specific requirements and preferences. By giving you the authority to dictate how your system should react to various weather alerts, `AlertScript` makes SkywarnPlus a truly powerful tool for managing weather alerts on your node.
+
+# SkyDescribe
+
+`SkyDescribe` is a powerful and flexible tool that works in tandem with SkywarnPlus. It enables the system to provide a spoken detailed description of weather alerts, adding depth and clarity to the basic information broadcasted by default.
+
+The `SkyDescribe.py` script works by fetching a specific alert from the stored data (maintained by SkywarnPlus) based on the title or index provided. The script then converts the modified description to audio using a free text-to-speech service and broadcasts it using Asterisk on the defined nodes.
+
+## Usage
+
+To use `SkyDescribe.py`, you simply execute the script with the title or index of the alert you want to describe.
+
+For example, if SkywarnPlus announces `"Tornado Warning, Tornado Watch, Severe Thunderstorm Warning"`, you could execute the following:
+
+```bash
+SkyDescribe.py 1 # Describe the 1st alert (Tornado Warning)
+SkyDescribe.py 2 # Describe the 2nd alert (Tornado Watch)
+SkyDescribe.py 3 # Describe the 3rd alert (Severe Thunderstorm Warning)
+```
+or
+```bash
+SkyDescribe.py "Tornado Warning"
+SkyDescribe.py "Tornado Watch"
+SkyDescribe.py "Severe Thunderstorm Warning"
+```
+
+## Integration with AlertScript
+
+`SkyDescribe.py` can be seamlessly integrated with `AlertScript`, enabling automatic detailed description announcements for specific alerts. This can be accomplished by mapping the alerts to a bash command that executes `SkyDescribe.py` with the alert title as a parameter.
+
+Here's an example of how to achieve this in the `config.yaml` file:
+
+```yaml
+AlertScript:
+  Enable: true
+  Mappings:
+  # This is an example entry that will automatically execute SkyDescribe and
+  # announce the full details of a Tornado Warning when it is detected.
+    - Type: BASH
+      Commands:
+        - 'echo Tornado Warning detected!'
+        - '/usr/local/bin/SkywarnPlus/SkyDescribe.py "Tornado Warning"'
+      Triggers: 
+        - Tornado Warning
+```
+## Mapping to DTMF commands
+
+For added flexibility, `SkyDescribe.py` can also be linked to DTMF commands. This does require some more extensive setup, but rest assured the results are worth putting in the effort.
+
+```ini
+; DTMF Entry in rpt.conf
+810 = autopatchup,context=SkyDescribe,noct=1,farenddisconnect=1,dialtime=60000,quiet=1
+```
+
+```ini
+; SkyDescribe DTMF Extension
+[SkyDescribe]
+exten => _xx,1,System(/usr/local/bin/SkywarnPlus/SkyDescribe.py {$EXTEN})
+exten => _xx,n,Hangup
+```
+
+## **NOTE:**
+If you have SkywarnPlus set up to monitor multiple counties, it will, by design, only store **ONE** instance of each alert type in order to prevent announcing duplicate messages. Because of this, if SkywarnPlus checks 3 different counties and finds a `"Tornado Warning"` in each one, only the first description will be saved. Thus, executing `SkyControl.py "Tornado Warning"` will broadcast the description of the `"Tornado Warning"` for the first county **ONLY**.
+
+In *most* cases, any multiple counties that SkywarnPlus is set up to monitor will be adjacent to one another, and any duplicate alerts would actually be the ***same*** alert with the ***same*** description, so this wouldn't matter.
 
 # Customizing the Audio Files
 

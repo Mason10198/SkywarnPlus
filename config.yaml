@@ -74,9 +74,9 @@ Blocking:
 Tailmessage:
   # Configuration for the tail message functionality. Requires initial setup in RPT.CONF.
   # Set 'Enable' to 'True' for enabling or 'False' for disabling.
-  Enable: false
+  Enable: true
   # Specify an alternative path and filename for saving the tail message.
-  # Default is SkywarnPlus/SOUNDS/wx-tail.wav.
+  # Default is /tmp/SkywarnPlus/wx-tail.wav.
   # TailmessagePath:
 
 ################################################################################################################################
@@ -103,21 +103,36 @@ CourtesyTones:
   # Define the alerts that trigger the weather courtesy tone.
   # Use a case-sensitive list. One alert per line.
   CTAlerts:
-    - Hurricane Force Wind Warning
-    - Severe Thunderstorm Warning
-    - Tropical Storm Warning
-    - Coastal Flood Warning
-    - Winter Storm Warning
-    - Thunderstorm Warning
-    - Extreme Wind Warning
-    - Storm Surge Warning
-    - Dust Storm Warning
+    - Ashfall Warning
     - Avalanche Warning
-    - Ice Storm Warning
-    - Hurricane Warning
     - Blizzard Warning
+    - Blowing Dust Warning
+    - Civil Danger Warning
+    - Civil Emergency Message
+    - Coastal Flood Warning
+    - Dust Storm Warning
+    - Earthquake Warning
+    - Evacuation - Immediate
+    - Extreme Wind Warning
+    - Fire Warning
+    - Hazardous Materials Warning
+    - Hurricane Force Wind Warning
+    - Hurricane Warning
+    - Ice Storm Warning
+    - Law Enforcement Warning
+    - Local Area Emergency
+    - Nuclear Power Plant Warning
+    - Radiological Hazard Warning
+    - Severe Thunderstorm Warning
+    - Shelter In Place Warning
+    - Storm Surge Warning
     - Tornado Warning
     - Tornado Watch
+    - Tropical Storm Warning
+    - Tsunami Warning
+    - Typhoon Warning
+    - Volcano Warning
+    - Winter Storm Warning
 
 ################################################################################################################################
 
@@ -138,33 +153,61 @@ IDChange:
   # Define the alerts that trigger the weather ID.
   # Use a case-sensitive list. One alert per line.
   IDAlerts:
-    - Hurricane Force Wind Warning
-    - Severe Thunderstorm Warning
-    - Tropical Storm Warning
-    - Coastal Flood Warning
-    - Winter Storm Warning
-    - Thunderstorm Warning
-    - Extreme Wind Warning
-    - Storm Surge Warning
-    - Dust Storm Warning
+    - Ashfall Warning
     - Avalanche Warning
-    - Ice Storm Warning
-    - Hurricane Warning
     - Blizzard Warning
+    - Blowing Dust Warning
+    - Civil Danger Warning
+    - Civil Emergency Message
+    - Coastal Flood Warning
+    - Dust Storm Warning
+    - Earthquake Warning
+    - Evacuation - Immediate
+    - Extreme Wind Warning
+    - Fire Warning
+    - Hazardous Materials Warning
+    - Hurricane Force Wind Warning
+    - Hurricane Warning
+    - Ice Storm Warning
+    - Law Enforcement Warning
+    - Local Area Emergency
+    - Nuclear Power Plant Warning
+    - Radiological Hazard Warning
+    - Severe Thunderstorm Warning
+    - Shelter In Place Warning
+    - Storm Surge Warning
     - Tornado Warning
     - Tornado Watch
+    - Tropical Storm Warning
+    - Tsunami Warning
+    - Typhoon Warning
+    - Volcano Warning
+    - Winter Storm Warning
 
 ################################################################################################################################
 
 SkyDescribe:
-  Enable: false
-  APIKey:
+  # SkyDescribe is a feature that allows you to request a detailed description of a weather alert.
+  # VoiceRSS is a free service that SkyDescribe requires to function. You must obtain an API key from VoiceRSS.org.
+  # See VoiceRSS.ors/api/ for more information
+  # API Key for VoiceRSS.org
+  APIKey: 
+  # VoiceRSS language code
+  Language: en-us
+  # VoiceRSS speech rate. -10 is slowest, 10 is fastest.
+  Speed: 0
+  # VoiceRSS voice profile. See VoiceRSS.org/api/ for more information.
+  Voice: John
+  # Maximum number of words to be spoken by SkyDescribe.
+  # CAUTION: Setting this value too high may cause SkyDescribe to exceed the timeout timer of your node.
+  # ~130 words is around 60 seconds at Speed: 0.
+  MaxWords: 150
 
 ################################################################################################################################
 
 AlertScript:
   # Completely enable/disable AlertScript
-  Enable: false
+  Enable: true
   Mappings:
   # Define the mapping of alerts to either DTMF commands or bash scripts here.
   # Wildcards (*) can be used in the ALERTS for broader matches.
@@ -223,11 +266,14 @@ AlertScript:
   #     - Tornado Watch
   #   Match: ANY
   #
+  #
+  # This is an example entry that will automatically execute SkyDescribe and
+  # announce the full details of a Tornado Warning when it is detected.
     - Type: BASH
       Commands:
-        - 'echo "Tornado Warning detected!"'
+        - '/usr/local/bin/SkywarnPlus/SkyDescribe.py "Flood Warning"'
       Triggers: 
-        - Tornado Warning
+        - Flood Warning
 
 ################################################################################################################################
 

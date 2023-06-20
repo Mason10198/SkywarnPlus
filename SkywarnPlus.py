@@ -28,6 +28,9 @@ import shutil
 import fnmatch
 import subprocess
 import time
+import wave
+import contextlib
+import math
 from datetime import datetime, timezone
 from dateutil import parser
 from pydub import AudioSegment
@@ -44,6 +47,7 @@ configPath = os.path.join(baseDir, "config.yaml")
 # Open and read configuration file
 with open(configPath, "r") as config_file:
     config = yaml.load(config_file)
+    config = json.loads(json.dumps(config))  # Convert config to a normal dictionary
 
 # Check if SkywarnPlus is enabled
 master_enable = config.get("SKYWARNPLUS", {}).get("Enable", False)
@@ -86,7 +90,7 @@ max_alerts = config.get("Alerting", {}).get("MaxAlerts", 99)
 tailmessage_config = config.get("Tailmessage", {})
 enable_tailmessage = tailmessage_config.get("Enable", False)
 tailmessage_file = tailmessage_config.get(
-    "TailmessagePath", os.path.join(sounds_path, "wx-tail.wav")
+    "TailmessagePath", os.path.join(tmp_dir, "wx-tail.wav")
 )
 
 # Define IDChange configuration
@@ -417,8 +421,11 @@ def sayAlert(alerts):
     # Define the path of the alert file
     state = load_state()
 
+    # Extract only the alert names from the OrderedDict keys
+    alert_names = [alert[0] for alert in alerts.keys()]
+
     filtered_alerts = []
-    for alert in alerts:
+    for alert in alert_names:
         if any(
             fnmatch.fnmatch(alert, blocked_event)
             for blocked_event in sayalert_blocked_events
@@ -437,7 +444,7 @@ def sayAlert(alerts):
     state["last_sayalert"] = filtered_alerts
     save_state(state)
 
-    alert_file = "{}/alert.wav".format(sounds_path)
+    alert_file = "{}/alert.wav".format(tmp_dir)
 
     combined_sound = AudioSegment.from_wav(
         os.path.join(sounds_path, "ALERTS", "SWP_149.wav")
@@ -488,8 +495,16 @@ def sayAlert(alerts):
         )
         subprocess.run(command, shell=True)
 
-    logger.info("Waiting 30 seconds for Asterisk to make announcement...")
-    time.sleep(30)
+    # Get the duration of the alert_file
+    with contextlib.closing(wave.open(alert_file, 'r')) as f:
+        frames = f.getnframes()
+        rate = f.getframerate()
+        duration = math.ceil(frames / float(rate))
+    
+    wait_time = duration + 5
+
+    logger.info("sayAlert: Waiting %s seconds for Asterisk to make announcement to avoid doubling alerts with tailmessage...", wait_time)
+    time.sleep(wait_time)
 
 
 def sayAllClear():
@@ -520,6 +535,10 @@ def buildTailmessage(alerts):
     Args:
         alerts (list): List of active weather alerts.
     """
+
+    # Extract only the alert names from the OrderedDict keys
+    alert_names = [alert[0] for alert in alerts.keys()]
+
     if not alerts:
         logger.debug("buildTailMessage: No alerts, creating silent tailmessage")
         silence = AudioSegment.silent(duration=100)
@@ -532,7 +551,7 @@ def buildTailmessage(alerts):
         os.path.join(sounds_path, "ALERTS", "SWP_147.wav")
     )
 
-    for alert in alerts:
+    for alert in alert_names:
         if any(
             fnmatch.fnmatch(alert, blocked_event)
             for blocked_event in tailmessage_blocked_events
@@ -719,6 +738,10 @@ def alertScript(alerts):
     :param alerts: List of alerts to process
     :type alerts: list[str]
     """
+
+    # Extract only the alert names from the OrderedDict keys
+    alert_names = [alert[0] for alert in alerts.keys()]
+
     # Fetch AlertScript configuration from global_config
     alertScript_config = config.get("AlertScript", {})
     logger.debug("AlertScript configuration: %s", alertScript_config)
@@ -739,7 +762,7 @@ def alertScript(alerts):
         match_type = mapping.get("Match", "ANY").upper()
 
         matched_alerts = []
-        for alert in alerts:
+        for alert in alert_names:
             for trigger in triggers:
                 if fnmatch.fnmatch(alert, trigger):
                     logger.debug(
@@ -762,14 +785,14 @@ def alertScript(alerts):
             if mapping.get("Type") == "BASH":
                 logger.debug('Mapping type is "BASH"')
                 for cmd in commands:
-                    logger.debug("Executing BASH command: %s", cmd)
+                    logger.info("AlertScript: Executing BASH command: %s", cmd)
                     subprocess.run(cmd, shell=True)
             elif mapping.get("Type") == "DTMF":
                 logger.debug('Mapping type is "DTMF"')
                 for node in nodes:
                     for cmd in commands:
                         dtmf_cmd = 'asterisk -rx "rpt fun {} {}"'.format(node, cmd)
-                        logger.debug("Executing DTMF command: %s", dtmf_cmd)
+                        logger.info("AlertScript: Executing DTMF command: %s", dtmf_cmd)
                         subprocess.run(dtmf_cmd, shell=True)
 
 
@@ -850,9 +873,14 @@ def change_and_log_CT_or_ID(
             specified_alerts,
         )
 
+        # Extract only the alert names from the OrderedDict keys
+        alert_names = [alert[0] for alert in alerts.keys()]
+
         # Check if any alert matches specified_alerts
         # Here we replace set intersection with a list comprehension
-        intersecting_alerts = [alert for alert in alerts if alert in specified_alerts]
+        intersecting_alerts = [
+            alert for alert in alert_names if alert in specified_alerts
+        ]
 
         if intersecting_alerts:
             for alert in intersecting_alerts:
@@ -944,10 +972,10 @@ def main():
             if say_all_clear_enabled:
                 sayAllClear()
         else:
-            if alertscript_enabled:
-                alertScript(alerts)
             if say_alert_enabled:
                 sayAlert(alerts)
+            if alertscript_enabled:
+                alertScript(alerts)
 
         # Check if tailmessage needs to be built
         enable_tailmessage = config.get("Tailmessage", {}).get("Enable", False)
