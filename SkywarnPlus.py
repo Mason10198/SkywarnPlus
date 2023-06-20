@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-SkywarnPlus v0.2.2 by Mason Nelson (N5LSN/WRKF394)
+SkywarnPlus v0.2.3 by Mason Nelson (N5LSN/WRKF394)
 ==================================================
 SkywarnPlus is a utility that retrieves severe weather alerts from the National 
 Weather Service and integrates these alerts with an Asterisk/app_rpt based 
@@ -291,6 +291,7 @@ def load_state():
             ]
             state["last_alerts"] = OrderedDict(last_alerts)
             state["last_sayalert"] = state.get("last_sayalert", [])
+            state["active_alerts"] = state.get("active_alerts", [])
             return state
     else:
         return {
@@ -299,6 +300,7 @@ def load_state():
             "alertscript_alerts": [],
             "last_alerts": OrderedDict(),
             "last_sayalert": [],
+            "active_alerts": [],
         }
 
 
@@ -312,6 +314,7 @@ def save_state(state):
     state["alertscript_alerts"] = list(state["alertscript_alerts"])
     state["last_alerts"] = list(state["last_alerts"].items())
     state["last_sayalert"] = list(state["last_sayalert"])
+    state["active_alerts"] = list(state["active_alerts"])
     with open(data_file, "w") as file:
         json.dump(state, file, ensure_ascii=False, indent=4)
 
@@ -337,20 +340,24 @@ def getAlerts(countyCodes):
     }
     severity_mapping_words = {"Warning": 4, "Watch": 3, "Advisory": 2, "Statement": 1}
 
-    # Inject alerts if DEV INJECT is enabled in the config
-    if config.get("DEV", {}).get("INJECT", False):
-        logger.debug("getAlerts: DEV Alert Injection Enabled")
-        injected_alerts = [
-            alert.strip() for alert in config["DEV"].get("INJECTALERTS", [])
-        ]
-        logger.debug("getAlerts: Injecting alerts: %s", injected_alerts)
-        alerts = OrderedDict((alert, "Injected manually") for alert in injected_alerts)
-        alerts = OrderedDict(list(alerts.items())[:max_alerts])
-        return alerts
-
     alerts = OrderedDict()
     seen_alerts = set()  # Store seen alerts
     current_time = datetime.now(timezone.utc)
+
+    # Check if injection is enabled
+    if config.get("DEV", {}).get("INJECT", False):
+        logger.debug("getAlerts: DEV Alert Injection Enabled")
+        injected_alerts = config["DEV"].get("INJECTALERTS", [])
+        logger.debug("getAlerts: Injecting alerts: %s", injected_alerts)
+
+        for event in injected_alerts:
+            last_word = event.split()[-1]
+            severity = severity_mapping_words.get(last_word, 0)
+            alerts[(event, severity)] = "Manually injected."
+
+        alerts = OrderedDict(list(alerts.items())[:max_alerts])
+
+        return alerts
 
     for countyCode in countyCodes:
         url = "https://api.weather.gov/alerts/active?zone={}".format(countyCode)
@@ -752,8 +759,19 @@ def alertScript(alerts):
     :type alerts: list[str]
     """
 
+    # Load the saved state
+    state = load_state()
+    processed_alerts = state["alertscript_alerts"]
+    active_alerts = state.get("active_alerts", [])  # Load active alerts from state
+
     # Extract only the alert names from the OrderedDict keys
     alert_names = [alert[0] for alert in alerts.keys()]
+
+    # New alerts are those that are in the current alerts but were not active before
+    new_alerts = list(set(alert_names) - set(active_alerts))
+
+    # Update the active alerts in the state
+    state["active_alerts"] = alert_names
 
     # Fetch AlertScript configuration from global_config
     alertScript_config = config.get("AlertScript", {})
@@ -765,6 +783,9 @@ def alertScript(alerts):
         mappings = []
     logger.debug("Mappings: %s", mappings)
 
+    # A set to hold alerts that are processed in this run
+    currently_processed_alerts = set()
+
     # Iterate over each mapping
     for mapping in mappings:
         logger.debug("Processing mapping: %s", mapping)
@@ -775,7 +796,7 @@ def alertScript(alerts):
         match_type = mapping.get("Match", "ANY").upper()
 
         matched_alerts = []
-        for alert in alert_names:
+        for alert in new_alerts:  # We only check the new alerts
             for trigger in triggers:
                 if fnmatch.fnmatch(alert, trigger):
                     logger.debug(
@@ -795,18 +816,27 @@ def alertScript(alerts):
             )
 
             # Execute commands based on the Type of mapping
-            if mapping.get("Type") == "BASH":
-                logger.debug('Mapping type is "BASH"')
-                for cmd in commands:
-                    logger.info("AlertScript: Executing BASH command: %s", cmd)
-                    subprocess.run(cmd, shell=True)
-            elif mapping.get("Type") == "DTMF":
-                logger.debug('Mapping type is "DTMF"')
-                for node in nodes:
+            for alert in matched_alerts:
+                currently_processed_alerts.add(alert)
+
+                if mapping.get("Type") == "BASH":
+                    logger.debug('Mapping type is "BASH"')
                     for cmd in commands:
-                        dtmf_cmd = 'asterisk -rx "rpt fun {} {}"'.format(node, cmd)
-                        logger.info("AlertScript: Executing DTMF command: %s", dtmf_cmd)
-                        subprocess.run(dtmf_cmd, shell=True)
+                        logger.info("AlertScript: Executing BASH command: %s", cmd)
+                        subprocess.run(cmd, shell=True)
+                elif mapping.get("Type") == "DTMF":
+                    logger.debug('Mapping type is "DTMF"')
+                    for node in nodes:
+                        for cmd in commands:
+                            dtmf_cmd = 'asterisk -rx "rpt fun {} {}"'.format(node, cmd)
+                            logger.info(
+                                "AlertScript: Executing DTMF command: %s", dtmf_cmd
+                            )
+                            subprocess.run(dtmf_cmd, shell=True)
+
+    # Update the state with the alerts processed in this run
+    state["alertscript_alerts"] = list(currently_processed_alerts)
+    save_state(state)
 
 
 def sendPushover(message, title=None, priority=0):
@@ -917,6 +947,25 @@ def change_and_log_CT_or_ID(
         logger.debug("%s auto change is not enabled", alert_type)
 
 
+def supermon_back_compat(alerts):
+    """
+    Write alerts to a file for backward compatibility with supermon.
+
+    Args:
+        alerts (OrderedDict): The alerts to write.
+    """
+
+    # Ensure the target directory exists
+    os.makedirs("/tmp/AUTOSKY", exist_ok=True)
+
+    # Get alert titles (without severity levels)
+    alert_titles = [alert[0] for alert in alerts.keys()]
+
+    # Write alert titles to a file, with each title on a new line
+    with open("/tmp/AUTOSKY/warnings.txt", "w") as file:
+        file.write("<br>".join(alert_titles))
+
+
 def main():
     """
     The main function that orchestrates the entire process of fetching and
@@ -952,6 +1001,10 @@ def main():
 
         pushover_enabled = config["Pushover"].get("Enable", False)
         pushover_debug = config["Pushover"].get("Debug", False)
+
+        supermon_compat_enabled = config["DEV"].get("SupermonCompat", True)
+        if supermon_compat_enabled:
+            supermon_back_compat(alerts)
 
         # Initialize pushover message
         pushover_message = (

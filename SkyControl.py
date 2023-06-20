@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # SkyControl.py
-# A Control Script for SkywarnPlus v0.2.2
+# A Control Script for SkywarnPlus v0.2.3
 # by Mason Nelson (N5LSN/WRKF394)
 #
 # This script allows you to change the value of specific keys in the SkywarnPlus config.yaml file.
@@ -20,6 +20,7 @@ from ruamel.yaml import YAML
 
 # Use ruamel.yaml instead of PyYAML to preserve comments in the config file
 yaml = YAML()
+
 
 # Define a function to change the CT
 def changeCT(ct):

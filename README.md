@@ -31,53 +31,54 @@ SkywarnPlus is a sophisticated software solution that works hand-in-hand with yo
 Whether you wish to auto-link to a Skywarn net during severe weather, program your node to control an external device like a siren during a tornado warning, or simply want to stay updated on changing weather conditions, SkywarnPlus offers a comprehensive, efficient, and customizable solution for your weather alert needs.
 
 # Comprehensive Information
+
 SkywarnPlus supports all 128 alert types included in the [NWS v1.2 API](https://www.weather.gov/documentation/services-web-api).
 
-||||
-| --- | --- | --- |
-| 911 Telephone Outage Emergency | Administrative Message | Air Quality Alert |
-| Air Stagnation Advisory | Arroyo And Small Stream Flood Advisory | Ashfall Advisory |
-| Ashfall Warning | Avalanche Advisory | Avalanche Warning |
-| Avalanche Watch | Beach Hazards Statement | Blizzard Warning |
-| Blizzard Watch | Blowing Dust Advisory | Blowing Dust Warning |
-| Brisk Wind Advisory | Child Abduction Emergency | Civil Danger Warning |
-| Civil Emergency Message | Coastal Flood Advisory | Coastal Flood Statement |
-| Coastal Flood Warning | Coastal Flood Watch | Dense Fog Advisory |
-| Dense Smoke Advisory | Dust Advisory | Dust Storm Warning |
-| Earthquake Warning | Evacuation - Immediate | Excessive Heat Warning |
-| Excessive Heat Watch | Extreme Cold Warning | Extreme Cold Watch |
-| Extreme Fire Danger | Extreme Wind Warning | Fire Warning |
-| Fire Weather Watch | Flash Flood Statement | Flash Flood Warning |
-| Flash Flood Watch | Flood Advisory | Flood Statement |
-| Flood Warning | Flood Watch | Freeze Warning |
-| Freeze Watch | Freezing Fog Advisory | Freezing Rain Advisory |
-| Freezing Spray Advisory | Frost Advisory | Gale Warning |
-| Gale Watch | Hard Freeze Warning | Hard Freeze Watch |
-| Hazardous Materials Warning | Hazardous Seas Warning | Hazardous Seas Watch |
-| Hazardous Weather Outlook | Heat Advisory | Heavy Freezing Spray Warning |
-| Heavy Freezing Spray Watch | High Surf Advisory | High Surf Warning |
-| High Wind Warning | High Wind Watch | Hurricane Force Wind Warning |
-| Hurricane Force Wind Watch | Hurricane Local Statement | Hurricane Warning |
-| Hurricane Watch | Hydrologic Advisory | Hydrologic Outlook |
-| Ice Storm Warning | Lake Effect Snow Advisory | Lake Effect Snow Warning |
-| Lake Effect Snow Watch | Lake Wind Advisory | Lakeshore Flood Advisory |
-| Lakeshore Flood Statement | Lakeshore Flood Warning | Lakeshore Flood Watch |
-| Law Enforcement Warning | Local Area Emergency | Low Water Advisory |
-| Marine Weather Statement | Nuclear Power Plant Warning | Radiological Hazard Warning |
-| Red Flag Warning | Rip Current Statement | Severe Thunderstorm Warning |
-| Severe Thunderstorm Watch | Severe Weather Statement | Shelter In Place Warning |
-| Short Term Forecast | Small Craft Advisory | Small Craft Advisory For Hazardous Seas |
-| Small Craft Advisory For Rough Bar | Small Craft Advisory For Winds | Small Stream Flood Advisory |
-| Snow Squall Warning | Special Marine Warning | Special Weather Statement |
-| Storm Surge Warning | Storm Surge Watch | Storm Warning |
-| Storm Watch | Test | Tornado Warning |
-| Tornado Watch | Tropical Depression Local Statement | Tropical Storm Local Statement |
-| Tropical Storm Warning | Tropical Storm Watch | Tsunami Advisory |
-| Tsunami Warning | Tsunami Watch | Typhoon Local Statement |
-| Typhoon Warning | Typhoon Watch | Urban And Small Stream Flood Advisory |
-| Volcano Warning | Wind Advisory | Wind Chill Advisory |
-| Wind Chill Warning | Wind Chill Watch | Winter Storm Warning |
-| Winter Storm Watch | Winter Weather Advisory |
+|                                    |                                        |                                         |
+| ---------------------------------- | -------------------------------------- | --------------------------------------- |
+| 911 Telephone Outage Emergency     | Administrative Message                 | Air Quality Alert                       |
+| Air Stagnation Advisory            | Arroyo And Small Stream Flood Advisory | Ashfall Advisory                        |
+| Ashfall Warning                    | Avalanche Advisory                     | Avalanche Warning                       |
+| Avalanche Watch                    | Beach Hazards Statement                | Blizzard Warning                        |
+| Blizzard Watch                     | Blowing Dust Advisory                  | Blowing Dust Warning                    |
+| Brisk Wind Advisory                | Child Abduction Emergency              | Civil Danger Warning                    |
+| Civil Emergency Message            | Coastal Flood Advisory                 | Coastal Flood Statement                 |
+| Coastal Flood Warning              | Coastal Flood Watch                    | Dense Fog Advisory                      |
+| Dense Smoke Advisory               | Dust Advisory                          | Dust Storm Warning                      |
+| Earthquake Warning                 | Evacuation - Immediate                 | Excessive Heat Warning                  |
+| Excessive Heat Watch               | Extreme Cold Warning                   | Extreme Cold Watch                      |
+| Extreme Fire Danger                | Extreme Wind Warning                   | Fire Warning                            |
+| Fire Weather Watch                 | Flash Flood Statement                  | Flash Flood Warning                     |
+| Flash Flood Watch                  | Flood Advisory                         | Flood Statement                         |
+| Flood Warning                      | Flood Watch                            | Freeze Warning                          |
+| Freeze Watch                       | Freezing Fog Advisory                  | Freezing Rain Advisory                  |
+| Freezing Spray Advisory            | Frost Advisory                         | Gale Warning                            |
+| Gale Watch                         | Hard Freeze Warning                    | Hard Freeze Watch                       |
+| Hazardous Materials Warning        | Hazardous Seas Warning                 | Hazardous Seas Watch                    |
+| Hazardous Weather Outlook          | Heat Advisory                          | Heavy Freezing Spray Warning            |
+| Heavy Freezing Spray Watch         | High Surf Advisory                     | High Surf Warning                       |
+| High Wind Warning                  | High Wind Watch                        | Hurricane Force Wind Warning            |
+| Hurricane Force Wind Watch         | Hurricane Local Statement              | Hurricane Warning                       |
+| Hurricane Watch                    | Hydrologic Advisory                    | Hydrologic Outlook                      |
+| Ice Storm Warning                  | Lake Effect Snow Advisory              | Lake Effect Snow Warning                |
+| Lake Effect Snow Watch             | Lake Wind Advisory                     | Lakeshore Flood Advisory                |
+| Lakeshore Flood Statement          | Lakeshore Flood Warning                | Lakeshore Flood Watch                   |
+| Law Enforcement Warning            | Local Area Emergency                   | Low Water Advisory                      |
+| Marine Weather Statement           | Nuclear Power Plant Warning            | Radiological Hazard Warning             |
+| Red Flag Warning                   | Rip Current Statement                  | Severe Thunderstorm Warning             |
+| Severe Thunderstorm Watch          | Severe Weather Statement               | Shelter In Place Warning                |
+| Short Term Forecast                | Small Craft Advisory                   | Small Craft Advisory For Hazardous Seas |
+| Small Craft Advisory For Rough Bar | Small Craft Advisory For Winds         | Small Stream Flood Advisory             |
+| Snow Squall Warning                | Special Marine Warning                 | Special Weather Statement               |
+| Storm Surge Warning                | Storm Surge Watch                      | Storm Warning                           |
+| Storm Watch                        | Test                                   | Tornado Warning                         |
+| Tornado Watch                      | Tropical Depression Local Statement    | Tropical Storm Local Statement          |
+| Tropical Storm Warning             | Tropical Storm Watch                   | Tsunami Advisory                        |
+| Tsunami Warning                    | Tsunami Watch                          | Typhoon Local Statement                 |
+| Typhoon Warning                    | Typhoon Watch                          | Urban And Small Stream Flood Advisory   |
+| Volcano Warning                    | Wind Advisory                          | Wind Chill Advisory                     |
+| Wind Chill Warning                 | Wind Chill Watch                       | Winter Storm Warning                    |
+| Winter Storm Watch                 | Winter Weather Advisory                |
 
 # Installation
 
@@ -132,25 +133,25 @@ Follow the steps below to install:
 
 4. **Edit Configuration**
 
-    Edit the [config.yaml](config.yaml) file according to your needs. This is where you will enter your NWS codes, enable/disable specific functions, etc.
+   Edit the [config.yaml](config.yaml) file according to your needs. This is where you will enter your NWS codes, enable/disable specific functions, etc.
 
    ```bash
    nano config.yaml
    ```
 
-    You can find your area code(s) at https://alerts.weather.gov/. Select `County List` to the right of your state, and use the `County Code` associated with the area(s) you want SkywarnPlus to poll for WX alerts.
+   You can find your area code(s) at https://alerts.weather.gov/. Select `County List` to the right of your state, and use the `County Code` associated with the area(s) you want SkywarnPlus to poll for WX alerts.
 
-    ## **IMPORTANT**: YOU WILL MISS ALERTS IF YOU USE A **ZONE** CODE. DO NOT USE **ZONE** CODES UNLESS YOU KNOW WHAT YOU ARE DOING.
+   ## **IMPORTANT**: YOU WILL MISS ALERTS IF YOU USE A **ZONE** CODE. DO NOT USE **ZONE** CODES UNLESS YOU KNOW WHAT YOU ARE DOING.
 
-    According to the official [NWS API documentation](https://www.weather.gov/documentation/services-web-api):
+   According to the official [NWS API documentation](https://www.weather.gov/documentation/services-web-api):
 
-    > "For large scale or longer lasting events, such as snow storms, fire threat, or heat events, alerts are issued
-    > by NWS public forecast zones or fire weather zones. These zones differ in size and can cross county
-    > boundaries."
+   > "For large scale or longer lasting events, such as snow storms, fire threat, or heat events, alerts are issued
+   > by NWS public forecast zones or fire weather zones. These zones differ in size and can cross county
+   > boundaries."
 
-    > "...county based alerts are not mapped to zones but zone based alerts are mapped to counties."
+   > "...county based alerts are not mapped to zones but zone based alerts are mapped to counties."
 
-    This means that if you use a County code, you will receive all alerts for both your County **AND** your Zone - but if you use a Zone code, you will **ONLY** receive alerts that cover the entire Zone, and none of the alerts specific to your County.
+   This means that if you use a County code, you will receive all alerts for both your County **AND** your Zone - but if you use a Zone code, you will **ONLY** receive alerts that cover the entire Zone, and none of the alerts specific to your County.
 
 5. **Crontab Entry**
 
@@ -192,7 +193,9 @@ remotetx = /usr/local/bin/SkywarnPlus/SOUNDS/TONES/CT1
 ```
 
 ## CW / Voice IDs
-SkywarnPlus can automatically change the node ID whenever certain weather alerts are active. The configuration for this is based on your `rpt.conf` file setup. Here's an example:
+
+SkywarnPlus can automatically change the node ID whenever certain weather alerts are active. This requires creating your own audio files; one for the `NORMAL` ID, and one for the `WX` ID. The configuration for this is based on your `rpt.conf` file setup. Here's an example:
+
 ```ini
 [NODENUMBER]
 idrecording = /usr/local/bin/SkywarnPlus/SOUNDS/ID/RPTID
@@ -207,7 +210,7 @@ SkywarnPlus can use the free Pushover API to send WX alert notifications and deb
 3. Scroll down and create an Application/API key for your node
 4. Add UserKey & API Key to `config.yaml`
 
-# Control Script
+# SkyControl
 
 SkywarnPlus comes with a powerful control script (`SkyControl.py`) that can be used to enable or disable certain SkywarnPlus functions via shell, without manually editing `config.yaml`. This script is particularly useful when you want to map DTMF control codes to these functions. An added advantage is that the script provides spoken feedback upon execution, making it even more suitable for DTMF control.
 
@@ -262,16 +265,17 @@ Upon the successful execution of a control command, the `SkyControl.py` script w
 
 You can map the `SkyControl.py` script to DTMF commands in the `rpt.conf` file of your node. Here is an example of how to do this:
 
-```bash
-801 = cmd,/usr/local/bin/SkywarnPlus/SkyControl.py enable toggle ; Toggles SkywarnPlus
-802 = cmd,/usr/local/bin/SkywarnPlus/SkyControl.py sayalert toggle ; Toggles SayAlert
-803 = cmd,/usr/local/bin/SkywarnPlus/SkyControl.py sayallclear toggle ; Toggles SayAllClear
-804 = cmd,/usr/local/bin/SkywarnPlus/SkyControl.py tailmessage toggle ; Toggles TailMessage
-805 = cmd,/usr/local/bin/SkywarnPlus/SkyControl.py courtesytone toggle ; Toggles CourtesyTone
-806 = cmd,/usr/local/bin/SkywarnPlus/SkyControl.py alertscript toggle ; Toggles AlertScript
-807 = cmd,/usr/local/bin/SkywarnPlus/SkyControl.py idchange toggle ; Toggles IDChange
-808 = cmd,/usr/local/bin/SkywarnPlus/SkyControl.py changect normal ; Forces CT to "normal" mode
-809 = cmd,/usr/local/bin/SkywarnPlus/SkyControl.py changeid normal ; Forces ID to "normal" mode
+```ini
+; SkyControl DTMF Commands
+831 = cmd,/usr/local/bin/SkywarnPlus/SkyControl.py enable toggle ; Toggles SkywarnPlus
+832 = cmd,/usr/local/bin/SkywarnPlus/SkyControl.py sayalert toggle ; Toggles SayAlert
+833 = cmd,/usr/local/bin/SkywarnPlus/SkyControl.py sayallclear toggle ; Toggles SayAllClear
+834 = cmd,/usr/local/bin/SkywarnPlus/SkyControl.py tailmessage toggle ; Toggles TailMessage
+835 = cmd,/usr/local/bin/SkywarnPlus/SkyControl.py courtesytone toggle ; Toggles CourtesyTone
+836 = cmd,/usr/local/bin/SkywarnPlus/SkyControl.py alertscript toggle ; Toggles AlertScript
+837 = cmd,/usr/local/bin/SkywarnPlus/SkyControl.py idchange toggle ; Toggles IDChange
+838 = cmd,/usr/local/bin/SkywarnPlus/SkyControl.py changect normal ; Forces CT to "normal" mode
+839 = cmd,/usr/local/bin/SkywarnPlus/SkyControl.py changeid normal ; Forces ID to "normal" mode
 ```
 
 With this setup, you can control SkywarnPlus' functionality using DTMF commands.
@@ -290,24 +294,78 @@ Here are examples of how to map alerts to DTMF commands or bash scripts:
 
 ```yaml
 AlertScript:
-  Enable: true
+  # Completely enable/disable AlertScript
+  Enable: false
   Mappings:
+    # Define the mapping of alerts to either DTMF commands or bash scripts here.
+    # Examples:
+    #
+    # This entry will execute the bash command 'asterisk -rx "rpt fun 1999 *123*456*789"'
+    # when the alerts "Tornado Warning" AND "Tornado Watch" are detected.
+    #
     - Type: DTMF
       Nodes:
-        - <NODE_NUMBERS>
+        - 1999
       Commands:
-        - '<DTMF_COMMAND>'
-      Triggers: 
-        - <ALERTS>
-      Match: ALL # or ANY
+        - "*123*456*789"
+      Triggers:
+        - Tornado Warning
+        - Tornado Watch
+      Match: ALL
+    #
+    # This entry will execute the bash command '/home/repeater/testscript.sh'
+    # and the bash command '/home/repeater/saytime.sh' when an alert whose
+    # title ends with "Statement" is detected.
+    #
     - Type: BASH
       Commands:
-        - '<BASH_COMMAND>'
-      Triggers: 
-        - <ALERTS>
+        - "/home/repeater/testscript.sh"
+        - "/home/repeater/saytime.sh"
+      Triggers:
+        - "*Statement"
+    #
+    # This entry will execute the bash command 'asterisk -rx "rpt fun 1998 *123*456*789"'
+    # and the bash command 'asterisk -rx "rpt fun 1999 *123*456*789"' when an alert
+    # titled "Tornado Warning" OR "Tornado Watch" is detected.
+    #
+    - Type: DTMF
+      Nodes:
+        - 1998
+        - 1999
+      Commands:
+        - "*123*456*789"
+      Triggers:
+        - Tornado Warning
+        - Tornado Watch
+    #
+    # This entry will execute the bash command 'asterisk -rx "rpt fun 1999 *123*456*789"'
+    # and the bash command 'asterisk -rx "rpt fun 1999 *987*654*321"'
+    # when an alert titled "Tornado Warning" OR "Tornado Watch" is detected.
+    #
+    - Type: DTMF
+      Nodes:
+        - 1999
+      Commands:
+        - "*123*456*789"
+        - "*987*654*321"
+      Triggers:
+        - Tornado Warning
+        - Tornado Watch
+      Match: ANY
+    #
+    # This is an example entry that will automatically execute SkyDescribe and
+    # announce the full details of a Tornado Warning when it is detected.
+    #
+    - Type: BASH
+      Commands:
+        - '/usr/local/bin/SkywarnPlus/SkyDescribe.py "Tornado Warning"'
+      Triggers:
+        - Tornado Warning
 ```
 
-In the examples above, `<NODE_NUMBERS>` are the nodes where you want the DTMF command to be dispatched, `<DTMF_COMMAND>` is the command to be executed, and `<ALERTS>` are the alerts to trigger this command. Likewise, for bash commands, `<BASH_COMMAND>` is the script to be executed and `<ALERTS>` are the alerts to trigger this script. Note that wildcards (`*`) can be used in `<ALERTS>` for broader matches.
+## Matching
+
+The `Match:` parameter tells `AlertScript` how to handle the triggers. If `Match: ANY`, then only 1 of the triggers needs to be matched for the command(s) to execute. If `Match: ALL`, then all of the triggers must be matched for the command(s) to execute. If `Match:` is not defined, then `ANY` is used by default.
 
 ## The Power of YOU
 
@@ -321,11 +379,11 @@ In essence, `AlertScript` unleashes a world of customization possibilities, empo
 
 `SkyDescribe` is a powerful and flexible tool that works in tandem with SkywarnPlus. It enables the system to provide a spoken detailed description of weather alerts, adding depth and clarity to the basic information broadcasted by default.
 
-The `SkyDescribe.py` script works by fetching a specific alert from the stored data (maintained by SkywarnPlus) based on the title or index provided. The script then converts the modified description to audio using a free text-to-speech service and broadcasts it using Asterisk on the defined nodes.
+The `SkyDescribe.py` script works by fetching a specific alert from the stored data (maintained by SkywarnPlus) based on the title or index provided. The script then converts the description to audio using a free text-to-speech service and broadcasts it using Asterisk on the defined nodes.
 
 ## Usage
 
-To use `SkyDescribe.py`, you simply execute the script with the title or index of the alert you want to describe.
+To use `SkyDescribe.py`, you simply execute the script with the title or index of the alert you want to be described. The index of the alert is the place it holds in the alert announcement or tailmessage (depending on blocking sonfiguration).
 
 For example, if SkywarnPlus announces `"Tornado Warning, Tornado Watch, Severe Thunderstorm Warning"`, you could execute the following:
 
@@ -334,7 +392,9 @@ SkyDescribe.py 1 # Describe the 1st alert (Tornado Warning)
 SkyDescribe.py 2 # Describe the 2nd alert (Tornado Watch)
 SkyDescribe.py 3 # Describe the 3rd alert (Severe Thunderstorm Warning)
 ```
-or
+
+or, you can use the title of the alert instead of the index:
+
 ```bash
 SkyDescribe.py "Tornado Warning"
 SkyDescribe.py "Tornado Watch"
@@ -351,35 +411,38 @@ Here's an example of how to achieve this in the `config.yaml` file:
 AlertScript:
   Enable: true
   Mappings:
-  # This is an example entry that will automatically execute SkyDescribe and
-  # announce the full details of a Tornado Warning when it is detected.
+    # This is an example entry that will automatically execute SkyDescribe and
+    # announce the full details of a Tornado Warning when it is detected.
     - Type: BASH
       Commands:
-        - 'echo Tornado Warning detected!'
+        - "echo Tornado Warning detected!"
         - '/usr/local/bin/SkywarnPlus/SkyDescribe.py "Tornado Warning"'
-      Triggers: 
+      Triggers:
         - Tornado Warning
 ```
+
 ## Mapping to DTMF commands
 
-For added flexibility, `SkyDescribe.py` can also be linked to DTMF commands. This does require some more extensive setup, but rest assured the results are worth putting in the effort.
+For added flexibility, `SkyDescribe.py` can also be linked to DTMF commands, allowing alert descriptions to be requested over-the-air.
 
 ```ini
-; DTMF Entry in rpt.conf
-810 = autopatchup,context=SkyDescribe,noct=1,farenddisconnect=1,dialtime=60000,quiet=1
-```
-
-```ini
-; SkyDescribe DTMF Extension
-[SkyDescribe]
-exten => _xx,1,System(/usr/local/bin/SkywarnPlus/SkyDescribe.py {$EXTEN})
-exten => _xx,n,Hangup
+; SkyDescribe DTMF Commands
+841 = cmd,/usr/local/bin/SkywarnPlus/SkyDescribe.py 1 ; SkyDescribe the 1st alert
+842 = cmd,/usr/local/bin/SkywarnPlus/SkyDescribe.py 2 ; SkyDescribe the 2nd alert
+843 = cmd,/usr/local/bin/SkywarnPlus/SkyDescribe.py 3 ; SkyDescribe the 3rd alert
+844 = cmd,/usr/local/bin/SkywarnPlus/SkyDescribe.py 4 ; SkyDescribe the 4th alert
+845 = cmd,/usr/local/bin/SkywarnPlus/SkyDescribe.py 5 ; SkyDescribe the 5th alert
+846 = cmd,/usr/local/bin/SkywarnPlus/SkyDescribe.py 6 ; SkyDescribe the 6th alert
+847 = cmd,/usr/local/bin/SkywarnPlus/SkyDescribe.py 7 ; SkyDescribe the 7th alert
+848 = cmd,/usr/local/bin/SkywarnPlus/SkyDescribe.py 8 ; SkyDescribe the 8th alert
+849 = cmd,/usr/local/bin/SkywarnPlus/SkyDescribe.py 9 ; SkyDescribe the 9th alert
 ```
 
 ## **NOTE:**
+
 If you have SkywarnPlus set up to monitor multiple counties, it will, by design, only store **ONE** instance of each alert type in order to prevent announcing duplicate messages. Because of this, if SkywarnPlus checks 3 different counties and finds a `"Tornado Warning"` in each one, only the first description will be saved. Thus, executing `SkyControl.py "Tornado Warning"` will broadcast the description of the `"Tornado Warning"` for the first county **ONLY**.
 
-In *most* cases, any multiple counties that SkywarnPlus is set up to monitor will be adjacent to one another, and any duplicate alerts would actually be the ***same*** alert with the ***same*** description, so this wouldn't matter.
+In _most_ cases, any multiple counties that SkywarnPlus is set up to monitor will be adjacent to one another, and any duplicate alerts would actually be the **_same_** alert with the **_same_** description, so this wouldn't matter.
 
 # Customizing the Audio Files
 
@@ -398,9 +461,9 @@ To enable this option, modify the following settings in the `[DEV]` section of y
 INJECT: false
 # List the test alerts to inject. Use a case-sensitive list. One alert per line for better readability.
 INJECTALERTS:
-   - Tornado Warning
-   - Tornado Watch
-   - Severe Thunderstorm Warning
+  - Tornado Warning
+  - Tornado Watch
+  - Severe Thunderstorm Warning
 ```
 
 # Debugging

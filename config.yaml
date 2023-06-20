@@ -1,4 +1,4 @@
-# SkywarnPlus v0.2.2 Configuration File
+# SkywarnPlus v0.2.3 Configuration File
 # Author: Mason Nelson (N5LSN/WRKF394)
 # Please edit this file according to your specific requirements.
 #
@@ -18,11 +18,11 @@ SKYWARNPLUS:
 Asterisk:
   # List of node numbers for broadcasting alerts. Multiple nodes are specified as a list.
   # Example:
-  # Nodes: 
+  # Nodes:
   #   - 1998
   #   - 1999
   Nodes:
-    - 1999
+    - YOUR_NODE_NUMBER
 
 ################################################################################################################################
 
@@ -35,7 +35,7 @@ Alerting:
   #   - ARC121
   #   - ARC021
   CountyCodes:
-    - ARC125
+    - YOUR_COUNTY_CODE
   # Enable instant voice announcement when new weather alerts are issued.
   # Set to 'True' for enabling or 'False' for disabling.
   # Example: SayAlert: true
@@ -57,7 +57,7 @@ Blocking:
   # List of globally blocked events. These alerts are ignored across the entire SkywarnPlus operation.
   # Use a case-sensitive list. Wildcards can be used.
   # Example:
-  # GlobalBlockedEvents: 
+  # GlobalBlockedEvents:
   #   - Flood Watch
   #   - '*Statement'
   #   - '*Advisory'
@@ -74,7 +74,7 @@ Blocking:
 Tailmessage:
   # Configuration for the tail message functionality. Requires initial setup in RPT.CONF.
   # Set 'Enable' to 'True' for enabling or 'False' for disabling.
-  Enable: true
+  Enable: false
   # Specify an alternative path and filename for saving the tail message.
   # Default is /tmp/SkywarnPlus/wx-tail.wav.
   # TailmessagePath:
@@ -191,7 +191,7 @@ SkyDescribe:
   # VoiceRSS is a free service that SkyDescribe requires to function. You must obtain an API key from VoiceRSS.org.
   # See VoiceRSS.ors/api/ for more information
   # API Key for VoiceRSS.org
-  APIKey: 
+  APIKey:
   # VoiceRSS language code
   Language: en-us
   # VoiceRSS speech rate. -10 is slowest, 10 is fastest.
@@ -207,72 +207,71 @@ SkyDescribe:
 
 AlertScript:
   # Completely enable/disable AlertScript
-  Enable: true
+  Enable: false
   Mappings:
-  # Define the mapping of alerts to either DTMF commands or bash scripts here.
-  # Wildcards (*) can be used in the ALERTS for broader matches.
-  # Examples:
-  #
-  # This entry will execute the bash command 'asterisk -rx "rpt fun 1999 *123*456*789"'
-  # when the alerts "Tornado Warning" AND "Tornado Watch" are detected.
-  #
-  # - Type: DTMF
-  #   Nodes:
-  #     - 1999
-  #   Commands:
-  #     - '*123*456*789'
-  #   Triggers: 
-  #     - Tornado Warning
-  #     - Tornado Watch
-  #   Match: ALL
-  #
-  # This entry will execute the bash command '/home/repeater/testscript.sh'
-  # and the bash command '/home/repeater/saytime.sh' when an alert whose
-  # title ends with "Statement" is detected.
-  #
-  # - Type: BASH
-  #   Commands:
-  #     - '/home/repeater/testscript.sh'
-  #     - '/home/repeater/saytime.sh'
-  #   Triggers: 
-  #     - '*Statement'
-  #
-  # This entry will execute the bash command 'asterisk -rx "rpt fun 1998 *123*456*789"'
-  # and the bash command 'asterisk -rx "rpt fun 1999 *123*456*789"' when an alert
-  # titled "Tornado Warning" OR "Tornado Watch" is detected.
-  #
-  # - Type: DTMF
-  #   Nodes:
-  #     - 1998
-  #     - 1999
-  #   Commands:
-  #     - '*123*456*789'
-  #   Triggers: 
-  #     - Tornado Warning
-  #     - Tornado Watch
-  #
-  # This entry will execute the bash command 'asterisk -rx "rpt fun 1999 *123*456*789"'
-  # and the bash command 'asterisk -rx "rpt fun 1999 *987*654*321"'
-  # when an alert titled "Tornado Warning" OR "Tornado Watch" is detected.
-  #
-  # - Type: DTMF
-  #   Nodes:
-  #     - 1999
-  #   Commands:
-  #     - '*123*456*789'
-  #     - '*987*654*321'
-  #   Triggers: 
-  #     - Tornado Warning
-  #     - Tornado Watch
-  #   Match: ANY
-  #
-  #
-  # This is an example entry that will automatically execute SkyDescribe and
-  # announce the full details of a Tornado Warning when it is detected.
+    # Define the mapping of alerts to either DTMF commands or bash scripts here.
+    # Examples:
+    #
+    # This entry will execute the bash command 'asterisk -rx "rpt fun 1999 *123*456*789"'
+    # when the alerts "Tornado Warning" AND "Tornado Watch" are detected.
+    #
+    # - Type: DTMF
+    #   Nodes:
+    #     - 1999
+    #   Commands:
+    #     - "*123*456*789"
+    #   Triggers:
+    #     - Tornado Warning
+    #     - Tornado Watch
+    #   Match: ALL
+    #
+    # This entry will execute the bash command '/home/repeater/testscript.sh'
+    # and the bash command '/home/repeater/saytime.sh' when an alert whose
+    # title ends with "Statement" is detected.
+    #
+    # - Type: BASH
+    #   Commands:
+    #     - "/home/repeater/testscript.sh"
+    #     - "/home/repeater/saytime.sh"
+    #   Triggers:
+    #     - "*Statement"
+    #
+    # This entry will execute the bash command 'asterisk -rx "rpt fun 1998 *123*456*789"'
+    # and the bash command 'asterisk -rx "rpt fun 1999 *123*456*789"' when an alert
+    # titled "Tornado Warning" OR "Tornado Watch" is detected.
+    #
+    # - Type: DTMF
+    #   Nodes:
+    #     - 1998
+    #     - 1999
+    #   Commands:
+    #     - "*123*456*789"
+    #   Triggers:
+    #     - Tornado Warning
+    #     - Tornado Watch
+    #
+    # This entry will execute the bash command 'asterisk -rx "rpt fun 1999 *123*456*789"'
+    # and the bash command 'asterisk -rx "rpt fun 1999 *987*654*321"'
+    # when an alert titled "Tornado Warning" OR "Tornado Watch" is detected.
+    #
+    # - Type: DTMF
+    #   Nodes:
+    #     - 1999
+    #   Commands:
+    #     - "*123*456*789"
+    #     - "*987*654*321"
+    #   Triggers:
+    #     - Tornado Warning
+    #     - Tornado Watch
+    #   Match: ANY
+    #
+    #
+    # This is an example entry that will automatically execute SkyDescribe and
+    # announce the full details of a Tornado Warning when it is detected.
     - Type: BASH
       Commands:
         - '/usr/local/bin/SkywarnPlus/SkyDescribe.py "Tornado Warning"'
-      Triggers: 
+      Triggers:
         - Tornado Warning
 
 ################################################################################################################################
@@ -291,8 +290,8 @@ Pushover:
 
 Logging:
   # Enable verbose logging
-  Debug: true
-  # Specify an alternative log file path. 
+  Debug: false
+  # Specify an alternative log file path.
   # LogPath:
 
 ################################################################################################################################
@@ -300,8 +299,10 @@ Logging:
 DEV:
   # Delete cached data on startup
   CLEANSLATE: false
-  # Specify the TMP directory. 
-  TmpDir: C:\Users\Mason\Desktop\SWP_TMP
+  # Specify the TMP directory.
+  TmpDir: /tmp/SkywarnPlus
+  # Write alert titles to /tmp/AUTOSKY/alerts.txt for Supermon backwards compatibility.
+  SupermonCompat: true
   # Enable test alert injection instead of calling the NWS API by setting 'INJECT' to 'True'.
   INJECT: false
   # List the test alerts to inject. Use a case-sensitive list. One alert per line.
