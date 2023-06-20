@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-SkywarnPlus v0.2.2 by Mason Nelson (N5LSN/WRKF394)
+SkywarnPlus v0.2.3 by Mason Nelson (N5LSN/WRKF394)
 ==================================================
 SkywarnPlus is a utility that retrieves severe weather alerts from the National 
 Weather Service and integrates these alerts with an Asterisk/app_rpt based 
@@ -28,10 +28,17 @@ import shutil
 import fnmatch
 import subprocess
 import time
-import yaml
+import wave
+import contextlib
+import math
 from datetime import datetime, timezone
 from dateutil import parser
 from pydub import AudioSegment
+from ruamel.yaml import YAML
+from collections import OrderedDict
+
+# Use ruamel.yaml instead of PyYAML
+yaml = YAML()
 
 # Directories and Paths
 baseDir = os.path.dirname(os.path.realpath(__file__))
@@ -39,7 +46,8 @@ configPath = os.path.join(baseDir, "config.yaml")
 
 # Open and read configuration file
 with open(configPath, "r") as config_file:
-    config = yaml.safe_load(config_file)
+    config = yaml.load(config_file)
+    config = json.loads(json.dumps(config))  # Convert config to a normal dictionary
 
 # Check if SkywarnPlus is enabled
 master_enable = config.get("SKYWARNPLUS", {}).get("Enable", False)
@@ -82,7 +90,7 @@ max_alerts = config.get("Alerting", {}).get("MaxAlerts", 99)
 tailmessage_config = config.get("Tailmessage", {})
 enable_tailmessage = tailmessage_config.get("Enable", False)
 tailmessage_file = tailmessage_config.get(
-    "TailmessagePath", os.path.join(sounds_path, "wx-tail.wav")
+    "TailmessagePath", os.path.join(tmp_dir, "wx-tail.wav")
 )
 
 # Define IDChange configuration
@@ -92,135 +100,140 @@ enable_idchange = idchange_config.get("Enable", False)
 # Data file path
 data_file = os.path.join(tmp_dir, "data.json")
 
-# Define Warning and Announcement strings
+# Define possible alert strings
 WS = [
+    "911 Telephone Outage Emergency",
+    "Administrative Message",
+    "Air Quality Alert",
+    "Air Stagnation Advisory",
+    "Arroyo And Small Stream Flood Advisory",
+    "Ashfall Advisory",
+    "Ashfall Warning",
+    "Avalanche Advisory",
+    "Avalanche Warning",
+    "Avalanche Watch",
+    "Beach Hazards Statement",
+    "Blizzard Warning",
+    "Blizzard Watch",
+    "Blowing Dust Advisory",
+    "Blowing Dust Warning",
+    "Brisk Wind Advisory",
+    "Child Abduction Emergency",
+    "Civil Danger Warning",
+    "Civil Emergency Message",
+    "Coastal Flood Advisory",
+    "Coastal Flood Statement",
+    "Coastal Flood Warning",
+    "Coastal Flood Watch",
+    "Dense Fog Advisory",
+    "Dense Smoke Advisory",
+    "Dust Advisory",
+    "Dust Storm Warning",
+    "Earthquake Warning",
+    "Evacuation - Immediate",
+    "Excessive Heat Warning",
+    "Excessive Heat Watch",
+    "Extreme Cold Warning",
+    "Extreme Cold Watch",
+    "Extreme Fire Danger",
+    "Extreme Wind Warning",
+    "Fire Warning",
+    "Fire Weather Watch",
+    "Flash Flood Statement",
+    "Flash Flood Warning",
+    "Flash Flood Watch",
+    "Flood Advisory",
+    "Flood Statement",
+    "Flood Warning",
+    "Flood Watch",
+    "Freeze Warning",
+    "Freeze Watch",
+    "Freezing Fog Advisory",
+    "Freezing Rain Advisory",
+    "Freezing Spray Advisory",
+    "Frost Advisory",
+    "Gale Warning",
+    "Gale Watch",
+    "Hard Freeze Warning",
+    "Hard Freeze Watch",
+    "Hazardous Materials Warning",
+    "Hazardous Seas Warning",
+    "Hazardous Seas Watch",
+    "Hazardous Weather Outlook",
+    "Heat Advisory",
+    "Heavy Freezing Spray Warning",
+    "Heavy Freezing Spray Watch",
+    "High Surf Advisory",
+    "High Surf Warning",
+    "High Wind Warning",
+    "High Wind Watch",
     "Hurricane Force Wind Warning",
+    "Hurricane Force Wind Watch",
+    "Hurricane Local Statement",
+    "Hurricane Warning",
+    "Hurricane Watch",
+    "Hydrologic Advisory",
+    "Hydrologic Outlook",
+    "Ice Storm Warning",
+    "Lake Effect Snow Advisory",
+    "Lake Effect Snow Warning",
+    "Lake Effect Snow Watch",
+    "Lake Wind Advisory",
+    "Lakeshore Flood Advisory",
+    "Lakeshore Flood Statement",
+    "Lakeshore Flood Warning",
+    "Lakeshore Flood Watch",
+    "Law Enforcement Warning",
+    "Local Area Emergency",
+    "Low Water Advisory",
+    "Marine Weather Statement",
+    "Nuclear Power Plant Warning",
+    "Radiological Hazard Warning",
+    "Red Flag Warning",
+    "Rip Current Statement",
     "Severe Thunderstorm Warning",
     "Severe Thunderstorm Watch",
-    "Winter Weather Advisory",
-    "Tropical Storm Warning",
-    "Special Marine Warning",
-    "Freezing Rain Advisory",
-    "Special Weather Statement",
-    "Excessive Heat Warning",
-    "Coastal Flood Advisory",
-    "Coastal Flood Warning",
-    "Winter Storm Warning",
-    "Tropical Storm Watch",
-    "Thunderstorm Warning",
-    "Small Craft Advisory",
-    "Extreme Wind Warning",
-    "Excessive Heat Watch",
-    "Wind Chill Advisory",
-    "Storm Surge Warning",
-    "River Flood Warning",
-    "Flash Flood Warning",
-    "Coastal Flood Watch",
-    "Winter Storm Watch",
-    "Wind Chill Warning",
-    "Thunderstorm Watch",
-    "Fire Weather Watch",
-    "Dense Fog Advisory",
-    "Storm Surge Watch",
-    "River Flood Watch",
-    "Ice Storm Warning",
-    "Hurricane Warning",
-    "High Wind Warning",
-    "Flash Flood Watch",
-    "Red Flag Warning",
-    "Blizzard Warning",
-    "Tornado Warning",
-    "Hurricane Watch",
-    "High Wind Watch",
-    "Frost Advisory",
-    "Freeze Warning",
-    "Wind Advisory",
-    "Tornado Watch",
-    "Storm Warning",
-    "Heat Advisory",
-    "Flood Warning",
-    "Gale Warning",
-    "Freeze Watch",
-    "Flood Watch",
-    "Flood Advisory",
-    "Hurricane Local Statement",
-    "Beach Hazards Statement",
-    "Air Quality Alert",
     "Severe Weather Statement",
-    "Winter Storm Advisory",
-    "Tropical Storm Advisory",
-    "Blizzard Watch",
-    "Dust Storm Warning",
-    "High Surf Advisory",
-    "Heat Watch",
-    "Freeze Watch",
-    "Dense Smoke Advisory",
-    "Avalanche Warning",
+    "Shelter In Place Warning",
+    "Short Term Forecast",
+    "Small Craft Advisory",
+    "Small Craft Advisory For Hazardous Seas",
+    "Small Craft Advisory For Rough Bar",
+    "Small Craft Advisory For Winds",
+    "Small Stream Flood Advisory",
+    "Snow Squall Warning",
+    "Special Marine Warning",
+    "Special Weather Statement",
+    "Storm Surge Warning",
+    "Storm Surge Watch",
+    "Storm Warning",
+    "Storm Watch",
+    "Test",
+    "Tornado Warning",
+    "Tornado Watch",
+    "Tropical Depression Local Statement",
+    "Tropical Storm Local Statement",
+    "Tropical Storm Warning",
+    "Tropical Storm Watch",
+    "Tsunami Advisory",
+    "Tsunami Warning",
+    "Tsunami Watch",
+    "Typhoon Local Statement",
+    "Typhoon Warning",
+    "Typhoon Watch",
+    "Urban And Small Stream Flood Advisory",
+    "Volcano Warning",
+    "Wind Advisory",
+    "Wind Chill Advisory",
+    "Wind Chill Warning",
+    "Wind Chill Watch",
+    "Winter Storm Warning",
+    "Winter Storm Watch",
+    "Winter Weather Advisory",
 ]
-WA = [
-    "01",
-    "02",
-    "03",
-    "04",
-    "05",
-    "06",
-    "07",
-    "08",
-    "09",
-    "10",
-    "11",
-    "12",
-    "13",
-    "14",
-    "15",
-    "16",
-    "17",
-    "18",
-    "19",
-    "20",
-    "21",
-    "22",
-    "23",
-    "24",
-    "25",
-    "26",
-    "27",
-    "28",
-    "29",
-    "30",
-    "31",
-    "32",
-    "33",
-    "34",
-    "35",
-    "36",
-    "37",
-    "38",
-    "39",
-    "40",
-    "41",
-    "42",
-    "43",
-    "44",
-    "45",
-    "46",
-    "47",
-    "48",
-    "49",
-    "50",
-    "51",
-    "52",
-    "53",
-    "54",
-    "55",
-    "56",
-    "57",
-    "58",
-    "59",
-    "60",
-    "61",
-    "62",
-]
+
+# Generate the WA list based on the length of WS
+WA = [str(i + 1) for i in range(len(WS))]
 
 # Test if the script needs to start from a clean slate
 CLEANSLATE = config.get("DEV", {}).get("CLEANSLATE", False)
@@ -265,22 +278,29 @@ def load_state():
     Load the state from the state file if it exists, else return an initial state.
 
     Returns:
-        dict: A dictionary containing data.
+        OrderedDict: A dictionary containing data.
     """
     if os.path.exists(data_file):
         with open(data_file, "r") as file:
             state = json.load(file)
-            state["alertscript_alerts"] = state["alertscript_alerts"]
-            state["last_alerts"] = state["last_alerts"]
+            state["alertscript_alerts"] = state.get("alertscript_alerts", [])
+            last_alerts = state.get("last_alerts", [])
+            last_alerts = [
+                (tuple(x[0]), x[1]) if isinstance(x[0], list) else x
+                for x in last_alerts
+            ]
+            state["last_alerts"] = OrderedDict(last_alerts)
             state["last_sayalert"] = state.get("last_sayalert", [])
+            state["active_alerts"] = state.get("active_alerts", [])
             return state
     else:
         return {
             "ct": None,
             "id": None,
             "alertscript_alerts": [],
-            "last_alerts": [],
+            "last_alerts": OrderedDict(),
             "last_sayalert": [],
+            "active_alerts": [],
         }
 
 
@@ -289,13 +309,14 @@ def save_state(state):
     Save the state to the state file.
 
     Args:
-        state (dict): A dictionary containing data.
+        state (OrderedDict): A dictionary containing data.
     """
     state["alertscript_alerts"] = list(state["alertscript_alerts"])
-    state["last_alerts"] = list(state["last_alerts"])
+    state["last_alerts"] = list(state["last_alerts"].items())
     state["last_sayalert"] = list(state["last_sayalert"])
+    state["active_alerts"] = list(state["active_alerts"])
     with open(data_file, "w") as file:
-        json.dump(state, file)
+        json.dump(state, file, ensure_ascii=False, indent=4)
 
 
 def getAlerts(countyCodes):
@@ -307,7 +328,7 @@ def getAlerts(countyCodes):
 
     Returns:
         alerts (list): List of active weather alerts.
-                       In case of alert injection from the config, return the injected alerts.
+        descriptions (dict): Dictionary of alert descriptions.
     """
     # Mapping for severity for API response and the 'words' severity
     severity_mapping_api = {
@@ -319,15 +340,24 @@ def getAlerts(countyCodes):
     }
     severity_mapping_words = {"Warning": 4, "Watch": 3, "Advisory": 2, "Statement": 1}
 
-    # Inject alerts if DEV INJECT is enabled in the config
+    alerts = OrderedDict()
+    seen_alerts = set()  # Store seen alerts
+    current_time = datetime.now(timezone.utc)
+
+    # Check if injection is enabled
     if config.get("DEV", {}).get("INJECT", False):
         logger.debug("getAlerts: DEV Alert Injection Enabled")
-        alerts = [alert.strip() for alert in config["DEV"].get("INJECTALERTS", [])]
-        logger.debug("getAlerts: Injecting alerts: %s", alerts)
-        return alerts
+        injected_alerts = config["DEV"].get("INJECTALERTS", [])
+        logger.debug("getAlerts: Injecting alerts: %s", injected_alerts)
 
-    alerts = []
-    current_time = datetime.now(timezone.utc)
+        for event in injected_alerts:
+            last_word = event.split()[-1]
+            severity = severity_mapping_words.get(last_word, 0)
+            alerts[(event, severity)] = "Manually injected."
+
+        alerts = OrderedDict(list(alerts.items())[:max_alerts])
+
+        return alerts
 
     for countyCode in countyCodes:
         url = "https://api.weather.gov/alerts/active?zone={}".format(countyCode)
@@ -344,23 +374,35 @@ def getAlerts(countyCodes):
                     expires_time = parser.isoparse(expires)
                     if effective_time <= current_time < expires_time:
                         event = feature["properties"]["event"]
+                        description = feature["properties"].get("description", "")
+                        severity = feature["properties"].get("severity", None)
+                        # Check if alert has already been seen
+                        if event in seen_alerts:
+                            continue
+
+                        # Initialize a flag to check if the event is globally blocked
+                        is_blocked = False
                         for global_blocked_event in global_blocked_events:
                             if fnmatch.fnmatch(event, global_blocked_event):
                                 logger.debug(
                                     "getAlerts: Globally Blocking %s as per configuration",
                                     event,
                                 )
+                                is_blocked = True
                                 break
+
+                        # Skip to the next feature if the event is globally blocked
+                        if is_blocked:
+                            continue
+
+                        if severity is None:
+                            last_word = event.split()[-1]
+                            severity = severity_mapping_words.get(last_word, 0)
                         else:
-                            severity = feature["properties"].get("severity", None)
-                            if severity is None:
-                                last_word = event.split()[-1]
-                                severity = severity_mapping_words.get(last_word, 0)
-                            else:
-                                severity = severity_mapping_api.get(severity, 0)
-                            alerts.append(
-                                (event, severity)
-                            )  # Add event to list as a tuple
+                            severity = severity_mapping_api.get(severity, 0)
+                        alerts[(event, severity)] = description
+                        seen_alerts.add(event)
+
         else:
             logger.error(
                 "Failed to retrieve alerts for %s, HTTP status code %s, response: %s",
@@ -369,21 +411,18 @@ def getAlerts(countyCodes):
                 response.text,
             )
 
-    alerts = list(dict.fromkeys(alerts))
-
-    alerts.sort(
-        key=lambda x: (
-            x[1],  # API-provided severity
-            severity_mapping_words.get(x[0].split()[-1], 0),  # 'words' severity
-        ),
-        reverse=True,
+    alerts = OrderedDict(
+        sorted(
+            alerts.items(),
+            key=lambda item: (
+                item[0][1],  # API-provided severity
+                severity_mapping_words.get(item[0][0].split()[-1], 0),  # Words severity
+            ),
+            reverse=True,
+        )
     )
 
-    logger.debug("getAlerts: Sorted alerts - (alert), (severity)")
-    for alert in alerts:
-        logger.debug(alert)
-
-    alerts = [alert[0] for alert in alerts[:max_alerts]]
+    alerts = OrderedDict(list(alerts.items())[:max_alerts])
 
     return alerts
 
@@ -393,13 +432,16 @@ def sayAlert(alerts):
     Generate and broadcast severe weather alert sounds on Asterisk.
 
     Args:
-        alerts (list): List of active weather alerts.
+        alerts (OrderedDict): OrderedDict of active weather alerts and their descriptions.
     """
     # Define the path of the alert file
     state = load_state()
 
+    # Extract only the alert names from the OrderedDict keys
+    alert_names = [alert[0] for alert in alerts.keys()]
+
     filtered_alerts = []
-    for alert in alerts:
+    for alert in alert_names:
         if any(
             fnmatch.fnmatch(alert, blocked_event)
             for blocked_event in sayalert_blocked_events
@@ -418,13 +460,13 @@ def sayAlert(alerts):
     state["last_sayalert"] = filtered_alerts
     save_state(state)
 
-    alert_file = "{}/alert.wav".format(sounds_path)
+    alert_file = "{}/alert.wav".format(tmp_dir)
 
     combined_sound = AudioSegment.from_wav(
-        os.path.join(sounds_path, "ALERTS", "SWP97.wav")
+        os.path.join(sounds_path, "ALERTS", "SWP_149.wav")
     )
     sound_effect = AudioSegment.from_wav(
-        os.path.join(sounds_path, "ALERTS", "SWP95.wav")
+        os.path.join(sounds_path, "ALERTS", "SWP_147.wav")
     )
 
     alert_count = 0
@@ -432,18 +474,18 @@ def sayAlert(alerts):
         try:
             index = WS.index(alert)
             audio_file = AudioSegment.from_wav(
-                os.path.join(sounds_path, "ALERTS", "SWP{}.wav".format(WA[index]))
+                os.path.join(sounds_path, "ALERTS", "SWP_{}.wav".format(WA[index]))
             )
             combined_sound += sound_effect + audio_file
             logger.debug(
-                "sayAlert: Added %s (SWP%s.wav) to alert sound", alert, WA[index]
+                "sayAlert: Added %s (SWP_%s.wav) to alert sound", alert, WA[index]
             )
             alert_count += 1
         except ValueError:
             logger.error("sayAlert: Alert not found: %s", alert)
         except FileNotFoundError:
             logger.error(
-                "sayAlert: Audio file not found: %s/ALERTS/SWP%s.wav",
+                "sayAlert: Audio file not found: %s/ALERTS/SWP_%s.wav",
                 sounds_path,
                 WA[index],
             )
@@ -469,8 +511,19 @@ def sayAlert(alerts):
         )
         subprocess.run(command, shell=True)
 
-    logger.info("Waiting 30 seconds for Asterisk to make announcement...")
-    time.sleep(30)
+    # Get the duration of the alert_file
+    with contextlib.closing(wave.open(alert_file, "r")) as f:
+        frames = f.getnframes()
+        rate = f.getframerate()
+        duration = math.ceil(frames / float(rate))
+
+    wait_time = duration + 5
+
+    logger.info(
+        "Waiting %s seconds for Asterisk to make announcement to avoid doubling alerts with tailmessage...",
+        wait_time,
+    )
+    time.sleep(wait_time)
 
 
 def sayAllClear():
@@ -482,7 +535,7 @@ def sayAllClear():
     state["last_sayalert"] = []
     save_state(state)
 
-    alert_clear = os.path.join(sounds_path, "ALERTS", "SWP96.wav")
+    alert_clear = os.path.join(sounds_path, "ALERTS", "SWP_148.wav")
 
     node_numbers = config.get("Asterisk", {}).get("Nodes", [])
     for node_number in node_numbers:
@@ -501,8 +554,12 @@ def buildTailmessage(alerts):
     Args:
         alerts (list): List of active weather alerts.
     """
+
+    # Extract only the alert names from the OrderedDict keys
+    alert_names = [alert[0] for alert in alerts.keys()]
+
     if not alerts:
-        logger.debug("buildTailMessage: No alerts, creating silent tailmessage")
+        logger.info("buildTailMessage: No alerts, creating silent tailmessage")
         silence = AudioSegment.silent(duration=100)
         converted_silence = convertAudio(silence)
         converted_silence.export(tailmessage_file, format="wav")
@@ -510,10 +567,10 @@ def buildTailmessage(alerts):
 
     combined_sound = AudioSegment.empty()
     sound_effect = AudioSegment.from_wav(
-        os.path.join(sounds_path, "ALERTS", "SWP95.wav")
+        os.path.join(sounds_path, "ALERTS", "SWP_147.wav")
     )
 
-    for alert in alerts:
+    for alert in alert_names:
         if any(
             fnmatch.fnmatch(alert, blocked_event)
             for blocked_event in tailmessage_blocked_events
@@ -526,11 +583,11 @@ def buildTailmessage(alerts):
         try:
             index = WS.index(alert)
             audio_file = AudioSegment.from_wav(
-                os.path.join(sounds_path, "ALERTS", "SWP{}.wav".format(WA[index]))
+                os.path.join(sounds_path, "ALERTS", "SWP_{}.wav".format(WA[index]))
             )
             combined_sound += sound_effect + audio_file
             logger.debug(
-                "buildTailMessage: Added %s (SWP%s.wav) to tailmessage",
+                "buildTailMessage: Added %s (SWP_%s.wav) to tailmessage",
                 alert,
                 WA[index],
             )
@@ -538,7 +595,7 @@ def buildTailmessage(alerts):
             logger.error("Alert not found: %s", alert)
         except FileNotFoundError:
             logger.error(
-                "Audio file not found: %s/ALERTS/SWP%s.wav",
+                "Audio file not found: %s/ALERTS/SWP_%s.wav",
                 sounds_path,
                 WA[index],
             )
@@ -549,6 +606,7 @@ def buildTailmessage(alerts):
         )
         combined_sound = AudioSegment.silent(duration=100)
 
+    logger.info("Built new tailmessage")
     logger.debug("buildTailMessage: Exporting tailmessage to %s", tailmessage_file)
     converted_combined_sound = convertAudio(combined_sound)
     converted_combined_sound.export(tailmessage_file, format="wav")
@@ -700,6 +758,21 @@ def alertScript(alerts):
     :param alerts: List of alerts to process
     :type alerts: list[str]
     """
+
+    # Load the saved state
+    state = load_state()
+    processed_alerts = state["alertscript_alerts"]
+    active_alerts = state.get("active_alerts", [])  # Load active alerts from state
+
+    # Extract only the alert names from the OrderedDict keys
+    alert_names = [alert[0] for alert in alerts.keys()]
+
+    # New alerts are those that are in the current alerts but were not active before
+    new_alerts = list(set(alert_names) - set(active_alerts))
+
+    # Update the active alerts in the state
+    state["active_alerts"] = alert_names
+
     # Fetch AlertScript configuration from global_config
     alertScript_config = config.get("AlertScript", {})
     logger.debug("AlertScript configuration: %s", alertScript_config)
@@ -709,6 +782,9 @@ def alertScript(alerts):
     if mappings is None:
         mappings = []
     logger.debug("Mappings: %s", mappings)
+
+    # A set to hold alerts that are processed in this run
+    currently_processed_alerts = set()
 
     # Iterate over each mapping
     for mapping in mappings:
@@ -720,7 +796,7 @@ def alertScript(alerts):
         match_type = mapping.get("Match", "ANY").upper()
 
         matched_alerts = []
-        for alert in alerts:
+        for alert in new_alerts:  # We only check the new alerts
             for trigger in triggers:
                 if fnmatch.fnmatch(alert, trigger):
                     logger.debug(
@@ -740,18 +816,27 @@ def alertScript(alerts):
             )
 
             # Execute commands based on the Type of mapping
-            if mapping.get("Type") == "BASH":
-                logger.debug('Mapping type is "BASH"')
-                for cmd in commands:
-                    logger.debug("Executing BASH command: %s", cmd)
-                    subprocess.run(cmd, shell=True)
-            elif mapping.get("Type") == "DTMF":
-                logger.debug('Mapping type is "DTMF"')
-                for node in nodes:
+            for alert in matched_alerts:
+                currently_processed_alerts.add(alert)
+
+                if mapping.get("Type") == "BASH":
+                    logger.debug('Mapping type is "BASH"')
                     for cmd in commands:
-                        dtmf_cmd = 'asterisk -rx "rpt fun {} {}"'.format(node, cmd)
-                        logger.debug("Executing DTMF command: %s", dtmf_cmd)
-                        subprocess.run(dtmf_cmd, shell=True)
+                        logger.info("AlertScript: Executing BASH command: %s", cmd)
+                        subprocess.run(cmd, shell=True)
+                elif mapping.get("Type") == "DTMF":
+                    logger.debug('Mapping type is "DTMF"')
+                    for node in nodes:
+                        for cmd in commands:
+                            dtmf_cmd = 'asterisk -rx "rpt fun {} {}"'.format(node, cmd)
+                            logger.info(
+                                "AlertScript: Executing DTMF command: %s", dtmf_cmd
+                            )
+                            subprocess.run(dtmf_cmd, shell=True)
+
+    # Update the state with the alerts processed in this run
+    state["alertscript_alerts"] = list(currently_processed_alerts)
+    save_state(state)
 
 
 def sendPushover(message, title=None, priority=0):
@@ -831,9 +916,14 @@ def change_and_log_CT_or_ID(
             specified_alerts,
         )
 
+        # Extract only the alert names from the OrderedDict keys
+        alert_names = [alert[0] for alert in alerts.keys()]
+
         # Check if any alert matches specified_alerts
         # Here we replace set intersection with a list comprehension
-        intersecting_alerts = [alert for alert in alerts if alert in specified_alerts]
+        intersecting_alerts = [
+            alert for alert in alert_names if alert in specified_alerts
+        ]
 
         if intersecting_alerts:
             for alert in intersecting_alerts:
@@ -857,19 +947,30 @@ def change_and_log_CT_or_ID(
         logger.debug("%s auto change is not enabled", alert_type)
 
 
+def supermon_back_compat(alerts):
+    """
+    Write alerts to a file for backward compatibility with supermon.
+
+    Args:
+        alerts (OrderedDict): The alerts to write.
+    """
+
+    # Ensure the target directory exists
+    os.makedirs("/tmp/AUTOSKY", exist_ok=True)
+
+    # Get alert titles (without severity levels)
+    alert_titles = [alert[0] for alert in alerts.keys()]
+
+    # Write alert titles to a file, with each title on a new line
+    with open("/tmp/AUTOSKY/warnings.txt", "w") as file:
+        file.write("<br>".join(alert_titles))
+
+
 def main():
     """
     The main function that orchestrates the entire process of fetching and
     processing severe weather alerts, then integrating these alerts into
     an Asterisk/app_rpt based radio repeater system.
-
-    Key Steps:
-    1. Fetch the configuration from the local setup.
-    2. Get the new alerts based on the provided county codes.
-    3. Compare the new alerts with the previously stored alerts.
-    4. If there's a change, store the new alerts and process them accordingly.
-    5. Check each alert against a set of specified alert types and perform actions accordingly.
-    6. Send notifications if enabled.
     """
     # Fetch configurations
     say_alert_enabled = config["Alerting"].get("SayAlert", False)
@@ -886,9 +987,9 @@ def main():
     alerts = getAlerts(countyCodes)
 
     # If new alerts differ from old ones, process new alerts
-    logger.debug("Last alerts: %s", last_alerts)
-    logger.debug("New alerts: %s", alerts)
-    if last_alerts != alerts:
+
+    if last_alerts.keys() != alerts.keys():
+        new_alerts = [x for x in alerts.keys() if x not in last_alerts.keys()]
         state["last_alerts"] = alerts
         save_state(state)
 
@@ -901,9 +1002,15 @@ def main():
         pushover_enabled = config["Pushover"].get("Enable", False)
         pushover_debug = config["Pushover"].get("Debug", False)
 
+        supermon_compat_enabled = config["DEV"].get("SupermonCompat", True)
+        if supermon_compat_enabled:
+            supermon_back_compat(alerts)
+
         # Initialize pushover message
         pushover_message = (
-            "Alerts Cleared\n" if len(alerts) == 0 else "\n".join(alerts) + "\n"
+            "Alerts Cleared\n"
+            if len(alerts) == 0
+            else "\n".join(str(key) for key in alerts.keys()) + "\n"
         )
 
         # Check if Courtesy Tones (CT) or ID needs to be changed
@@ -926,15 +1033,15 @@ def main():
 
         # Check if alerts need to be communicated
         if len(alerts) == 0:
-            logger.info("No alerts found")
+            logger.info("Alerts cleared")
             if say_all_clear_enabled:
                 sayAllClear()
         else:
-            logger.info("Alerts found: %s", alerts)
-            if alertscript_enabled:
-                alertScript(alerts)
+            logger.info("New alerts: %s", new_alerts)
             if say_alert_enabled:
                 sayAlert(alerts)
+            if alertscript_enabled:
+                alertScript(alerts)
 
         # Check if tailmessage needs to be built
         enable_tailmessage = config.get("Tailmessage", {}).get("Enable", False)

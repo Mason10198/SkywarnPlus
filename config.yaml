@@ -1,4 +1,4 @@
-# SkywarnPlus v0.2.2 Configuration File
+# SkywarnPlus v0.2.3 Configuration File
 # Author: Mason Nelson (N5LSN/WRKF394)
 # Please edit this file according to your specific requirements.
 #
@@ -18,11 +18,11 @@ SKYWARNPLUS:
 Asterisk:
   # List of node numbers for broadcasting alerts. Multiple nodes are specified as a list.
   # Example:
-  # Nodes: 
+  # Nodes:
   #   - 1998
   #   - 1999
   Nodes:
-    - YOUR_NODE_NUMBER_HERE
+    - YOUR_NODE_NUMBER
 
 ################################################################################################################################
 
@@ -35,7 +35,7 @@ Alerting:
   #   - ARC121
   #   - ARC021
   CountyCodes:
-    - YOUR_COUNTY_CODE_HERE
+    - YOUR_COUNTY_CODE
   # Enable instant voice announcement when new weather alerts are issued.
   # Set to 'True' for enabling or 'False' for disabling.
   # Example: SayAlert: true
@@ -57,7 +57,7 @@ Blocking:
   # List of globally blocked events. These alerts are ignored across the entire SkywarnPlus operation.
   # Use a case-sensitive list. Wildcards can be used.
   # Example:
-  # GlobalBlockedEvents: 
+  # GlobalBlockedEvents:
   #   - Flood Watch
   #   - '*Statement'
   #   - '*Advisory'
@@ -76,7 +76,7 @@ Tailmessage:
   # Set 'Enable' to 'True' for enabling or 'False' for disabling.
   Enable: false
   # Specify an alternative path and filename for saving the tail message.
-  # Default is SkywarnPlus/SOUNDS/wx-tail.wav.
+  # Default is /tmp/SkywarnPlus/wx-tail.wav.
   # TailmessagePath:
 
 ################################################################################################################################
@@ -103,21 +103,36 @@ CourtesyTones:
   # Define the alerts that trigger the weather courtesy tone.
   # Use a case-sensitive list. One alert per line.
   CTAlerts:
-    - Hurricane Force Wind Warning
-    - Severe Thunderstorm Warning
-    - Tropical Storm Warning
-    - Coastal Flood Warning
-    - Winter Storm Warning
-    - Thunderstorm Warning
-    - Extreme Wind Warning
-    - Storm Surge Warning
-    - Dust Storm Warning
+    - Ashfall Warning
     - Avalanche Warning
-    - Ice Storm Warning
-    - Hurricane Warning
     - Blizzard Warning
+    - Blowing Dust Warning
+    - Civil Danger Warning
+    - Civil Emergency Message
+    - Coastal Flood Warning
+    - Dust Storm Warning
+    - Earthquake Warning
+    - Evacuation - Immediate
+    - Extreme Wind Warning
+    - Fire Warning
+    - Hazardous Materials Warning
+    - Hurricane Force Wind Warning
+    - Hurricane Warning
+    - Ice Storm Warning
+    - Law Enforcement Warning
+    - Local Area Emergency
+    - Nuclear Power Plant Warning
+    - Radiological Hazard Warning
+    - Severe Thunderstorm Warning
+    - Shelter In Place Warning
+    - Storm Surge Warning
     - Tornado Warning
     - Tornado Watch
+    - Tropical Storm Warning
+    - Tsunami Warning
+    - Typhoon Warning
+    - Volcano Warning
+    - Winter Storm Warning
 
 ################################################################################################################################
 
@@ -138,21 +153,55 @@ IDChange:
   # Define the alerts that trigger the weather ID.
   # Use a case-sensitive list. One alert per line.
   IDAlerts:
-    - Hurricane Force Wind Warning
-    - Severe Thunderstorm Warning
-    - Tropical Storm Warning
-    - Coastal Flood Warning
-    - Winter Storm Warning
-    - Thunderstorm Warning
-    - Extreme Wind Warning
-    - Storm Surge Warning
-    - Dust Storm Warning
+    - Ashfall Warning
     - Avalanche Warning
-    - Ice Storm Warning
-    - Hurricane Warning
     - Blizzard Warning
+    - Blowing Dust Warning
+    - Civil Danger Warning
+    - Civil Emergency Message
+    - Coastal Flood Warning
+    - Dust Storm Warning
+    - Earthquake Warning
+    - Evacuation - Immediate
+    - Extreme Wind Warning
+    - Fire Warning
+    - Hazardous Materials Warning
+    - Hurricane Force Wind Warning
+    - Hurricane Warning
+    - Ice Storm Warning
+    - Law Enforcement Warning
+    - Local Area Emergency
+    - Nuclear Power Plant Warning
+    - Radiological Hazard Warning
+    - Severe Thunderstorm Warning
+    - Shelter In Place Warning
+    - Storm Surge Warning
     - Tornado Warning
     - Tornado Watch
+    - Tropical Storm Warning
+    - Tsunami Warning
+    - Typhoon Warning
+    - Volcano Warning
+    - Winter Storm Warning
+
+################################################################################################################################
+
+SkyDescribe:
+  # SkyDescribe is a feature that allows you to request a detailed description of a weather alert.
+  # VoiceRSS is a free service that SkyDescribe requires to function. You must obtain an API key from VoiceRSS.org.
+  # See VoiceRSS.ors/api/ for more information
+  # API Key for VoiceRSS.org
+  APIKey:
+  # VoiceRSS language code
+  Language: en-us
+  # VoiceRSS speech rate. -10 is slowest, 10 is fastest.
+  Speed: 0
+  # VoiceRSS voice profile. See VoiceRSS.org/api/ for more information.
+  Voice: John
+  # Maximum number of words to be spoken by SkyDescribe.
+  # CAUTION: Setting this value too high may cause SkyDescribe to exceed the timeout timer of your node.
+  # ~130 words is around 60 seconds at Speed: 0.
+  MaxWords: 150
 
 ################################################################################################################################
 
@@ -160,67 +209,69 @@ AlertScript:
   # Completely enable/disable AlertScript
   Enable: false
   Mappings:
-  # Define the mapping of alerts to either DTMF commands or bash scripts here.
-  # Wildcards (*) can be used in the ALERTS for broader matches.
-  # Examples:
-  #
-  # This entry will execute the bash command 'asterisk -rx "rpt fun 1999 *123*456*789"'
-  # when the alerts "Tornado Warning" AND "Tornado Watch" are detected.
-  #
-  # - Type: DTMF
-  #   Nodes:
-  #     - 1999
-  #   Commands:
-  #     - '*123*456*789'
-  #   Triggers: 
-  #     - Tornado Warning
-  #     - Tornado Watch
-  #   Match: ALL
-  #
-  # This entry will execute the bash command '/home/repeater/testscript.sh'
-  # and the bash command '/home/repeater/saytime.sh' when an alert whose
-  # title ends with "Statement" is detected.
-  #
-  # - Type: BASH
-  #   Commands:
-  #     - '/home/repeater/testscript.sh'
-  #     - '/home/repeater/saytime.sh'
-  #   Triggers: 
-  #     - '*Statement'
-  #
-  # This entry will execute the bash command 'asterisk -rx "rpt fun 1998 *123*456*789"'
-  # and the bash command 'asterisk -rx "rpt fun 1999 *123*456*789"' when an alert
-  # titled "Tornado Warning" OR "Tornado Watch" is detected.
-  #
-  # - Type: DTMF
-  #   Nodes:
-  #     - 1998
-  #     - 1999
-  #   Commands:
-  #     - '*123*456*789'
-  #   Triggers: 
-  #     - Tornado Warning
-  #     - Tornado Watch
-  #
-  # This entry will execute the bash command 'asterisk -rx "rpt fun 1999 *123*456*789"'
-  # and the bash command 'asterisk -rx "rpt fun 1999 *987*654*321"'
-  # when an alert titled "Tornado Warning" OR "Tornado Watch" is detected.
-  #
-  # - Type: DTMF
-  #   Nodes:
-  #     - 1999
-  #   Commands:
-  #     - '*123*456*789'
-  #     - '*987*654*321'
-  #   Triggers: 
-  #     - Tornado Warning
-  #     - Tornado Watch
-  #   Match: ANY
-  #
+    # Define the mapping of alerts to either DTMF commands or bash scripts here.
+    # Examples:
+    #
+    # This entry will execute the bash command 'asterisk -rx "rpt fun 1999 *123*456*789"'
+    # when the alerts "Tornado Warning" AND "Tornado Watch" are detected.
+    #
+    # - Type: DTMF
+    #   Nodes:
+    #     - 1999
+    #   Commands:
+    #     - "*123*456*789"
+    #   Triggers:
+    #     - Tornado Warning
+    #     - Tornado Watch
+    #   Match: ALL
+    #
+    # This entry will execute the bash command '/home/repeater/testscript.sh'
+    # and the bash command '/home/repeater/saytime.sh' when an alert whose
+    # title ends with "Statement" is detected.
+    #
+    # - Type: BASH
+    #   Commands:
+    #     - "/home/repeater/testscript.sh"
+    #     - "/home/repeater/saytime.sh"
+    #   Triggers:
+    #     - "*Statement"
+    #
+    # This entry will execute the bash command 'asterisk -rx "rpt fun 1998 *123*456*789"'
+    # and the bash command 'asterisk -rx "rpt fun 1999 *123*456*789"' when an alert
+    # titled "Tornado Warning" OR "Tornado Watch" is detected.
+    #
+    # - Type: DTMF
+    #   Nodes:
+    #     - 1998
+    #     - 1999
+    #   Commands:
+    #     - "*123*456*789"
+    #   Triggers:
+    #     - Tornado Warning
+    #     - Tornado Watch
+    #
+    # This entry will execute the bash command 'asterisk -rx "rpt fun 1999 *123*456*789"'
+    # and the bash command 'asterisk -rx "rpt fun 1999 *987*654*321"'
+    # when an alert titled "Tornado Warning" OR "Tornado Watch" is detected.
+    #
+    # - Type: DTMF
+    #   Nodes:
+    #     - 1999
+    #   Commands:
+    #     - "*123*456*789"
+    #     - "*987*654*321"
+    #   Triggers:
+    #     - Tornado Warning
+    #     - Tornado Watch
+    #   Match: ANY
+    #
+    #
+    # This is an example entry that will automatically execute SkyDescribe and
+    # announce the full details of a Tornado Warning when it is detected.
     - Type: BASH
       Commands:
-        - 'echo "Tornado Warning detected!"'
-      Triggers: 
+        - '/usr/local/bin/SkywarnPlus/SkyDescribe.py "Tornado Warning"'
+      Triggers:
         - Tornado Warning
 
 ################################################################################################################################
@@ -240,7 +291,7 @@ Pushover:
 Logging:
   # Enable verbose logging
   Debug: false
-  # Specify an alternative log file path. 
+  # Specify an alternative log file path.
   # LogPath:
 
 ################################################################################################################################
@@ -248,8 +299,10 @@ Logging:
 DEV:
   # Delete cached data on startup
   CLEANSLATE: false
-  # Specify the TMP directory. 
+  # Specify the TMP directory.
   TmpDir: /tmp/SkywarnPlus
+  # Write alert titles to /tmp/AUTOSKY/alerts.txt for Supermon backwards compatibility.
+  SupermonCompat: true
   # Enable test alert injection instead of calling the NWS API by setting 'INJECT' to 'True'.
   INJECT: false
   # List the test alerts to inject. Use a case-sensitive list. One alert per line.

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # SkyControl.py
-# A Control Script for SkywarnPlus v0.2.2
+# A Control Script for SkywarnPlus v0.2.3
 # by Mason Nelson (N5LSN/WRKF394)
 #
 # This script allows you to change the value of specific keys in the SkywarnPlus config.yaml file.
@@ -14,9 +14,12 @@
 import os
 import shutil
 import sys
-import yaml
 import subprocess
 from pathlib import Path
+from ruamel.yaml import YAML
+
+# Use ruamel.yaml instead of PyYAML to preserve comments in the config file
+yaml = YAML()
 
 
 # Define a function to change the CT
@@ -55,7 +58,7 @@ def changeCT(ct):
 
 # Define a function to change the ID
 def changeID(id):
-    id_dir = config["IDChange"].get("IDDir", os.path.join(SCRIPT_DIR, "ID"))
+    id_dir = config["IDChange"].get("IDDir", os.path.join(str(SCRIPT_DIR), "ID"))
     normal_id = config["IDChange"]["IDs"]["NormalID"]
     wx_id = config["IDChange"]["IDs"]["WXID"]
     rpt_id = config["IDChange"]["IDs"]["RptID"]
@@ -80,57 +83,57 @@ VALID_KEYS = {
     "enable": {
         "key": "Enable",
         "section": "SKYWARNPLUS",
-        "true_file": "SWP85.wav",
-        "false_file": "SWP86.wav",
+        "true_file": "SWP_137.wav",
+        "false_file": "SWP_138.wav",
     },
     "sayalert": {
         "key": "SayAlert",
         "section": "Alerting",
-        "true_file": "SWP87.wav",
-        "false_file": "SWP88.wav",
+        "true_file": "SWP_139.wav",
+        "false_file": "SWP_140.wav",
     },
     "sayallclear": {
         "key": "SayAllClear",
         "section": "Alerting",
-        "true_file": "SWP89.wav",
-        "false_file": "SWP90.wav",
+        "true_file": "SWP_141.wav",
+        "false_file": "SWP_142.wav",
     },
     "tailmessage": {
         "key": "Enable",
         "section": "Tailmessage",
-        "true_file": "SWP91.wav",
-        "false_file": "SWP92.wav",
+        "true_file": "SWP_143.wav",
+        "false_file": "SWP_144.wav",
     },
     "courtesytone": {
         "key": "Enable",
         "section": "CourtesyTones",
-        "true_file": "SWP93.wav",
-        "false_file": "SWP94.wav",
+        "true_file": "SWP_145.wav",
+        "false_file": "SWP_146.wav",
     },
     "idchange": {
         "key": "Enable",
         "section": "IDChange",
-        "true_file": "SWP83.wav",
-        "false_file": "SWP84.wav",
+        "true_file": "SWP_135.wav",
+        "false_file": "SWP_136.wav",
     },
     "alertscript": {
         "key": "Enable",
         "section": "AlertScript",
-        "true_file": "SWP81.wav",
-        "false_file": "SWP82.wav",
+        "true_file": "SWP_133.wav",
+        "false_file": "SWP_134.wav",
     },
     "changect": {
         "key": "",
         "section": "",
-        "true_file": "SWP79.wav",
-        "false_file": "SWP80.wav",
+        "true_file": "SWP_131.wav",
+        "false_file": "SWP_132.wav",
         "available_values": ["wx", "normal"],
     },
     "changeid": {
         "key": "",
         "section": "",
-        "true_file": "SWP77.wav",
-        "false_file": "SWP78.wav",
+        "true_file": "SWP_129.wav",
+        "false_file": "SWP_130.wav",
         "available_values": ["WX", "NORMAL"],
     },
 }
@@ -149,6 +152,10 @@ if len(sys.argv) != 3:
 
 # The input key and value
 key, value = sys.argv[1:3]
+
+# Convert to lower case
+key = key.lower()
+value = value.lower()
 
 # Make sure the provided key is valid
 if key not in VALID_KEYS:
@@ -173,7 +180,7 @@ else:
 
 # Load the config file
 with open(str(CONFIG_FILE), "r") as f:
-    config = yaml.safe_load(f)
+    config = yaml.load(f)
 
 if key == "changect":
     value = changeCT(value)

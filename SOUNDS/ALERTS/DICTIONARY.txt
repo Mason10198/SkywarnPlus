@@ -6,88 +6,152 @@ files correspond to which weather events.
 This is useful for those who may want to
 replace the audio files with their own.
 ----------------------------------------
-SWP01.wav: Hurricane Force Wind Warning
-SWP02.wav: Severe Thunderstorm Warning
-SWP03.wav: Severe Thunderstorm Watch
-SWP04.wav: Winter Weather Advisory
-SWP05.wav: Tropical Storm Warning
-SWP06.wav: Special Marine Warning
-SWP07.wav: Freezing Rain Advisory
-SWP08.wav: Special Weather Statement
-SWP09.wav: Excessive Heat Warning
-SWP10.wav: Coastal Flood Advisory
-SWP11.wav: Coastal Flood Warning
-SWP12.wav: Winter Storm Warning
-SWP13.wav: Tropical Storm Watch
-SWP14.wav: Thunderstorm Warning
-SWP15.wav: Small Craft Advisory
-SWP16.wav: Extreme Wind Warning
-SWP17.wav: Excessive Heat Watch
-SWP18.wav: Wind Chill Advisory
-SWP19.wav: Storm Surge Warning
-SWP20.wav: River Flood Warning
-SWP21.wav: Flash Flood Warning
-SWP22.wav: Coastal Flood Watch
-SWP23.wav: Winter Storm Watch
-SWP24.wav: Wind Chill Warning
-SWP25.wav: Thunderstorm Watch
-SWP26.wav: Fire Weather Watch
-SWP27.wav: Dense Fog Advisory
-SWP28.wav: Storm Surge Watch
-SWP29.wav: River Flood Watch
-SWP30.wav: Ice Storm Warning
-SWP31.wav: Hurricane Warning
-SWP32.wav: High Wind Warning
-SWP33.wav: Flash Flood Watch
-SWP34.wav: Red Flag Warning
-SWP35.wav: Blizzard Warning
-SWP36.wav: Tornado Warning
-SWP37.wav: Hurricane Watch
-SWP38.wav: High Wind Watch
-SWP39.wav: Frost Advisory
-SWP40.wav: Freeze Warning
-SWP41.wav: Wind Advisory
-SWP42.wav: Tornado Watch
-SWP43.wav: Storm Warning
-SWP44.wav: Heat Advisory
-SWP45.wav: Flood Warning
-SWP46.wav: Gale Warning
-SWP47.wav: Freeze Watch
-SWP48.wav: Flood Watch
-SWP49.wav: Flood Advisory
-SWP50.wav: Hurricane Local Statement
-SWP51.wav: Beach Hazards Statement
-SWP52.wav: Air Quality Alert
-SWP53.wav: Severe Weather Statement
-SWP54.wav: Winter Storm Advisory
-SWP55.wav: Tropical Storm Advisory
-SWP56.wav: Blizzard Watch
-SWP57.wav: Dust Storm Warning
-SWP58.wav: High Surf Advisory
-SWP59.wav: Heat Watch
-SWP60.wav: Freeze Watch
-SWP61.wav: Dense Smoke Advisory
-SWP62.wav: Avalanche Warning
-SWP77.wav: ID Set To Normal
-SWP78.wav: ID Set To Weather
-SWP79.wav: Courtesy Tones Set To Normal
-SWP80.wav: Courtesy Tones Set To Weather
-SWP81.wav: AlertScript Enabled
-SWP82.wav: AlertScript Disabled
-SWP83.wav: IDChange Enabled
-SWP84.wav: IDChange Disabled
-SWP85.wav: SkywarnPlus Enabled
-SWP86.wav: SkywarnPlus Disabled
-SWP87.wav: SayAlert Enabled
-SWP88.wav: SayAlert Disabled
-SWP89.wav: SayAllClear Enabled
-SWP90.wav: SayAllClear Disabled
-SWP91.wav: Tailmessage Enabled
-SWP92.wav: Tailmessage Disabled
-SWP93.wav: CourtesyTone Enabled
-SWP94.wav: CourtesyTone Disabled
-SWP95.wav: Tic Sound Effect
-SWP96.wav: All Clear Message
-SWP97.wav: Updated Weather Information Message
-SWP98.wav: Error Sound Effect
-SWP99.wav: Word Space Silence
+SWP_1.wav: 911 Telephone Outage Emergency
+SWP_2.wav: Administrative Message
+SWP_3.wav: Air Quality Alert
+SWP_4.wav: Air Stagnation Advisory
+SWP_5.wav: Arroyo And Small Stream Flood Advisory
+SWP_6.wav: Ashfall Advisory
+SWP_7.wav: Ashfall Warning
+SWP_8.wav: Avalanche Advisory
+SWP_9.wav: Avalanche Warning
+SWP_10.wav: Avalanche Watch
+SWP_11.wav: Beach Hazards Statement
+SWP_12.wav: Blizzard Warning
+SWP_13.wav: Blizzard Watch
+SWP_14.wav: Blowing Dust Advisory
+SWP_15.wav: Blowing Dust Warning
+SWP_16.wav: Brisk Wind Advisory
+SWP_17.wav: Child Abduction Emergency
+SWP_18.wav: Civil Danger Warning
+SWP_19.wav: Civil Emergency Message
+SWP_20.wav: Coastal Flood Advisory
+SWP_21.wav: Coastal Flood Statement
+SWP_22.wav: Coastal Flood Warning
+SWP_23.wav: Coastal Flood Watch
+SWP_24.wav: Dense Fog Advisory
+SWP_25.wav: Dense Smoke Advisory
+SWP_26.wav: Dust Advisory
+SWP_27.wav: Dust Storm Warning
+SWP_28.wav: Earthquake Warning
+SWP_29.wav: Evacuation - Immediate
+SWP_30.wav: Excessive Heat Warning
+SWP_31.wav: Excessive Heat Watch
+SWP_32.wav: Extreme Cold Warning
+SWP_33.wav: Extreme Cold Watch
+SWP_34.wav: Extreme Fire Danger
+SWP_35.wav: Extreme Wind Warning
+SWP_36.wav: Fire Warning
+SWP_37.wav: Fire Weather Watch
+SWP_38.wav: Flash Flood Statement
+SWP_39.wav: Flash Flood Warning
+SWP_40.wav: Flash Flood Watch
+SWP_41.wav: Flood Advisory
+SWP_42.wav: Flood Statement
+SWP_43.wav: Flood Warning
+SWP_44.wav: Flood Watch
+SWP_45.wav: Freeze Warning
+SWP_46.wav: Freeze Watch
+SWP_47.wav: Freezing Fog Advisory
+SWP_48.wav: Freezing Rain Advisory
+SWP_49.wav: Freezing Spray Advisory
+SWP_50.wav: Frost Advisory
+SWP_51.wav: Gale Warning
+SWP_52.wav: Gale Watch
+SWP_53.wav: Hard Freeze Warning
+SWP_54.wav: Hard Freeze Watch
+SWP_55.wav: Hazardous Materials Warning
+SWP_56.wav: Hazardous Seas Warning
+SWP_57.wav: Hazardous Seas Watch
+SWP_58.wav: Hazardous Weather Outlook
+SWP_59.wav: Heat Advisory
+SWP_60.wav: Heavy Freezing Spray Warning
+SWP_61.wav: Heavy Freezing Spray Watch
+SWP_62.wav: High Surf Advisory
+SWP_63.wav: High Surf Warning
+SWP_64.wav: High Wind Warning
+SWP_65.wav: High Wind Watch
+SWP_66.wav: Hurricane Force Wind Warning
+SWP_67.wav: Hurricane Force Wind Watch
+SWP_68.wav: Hurricane Local Statement
+SWP_69.wav: Hurricane Warning
+SWP_70.wav: Hurricane Watch
+SWP_71.wav: Hydrologic Advisory
+SWP_72.wav: Hydrologic Outlook
+SWP_73.wav: Ice Storm Warning
+SWP_74.wav: Lake Effect Snow Advisory
+SWP_75.wav: Lake Effect Snow Warning
+SWP_76.wav: Lake Effect Snow Watch
+SWP_77.wav: Lake Wind Advisory
+SWP_78.wav: Lakeshore Flood Advisory
+SWP_79.wav: Lakeshore Flood Statement
+SWP_80.wav: Lakeshore Flood Warning
+SWP_81.wav: Lakeshore Flood Watch
+SWP_82.wav: Law Enforcement Warning
+SWP_83.wav: Local Area Emergency
+SWP_84.wav: Low Water Advisory
+SWP_85.wav: Marine Weather Statement
+SWP_86.wav: Nuclear Power Plant Warning
+SWP_87.wav: Radiological Hazard Warning
+SWP_88.wav: Red Flag Warning
+SWP_89.wav: Rip Current Statement
+SWP_90.wav: Severe Thunderstorm Warning
+SWP_91.wav: Severe Thunderstorm Watch
+SWP_92.wav: Severe Weather Statement
+SWP_93.wav: Shelter In Place Warning
+SWP_94.wav: Short Term Forecast
+SWP_95.wav: Small Craft Advisory
+SWP_96.wav: Small Craft Advisory For Hazardous Seas
+SWP_97.wav: Small Craft Advisory For Rough Bar
+SWP_98.wav: Small Craft Advisory For Winds
+SWP_99.wav: Small Stream Flood Advisory
+SWP_100.wav: Snow Squall Warning
+SWP_101.wav: Special Marine Warning
+SWP_102.wav: Special Weather Statement
+SWP_103.wav: Storm Surge Warning
+SWP_104.wav: Storm Surge Watch
+SWP_105.wav: Storm Warning
+SWP_106.wav: Storm Watch
+SWP_107.wav: Test
+SWP_108.wav: Tornado Warning
+SWP_109.wav: Tornado Watch
+SWP_110.wav: Tropical Depression Local Statement
+SWP_111.wav: Tropical Storm Local Statement
+SWP_112.wav: Tropical Storm Warning
+SWP_113.wav: Tropical Storm Watch
+SWP_114.wav: Tsunami Advisory
+SWP_115.wav: Tsunami Warning
+SWP_116.wav: Tsunami Watch
+SWP_117.wav: Typhoon Local Statement
+SWP_118.wav: Typhoon Warning
+SWP_119.wav: Typhoon Watch
+SWP_120.wav: Urban And Small Stream Flood Advisory
+SWP_121.wav: Volcano Warning
+SWP_122.wav: Wind Advisory
+SWP_123.wav: Wind Chill Advisory
+SWP_124.wav: Wind Chill Warning
+SWP_125.wav: Wind Chill Watch
+SWP_126.wav: Winter Storm Warning
+SWP_127.wav: Winter Storm Watch
+SWP_128.wav: Winter Weather Advisory
+SWP_129.wav: ID Set To Normal
+SWP_130.wav: ID Set To Weather
+SWP_131.wav: Courtesy Tones Set To Normal
+SWP_132.wav: Courtesy Tones Set To Weather
+SWP_133.wav: AlertScript Enabled
+SWP_134.wav: AlertScript Disabled
+SWP_135.wav: IDChange Enabled
+SWP_136.wav: IDChange Disabled
+SWP_137.wav: SkywarnPlus Enabled
+SWP_138.wav: SkywarnPlus Disabled
+SWP_139.wav: SayAlert Enabled
+SWP_140.wav: SayAlert Disabled
+SWP_141.wav: SayAllClear Enabled
+SWP_142.wav: SayAllClear Disabled
+SWP_143.wav: Tailmessage Enabled
+SWP_144.wav: Tailmessage Disabled
+SWP_145.wav: CourtesyTone Enabled
+SWP_146.wav: CourtesyTone Disabled
+SWP_147.wav: Tic Sound Effect
+SWP_148.wav: All Clear Message
+SWP_149.wav: Updated Weather Information Message
