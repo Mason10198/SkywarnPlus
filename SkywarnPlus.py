@@ -343,6 +343,7 @@ def getAlerts(countyCodes):
     alerts = OrderedDict()
     seen_alerts = set()  # Store seen alerts
     current_time = datetime.now(timezone.utc)
+    logger.debug("getAlerts: Current time: %s", current_time)
 
     # Check if injection is enabled
     if config.get("DEV", {}).get("INJECT", False):
@@ -367,12 +368,15 @@ def getAlerts(countyCodes):
         if response.status_code == 200:
             alert_data = response.json()
             for feature in alert_data["features"]:
-                effective = feature["properties"].get("effective")
-                expires = feature["properties"].get("expires")
-                if effective and expires:
-                    effective_time = parser.isoparse(effective)
-                    expires_time = parser.isoparse(expires)
-                    if effective_time <= current_time < expires_time:
+                onset = feature["properties"].get("onset")
+                ends = feature["properties"].get("ends")
+                if onset and ends:
+                    onset_time = parser.isoparse(onset)
+                    ends_time = parser.isoparse(ends)
+                    # Convert alert times to UTC
+                    onset_time_utc = onset_time.astimezone(timezone.utc)
+                    ends_time_utc = ends_time.astimezone(timezone.utc)
+                    if onset_time_utc <= current_time < ends_time_utc:
                         event = feature["properties"]["event"]
                         description = feature["properties"].get("description", "")
                         severity = feature["properties"].get("severity", None)
