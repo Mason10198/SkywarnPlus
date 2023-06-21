@@ -407,10 +407,13 @@ def getAlerts(countyCodes):
                         alerts[(event, severity)] = description
                         seen_alerts.add(event)
                     else:
+                        logger.debug("getAlerts: Skipping alert %s, not active.", event)
                         logger.debug(
-                            "getAlerts: Skipping alert %s, not active.", event
+                            "Current time: %s | Alert onset: %s | Alert ends %s",
+                            current_time,
+                            onset_time_utc,
+                            ends_time_utc,
                         )
-                        logger.debug("Current time: %s | Alert onset: %s | Alert ends %s", current_time, onset_time_utc, ends_time_utc)
 
         else:
             logger.error(

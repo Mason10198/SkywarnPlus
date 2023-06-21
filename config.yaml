@@ -2,12 +2,14 @@
 # Author: Mason Nelson (N5LSN/WRKF394)
 # Please edit this file according to your specific requirements.
 #
-# This config file is structured YAML.  Please be sure to maintain the structure when editing.
-# YAML is very picky about indentation.  Use spaces, not tabs.
+# This config file is structured YAML. Please be sure to maintain the structure when editing.
+# YAML is very picky about indentation. Use spaces, not tabs.
 
 ################################################################################################################################
 
 SKYWARNPLUS:
+  #
+  #
   # Toggle the entire SkywarnPlus operation.
   # Set to 'True' to activate or 'False' to disable.
   # Example: Enable: true
@@ -16,6 +18,8 @@ SKYWARNPLUS:
 ################################################################################################################################
 
 Asterisk:
+  #
+  #
   # List of node numbers for broadcasting alerts. Multiple nodes are specified as a list.
   # Example:
   # Nodes:
@@ -27,6 +31,8 @@ Asterisk:
 ################################################################################################################################
 
 Alerting:
+  #
+  #
   # Specify the county codes for which you want to pull weather data.
   # Find your county codes at https://alerts.weather.gov/.
   # Make sure to use county codes ONLY, NOT zone codes, otherwise you might miss out on alerts.
@@ -36,24 +42,38 @@ Alerting:
   #   - ARC021
   CountyCodes:
     - YOUR_COUNTY_CODE
+  #
+  #
   # Enable instant voice announcement when new weather alerts are issued.
   # Set to 'True' for enabling or 'False' for disabling.
   # Example: SayAlert: true
   SayAlert: true
+  #
+  #
   # Enable instant voice announcement when weather alerts are cleared.
   # Set to 'True' for enabling or 'False' for disabling.
   # Example: SayAllClear: true
   SayAllClear: true
+  #
+  #
   # Limit the maximum number of alerts to process in case of multiple alerts.
   # SkywarnPlus fetches all alerts, orders them by severity, and processes only the 'n' most severe alerts, where 'n' is the MaxAlerts value.
-  # MaxAlerts:
+  #MaxAlerts:
+  #
+  #
   # Specify an alternative path to the directory where sound files are located.
   # Default is SkywarnPlus/SOUNDS.
-  # SoundsPath:
+  #SoundsPath:
+  #
+  #
+  # Specify a 
+  SayAlertSuffix: 
 
 ################################################################################################################################
 
 Blocking:
+  #
+  #
   # List of globally blocked events. These alerts are ignored across the entire SkywarnPlus operation.
   # Use a case-sensitive list. Wildcards can be used.
   # Example:
@@ -62,9 +82,13 @@ Blocking:
   #   - '*Statement'
   #   - '*Advisory'
   GlobalBlockedEvents:
+  #
+  #
   # List of events blocked from being announced when received. These alerts will still be added to the tail message.
   # Use a case-sensitive list.
   SayAlertBlockedEvents:
+  #
+  #
   # List of events blocked from being added to the tail message. These alerts will still be announced when received.
   # Use a case-sensitive list.
   TailmessageBlockedEvents:
@@ -73,34 +97,51 @@ Blocking:
 
 Tailmessage:
   # Configuration for the tail message functionality. Requires initial setup in RPT.CONF.
-  # Set 'Enable' to 'True' for enabling or 'False' for disabling.
+  #
+  #
+  # Enable/disable automatic tail message.
   Enable: false
+  #
+  #
   # Specify an alternative path and filename for saving the tail message.
   # Default is /tmp/SkywarnPlus/wx-tail.wav.
-  # TailmessagePath:
+  #TailmessagePath:
 
 ################################################################################################################################
 
 CourtesyTones:
-  # Configuration for the Courtesy Tones. Requires initial setup in RPT.CONF.
-  # Set 'Enable' to 'True' for enabling or 'False' for disabling.
+  # Configuration for automatic CT changing. Requires initial setup in RPT.CONF.
+  #
+  #
+  # Enable/disable automatic courtesy tones.
   Enable: false
+  #
+  #
   # Specify an alternative directory where tone files are located.
   # Default is SkywarnPlus/SOUNDS/TONES.
-  # ToneDir:
-  # Define the sound files for various types of courtesy tones.
+  #ToneDir:
+  #
+  #
+  # Define the sound files for courtesy tones.
   Tones:
+    #
     # Audio file to feed Asterisk as ct1 in "normal" mode
     CT1: Boop.ulaw
+    #
     # Audio file to feed Asterisk as ct2 in "normal" mode
     CT2: Beep.ulaw
+    #
     # Audio file to feed Asterisk as ct1 AND ct2 in "wx" mode
     WXCT: Stardust.ulaw
+    #
     # The file rpt.conf is looking for as ct1
     RptCT1: CT1.ulaw
+    #
     # The file rpt.conf is looking for as ct2
     RptCT2: CT2.ulaw
-  # Define the alerts that trigger the weather courtesy tone.
+  #
+  #
+  # Define the alerts that trigger the "wx" courtesy tone.
   # Use a case-sensitive list. One alert per line.
   CTAlerts:
     - Ashfall Warning
@@ -138,18 +179,30 @@ CourtesyTones:
 
 IDChange:
   # Configuration for Automatic ID Changing. Requires initial setup in RPT.CONF and manual creation of audio files.
+  #
+  #
+  # Enable/disable automatic ID changing.
   Enable: false
+  #
+  #
   # Specify an alternative directory where ID files are located.
   # Default is SkywarnPlus/SOUNDS/ID.
-  # IDDir:
-  # Define the sound files for normal ID and weather ID.
+  #IDDir:
+  #
+  #
+  # Define the sound files for IDs.
   IDs:
+    #
     # Audio file to feed Asterisk as ID in "normal" mode
     NormalID: NORMALID.ulaw
+    #
     # Audio file to feed Asterisk as ID in "wx" mode
     WXID: WXID.ulaw
+    #
     # Audio file rpt.conf is looking for as ID
     RptID: RPTID.ulaw
+  #
+  #
   # Define the alerts that trigger the weather ID.
   # Use a case-sensitive list. One alert per line.
   IDAlerts:
@@ -190,14 +243,24 @@ SkyDescribe:
   # SkyDescribe is a feature that allows you to request a detailed description of a weather alert.
   # VoiceRSS is a free service that SkyDescribe requires to function. You must obtain an API key from VoiceRSS.org.
   # See VoiceRSS.ors/api/ for more information
+  #
+  #
   # API Key for VoiceRSS.org
   APIKey:
+  #
+  #
   # VoiceRSS language code
   Language: en-us
+  #
+  #
   # VoiceRSS speech rate. -10 is slowest, 10 is fastest.
   Speed: 0
+  #
+  #
   # VoiceRSS voice profile. See VoiceRSS.org/api/ for more information.
   Voice: John
+  #
+  #
   # Maximum number of words to be spoken by SkyDescribe.
   # CAUTION: Setting this value too high may cause SkyDescribe to exceed the timeout timer of your node.
   # ~130 words is around 60 seconds at Speed: 0.
@@ -206,8 +269,13 @@ SkyDescribe:
 ################################################################################################################################
 
 AlertScript:
+  # AlertScript allows you to map BASH or DTMF commands to be executed when a weather alert is detected.
+  #
+  #
   # Completely enable/disable AlertScript
   Enable: false
+  #
+  #
   Mappings:
     # Define the mapping of alerts to either DTMF commands or bash scripts here.
     # Examples:
@@ -268,6 +336,7 @@ AlertScript:
     #
     # This is an example entry that will automatically execute SkyDescribe and
     # announce the full details of a Tornado Warning when it is detected.
+    #
     - Type: BASH
       Commands:
         - '/usr/local/bin/SkywarnPlus/SkyDescribe.py "Tornado Warning"'
@@ -278,33 +347,58 @@ AlertScript:
 
 Pushover:
   # Configuration for Pushover integration. Pushover is a free notification service. Register at https://pushover.net/.
+  #
+  #
+  # Enable/disable Pushover integration.
   Enable: false
+  #
+  #
   # Provide your user key obtained from Pushover.
   UserKey:
+  #
+  #
   # Provide the API token obtained from Pushover.
   APIToken:
+  #
+  #
   # Enable verbose messaging
   Debug: false
 
 ################################################################################################################################
 
 Logging:
+  # Configuration for logging.
+  #
+  #
   # Enable verbose logging
   Debug: false
+  #
+  #
   # Specify an alternative log file path.
-  # LogPath:
+  #LogPath:
 
 ################################################################################################################################
 
 DEV:
+  # Configuration for development and testing.
+  #
+  #
   # Delete cached data on startup
   CLEANSLATE: false
+  #
+  #
   # Specify the TMP directory.
   TmpDir: /tmp/SkywarnPlus
+  #
+  #
   # Write alert titles to /tmp/AUTOSKY/alerts.txt for Supermon backwards compatibility.
   SupermonCompat: true
+  #
+  #
   # Enable test alert injection instead of calling the NWS API by setting 'INJECT' to 'True'.
   INJECT: false
+  #
+  #
   # List the test alerts to inject. Use a case-sensitive list. One alert per line.
   INJECTALERTS:
     - Tornado Warning
