@@ -50,6 +50,10 @@ Alerting:
   SayAlert: true
   #
   #
+  # Specify a WAV file in the root of the SOUNDS directory to be appended to the end of the alert message.
+  #SayAlertSuffix: 
+  #
+  #
   # Enable instant voice announcement when weather alerts are cleared.
   # Set to 'True' for enabling or 'False' for disabling.
   # Example: SayAllClear: true
@@ -66,8 +70,6 @@ Alerting:
   #SoundsPath:
   #
   #
-  # Specify a 
-  SayAlertSuffix: 
 
 ################################################################################################################################
 
@@ -101,6 +103,10 @@ Tailmessage:
   #
   # Enable/disable automatic tail message.
   Enable: false
+  #
+  #
+  # Specify a WAV file in the root of the SOUNDS directory to be appended to the end of the tail message.
+  #TailmessageSuffix: 
   #
   #
   # Specify an alternative path and filename for saving the tail message.

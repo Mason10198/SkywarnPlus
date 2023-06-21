@@ -15,7 +15,7 @@ This includes features such as automatic voice alerts and a tail message feature
 for constant updates. All alerts are sorted by severity and cover a broad range 
 of weather conditions such as hurricane warnings, thunderstorms, heat waves, etc. 
 
-Configurable through a .ini file, SkywarnPlus serves as a comprehensive and 
+Configurable through a .yaml file, SkywarnPlus serves as a comprehensive and 
 flexible tool for those who need to stay informed about weather conditions 
 and disseminate this information through their radio repeater system.
 """
@@ -506,6 +506,14 @@ def sayAlert(alerts):
         logger.debug("sayAlert: All alerts were blocked, not broadcasting any alerts.")
         return
 
+    alert_suffix = config.get("Alerting", {}).get("SayAlertSuffix", None)
+    if alert_suffix is not None:
+        suffix_silence = AudioSegment.silent(duration=1000)
+        logger.debug("sayAlert: Adding alert suffix %s", alert_suffix)
+        suffix_file = os.path.join(sounds_path, alert_suffix)
+        suffix_sound = AudioSegment.from_wav(suffix_file)
+        combined_sound += suffix_silence + suffix_sound
+
     logger.debug("sayAlert: Exporting alert sound to %s", alert_file)
     converted_combined_sound = convertAudio(combined_sound)
     converted_combined_sound.export(alert_file, format="wav")
@@ -570,6 +578,9 @@ def buildTailmessage(alerts):
     # Extract only the alert names from the OrderedDict keys
     alert_names = [alert[0] for alert in alerts.keys()]
 
+    # Get the suffix config
+    tailmessage_suffix = config.get("Tailmessage", {}).get("TailmessageSuffix", None)
+
     if not alerts:
         logger.info("buildTailMessage: No alerts, creating silent tailmessage")
         silence = AudioSegment.silent(duration=100)
@@ -617,6 +628,14 @@ def buildTailmessage(alerts):
             "buildTailMessage: All alerts were blocked, creating silent tailmessage"
         )
         combined_sound = AudioSegment.silent(duration=100)
+    elif tailmessage_suffix is not None:
+        suffix_silence = AudioSegment.silent(duration=1000)
+        logger.debug(
+            "buildTailMessage: Adding tailmessage suffix %s", tailmessage_suffix
+        )
+        suffix_file = os.path.join(sounds_path, tailmessage_suffix)
+        suffix_sound = AudioSegment.from_wav(suffix_file)
+        combined_sound += suffix_silence + suffix_sound
 
     logger.info("Built new tailmessage")
     logger.debug("buildTailMessage: Exporting tailmessage to %s", tailmessage_file)
