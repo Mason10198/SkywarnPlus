@@ -93,8 +93,6 @@ Follow the steps below to install:
    **Debian (AllStarLink)**
 
    ```bash
-   apt update
-   apt upgrade
    apt install unzip python3 python3-pip ffmpeg
    pip3 install ruamel.yaml requests python-dateutil pydub
    ```
