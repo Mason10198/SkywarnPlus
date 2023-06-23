@@ -24,6 +24,8 @@ SkywarnPlus is a sophisticated software solution that works hand-in-hand with yo
 
 - **Remote Control:** Functions can be mapped to DTMF commands for remote over-the-air control.
 
+- **Detailed Alert Descriptions:** In addition to standard alert announcements, SkywarnPlus includes SkyDescribe, a feature for announcing detailed NWS provided descriptions of alert details.
+
 - **Highly Customizable:** SkywarnPlus is extremely customizable, offering advanced filtering parameters to block certain alerts or types of alerts from different functions. Users can even map DTMF macros or shell commands to specified weather alerts, expanding the software's capabilities according to user needs.
 
 - **Pushover Integration:** With Pushover integration, SkywarnPlus can send weather alert notifications directly to your phone or other devices.
@@ -161,6 +163,11 @@ Follow the steps below to install:
 
    This command will execute SkywarnPlus (poll NWS API for data) every minute.
 
+# **NOTE:**
+
+When SkywarnPlus runs for the first time after installation (and for the first time at each boot), **YOU WILL NOT HEAR ANY MESSAGES** until alerts are detected. This is by design. SkywarnPlus announces when alerts change from `none` to `some`, and it announces when alerts change from `some` to `none`. It will announce nothing if the status of alerts does not change (`none` to `none`).
+
+If you want to test SkywarnPlus' operation after installation, please see the **Testing** section of this README.
 # Tailmessage, Courtesy Tones, & IDs
 
 SkywarnPlus can automatically change and manage tailmessages, courtesy tones, and CW / voice IDs on your node. These functions require specific configurations in the `rpt.conf` file.
@@ -245,6 +252,10 @@ And to toggle it, you would use:
 ```bash
 /usr/local/bin/SkywarnPlus/SkyControl.py enable toggle
 ```
+
+## **NOTE:**
+
+Running the `Enable` command after installing SkywarnPlus is not necessary. The enable flag is already set to `true` in the `config.yaml` file by default, and all you need to do for SkywarnPlus to operate is add it to the `crontab`.
 
 You can also use `SkyControl.py` to manually force the state of Courtesy Tones or IDs:
 
