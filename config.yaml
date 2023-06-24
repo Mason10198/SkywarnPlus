@@ -61,6 +61,23 @@ Alerting:
   # Default is SkywarnPlus/SOUNDS.
   #SoundsPath:
 
+  # 'TimeType' Configuration
+  #
+  # This setting determines the timing reference for issuing weather alerts. 
+  # You can choose between "onset" and "effective" time.
+  #
+  # 'onset': Alerts are issued based on the predicted start time of the weather event. 
+  # This means the system will only send out alerts when the events are imminent. 
+  # For example, even though a "Heat Advisory" can be forecasted accurately a day or two in advance,
+  # the alert will only be sent close to the actual occurrence of the event.
+  #
+  # 'effective': Alerts are sent as soon as they are received, based on the effective time of the alert message. 
+  # The "effective" time is when the alert message is considered to be in effect, 
+  # which could be earlier than the actual onset of the event.
+  # 
+  # By using 'onset', you can ensure that alerts are relevant and timely for the recipients.
+  TimeType: onset
+
 ################################################################################################################################
 
 Blocking:

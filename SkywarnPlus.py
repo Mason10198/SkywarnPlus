@@ -31,7 +31,7 @@ import time
 import wave
 import contextlib
 import math
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from dateutil import parser
 from pydub import AudioSegment
 from ruamel.yaml import YAML
@@ -360,6 +360,17 @@ def getAlerts(countyCodes):
 
         return alerts
 
+    # Determing whether to use 'effective' or 'onset' time
+    timetype_mode = config.get("Alerting", {}).get("TimeType", "onset")
+    if timetype_mode == "effective":
+        logger.debug("getAlerts: Using effective time for alerting")
+        time_type_start = "effective"
+        time_type_end = "expires"
+    else:
+        logger.debug("getAlerts: Using onset time for alerting")
+        time_type_start = "onset"
+        time_type_end = "ends"
+
     for countyCode in countyCodes:
         url = "https://api.weather.gov/alerts/active?zone={}".format(countyCode)
         logger.debug("getAlerts: Checking for alerts in %s at URL: %s", countyCode, url)
@@ -368,16 +379,16 @@ def getAlerts(countyCodes):
         if response.status_code == 200:
             alert_data = response.json()
             for feature in alert_data["features"]:
-                onset = feature["properties"].get("onset")
-                ends = feature["properties"].get("ends")
-                if onset and ends:
-                    onset_time = parser.isoparse(onset)
-                    ends_time = parser.isoparse(ends)
+                start = feature["properties"].get(time_type_start)
+                end = feature["properties"].get(time_type_end)
+                if start and end:
+                    start_time = parser.isoparse(start)
+                    end_time = parser.isoparse(end)
                     # Convert alert times to UTC
-                    onset_time_utc = onset_time.astimezone(timezone.utc)
-                    ends_time_utc = ends_time.astimezone(timezone.utc)
-                    if onset_time_utc <= current_time < ends_time_utc:
-                        event = feature["properties"]["event"]
+                    start_time_utc = start_time.astimezone(timezone.utc)
+                    end_time_utc = end_time.astimezone(timezone.utc)
+                    event = feature["properties"]["event"]
+                    if start_time_utc <= current_time < end_time_utc:
                         description = feature["properties"].get("description", "")
                         severity = feature["properties"].get("severity", None)
                         # Check if alert has already been seen
@@ -407,12 +418,17 @@ def getAlerts(countyCodes):
                         alerts[(event, severity)] = description
                         seen_alerts.add(event)
                     else:
-                        logger.debug("getAlerts: Skipping alert %s, not active.", event)
+                        time_difference = time_until(start_time_utc, current_time)
                         logger.debug(
-                            "Current time: %s | Alert onset: %s | Alert ends %s",
+                            "getAlerts: Skipping %s, not active for another %s.",
+                            event,
+                            time_difference,
+                        )
+                        logger.debug(
+                            "Current time: %s | Alert start: %s | Alert end %s",
                             current_time,
-                            onset_time_utc,
-                            ends_time_utc,
+                            start_time_utc,
+                            end_time_utc,
                         )
 
         else:
@@ -437,6 +453,30 @@ def getAlerts(countyCodes):
     alerts = OrderedDict(list(alerts.items())[:max_alerts])
 
     return alerts
+
+
+def time_until(start_time_utc, current_time):
+    """
+    Calculate the time difference between two datetime objects and returns it
+    as a formatted string.
+
+    Args:
+        start_time_utc (datetime): The start time of the alert in UTC.
+        current_time (datetime): The current time in UTC.
+
+    Returns:
+        str: Formatted string displaying the time difference. If the alert has
+             not started yet, it returns a positive time difference. If the
+             alert has already started, it returns a negative time difference.
+    """
+    delta = start_time_utc - current_time
+    sign = "-" if delta < timedelta(0) else ""
+    days, remainder = divmod(abs(delta.total_seconds()), 86400)
+    hours, remainder = divmod(remainder, 3600)
+    minutes, _ = divmod(remainder, 60)
+    return "{}{} days, {} hours, {} minutes".format(
+        sign, int(days), int(hours), int(minutes)
+    )
 
 
 def sayAlert(alerts):
@@ -1040,8 +1080,8 @@ def main():
         # Initialize pushover message
         pushover_message = (
             "Alerts Cleared\n"
-            if len(alerts) == 0
-            else "\n".join(str(key) for key in alerts.keys()) + "\n"
+            if not alerts
+            else "\n".join(alert[0] for alert in alerts.keys()) + "\n"
         )
 
         # Check if Courtesy Tones (CT) or ID needs to be changed
