@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-SkywarnPlus v0.2.5 by Mason Nelson (N5LSN/WRKF394)
+SkywarnPlus v0.2.6 by Mason Nelson (N5LSN/WRKF394)
 ==================================================
 SkywarnPlus is a utility that retrieves severe weather alerts from the National 
 Weather Service and integrates these alerts with an Asterisk/app_rpt based 
