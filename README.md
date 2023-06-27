@@ -30,6 +30,8 @@ SkywarnPlus is a sophisticated software solution that works hand-in-hand with yo
 
 - **Pushover Integration:** With Pushover integration, SkywarnPlus can send weather alert notifications directly to your phone or other devices.
 
+- **Fault Tolerance:** In the event that SkywarnPlus is unable to access the internet for alert updates (during a severe storm), it will continue to function using alert data it has stored from the last successful data update, using the estimated expiration time provided by the NWS to determine when to automatically "clear" alerts. There is no need to worry about your node "locking up" with stale alerts.
+
 Whether you wish to auto-link to a Skywarn net during severe weather, program your node to control an external device like a siren during a tornado warning, or simply want to stay updated on changing weather conditions, SkywarnPlus offers a comprehensive, efficient, and customizable solution for your weather alert needs.
 
 # Comprehensive Information
