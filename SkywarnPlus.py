@@ -634,7 +634,7 @@ def buildTailmessage(alerts):
     tailmessage_suffix = config.get("Tailmessage", {}).get("TailmessageSuffix", None)
 
     if not alerts:
-        logger.info("buildTailMessage: No alerts, creating silent tailmessage")
+        logger.debug("buildTailMessage: No alerts, creating silent tailmessage")
         silence = AudioSegment.silent(duration=100)
         converted_silence = convertAudio(silence)
         converted_silence.export(tailmessage_file, format="wav")
