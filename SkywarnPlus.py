@@ -1069,7 +1069,7 @@ def main():
         pushover_message = (
             "Alerts Cleared\n"
             if not alerts
-            else "\n".join(alert[0] for alert in alerts.keys()) + "\n"
+            else "\n".join(alerts.keys()) + "\n"
         )
 
         # Check if Courtesy Tones (CT) or ID needs to be changed
