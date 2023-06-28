@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-SkyDescribe.py v0.2.6 by Mason Nelson
+SkyDescribe.py v0.3.0 by Mason Nelson
 ==================================================
 Text to Speech conversion for Weather Descriptions
 
@@ -81,7 +81,6 @@ if not api_key:
     sys.exit(1)
 
 
-# Main functions
 def load_state():
     """
     Load the state from the state file if it exists, else return an initial state.
@@ -100,6 +99,7 @@ def load_state():
             ]
             state["last_alerts"] = OrderedDict(last_alerts)
             state["last_sayalert"] = state.get("last_sayalert", [])
+            state["active_alerts"] = state.get("active_alerts", [])
             return state
     else:
         return {
@@ -108,6 +108,7 @@ def load_state():
             "alertscript_alerts": [],
             "last_alerts": OrderedDict(),
             "last_sayalert": [],
+            "active_alerts": [],
         }
 
 
@@ -258,19 +259,11 @@ def convert_to_audio(api_key, text):
 
 
 def main(index_or_title):
-    """
-    The main function of the script.
-
-    This function processes the alert, converts it to audio, and plays it using Asterisk.
-
-    Args:
-        index_or_title (str): The index or title of the alert to process.
-    """
     state = load_state()
-    alerts = list(state["last_alerts"].items())  # Now alerts is a list of tuples
+    alerts = list(state["last_alerts"].items())
 
     # Determine if the argument is an index or a title
-    try:
+    if str(index_or_title).isdigit():
         index = int(index_or_title) - 1
         if index >= len(alerts):
             logger.error("SkyDescribe: No alert found at index %d.", index + 1)
@@ -278,17 +271,14 @@ def main(index_or_title):
                 index + 1
             )
         else:
-            alert, description = alerts[
-                index
-            ]  # Each item in alerts is a tuple: (alert, description)
-    except ValueError:
+            alert, alert_data = alerts[index]
+            (_, description, _) = alert_data
+    else:
         # Argument is not an index, assume it's a title
         title = index_or_title
-        for alert, desc in alerts:
-            if (
-                alert[0] == title
-            ):  # Assuming alert is a tuple where the first item is the title
-                description = desc
+        for alert, alert_data in alerts:
+            if alert == title:  # Assuming alert is a title
+                _, description, _ = alert_data
                 break
         else:
             logger.error("SkyDescribe: No alert with title %s found.", title)
@@ -300,11 +290,11 @@ def main(index_or_title):
 
     # If the description is not an error message, extract the alert title
     if not "Sky Describe error" in description:
-        alert_title = alert[0]  # Extract only the title from the alert tuple
+        alert_title = alert  # As alert itself is the title now
         logger.info("SkyDescribe: Generating description for alert: %s", alert_title)
         # Add the alert title at the beginning
-        description = (
-            "Detailed alert information for {}. ".format(alert_title) + description
+        description = "Detailed alert information for {}. {}".format(
+            alert_title, description
         )
         description = modify_description(description)
 

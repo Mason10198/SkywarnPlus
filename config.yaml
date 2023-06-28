@@ -1,4 +1,4 @@
-# SkywarnPlus v0.2.6 Configuration File
+# SkywarnPlus v0.3.0 Configuration File
 # Author: Mason Nelson (N5LSN/WRKF394)
 # Please edit this file according to your specific requirements.
 
@@ -55,7 +55,7 @@ Alerting:
 
   # Limit the maximum number of alerts to process in case of multiple alerts.
   # SkywarnPlus fetches all alerts, orders them by severity, and processes only the 'n' most severe alerts, where 'n' is the MaxAlerts value.
-  #MaxAlerts:
+  #MaxAlerts: 5
 
   # Specify an alternative path to the directory where sound files are located.
   # Default is SkywarnPlus/SOUNDS.
@@ -244,13 +244,13 @@ SkyDescribe:
   # See VoiceRSS.ors/api/ for more information
 
   # API Key for VoiceRSS.org
-  APIKey:
+  APIKey: 
 
   # VoiceRSS language code
   Language: en-us
 
   # VoiceRSS speech rate. -10 is slowest, 10 is fastest.
-  Speed: 0
+  Speed: 1
 
   # VoiceRSS voice profile. See VoiceRSS.org/api/ for more information.
   Voice: John
