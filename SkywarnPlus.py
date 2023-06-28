@@ -366,8 +366,7 @@ def getAlerts(countyCodes):
         time_type_end = "ends"
 
     for countyCode in countyCodes:
-        # url = "https://api.weather.gov/alerts/active?zone={}".format(countyCode)
-        url = "https://api.weather.gov/alerts/active"
+        url = "https://api.weather.gov/alerts/active?zone={}".format(countyCode)
         try:
             response = requests.get(url)
             response.raise_for_status()  # will raise an exception if the status code is not 200
