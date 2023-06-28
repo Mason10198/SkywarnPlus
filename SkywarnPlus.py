@@ -378,6 +378,10 @@ def getAlerts(countyCodes):
             for feature in alert_data["features"]:
                 start = feature["properties"].get(time_type_start)
                 end = feature["properties"].get(time_type_end)
+                # if end is null, use effective time
+                if not end:
+                    end = feature["properties"].get("expires")
+                    logger.debug("getAlerts: %s has no \"%s\" time, using \"expires\" time instead: %s", feature["properties"]["event"], time_type_end, end)
                 if start and end:
                     start_time = parser.isoparse(start)
                     end_time = parser.isoparse(end)
