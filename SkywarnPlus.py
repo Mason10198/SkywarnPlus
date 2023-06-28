@@ -381,7 +381,12 @@ def getAlerts(countyCodes):
                 # if end is null, use effective time
                 if not end:
                     end = feature["properties"].get("expires")
-                    logger.debug("getAlerts: %s has no \"%s\" time, using \"expires\" time instead: %s", feature["properties"]["event"], time_type_end, end)
+                    logger.debug(
+                        'getAlerts: %s has no "%s" time, using "expires" time instead: %s',
+                        feature["properties"]["event"],
+                        time_type_end,
+                        end,
+                    )
                 if start and end:
                     start_time = parser.isoparse(start)
                     end_time = parser.isoparse(end)
@@ -1008,7 +1013,7 @@ def supermon_back_compat(alerts):
     os.makedirs("/tmp/AUTOSKY", exist_ok=True)
 
     # Get alert titles (without severity levels)
-    alert_titles = [alert[0] for alert in alerts.keys()]
+    alert_titles = list(alerts.keys())
 
     # Write alert titles to a file, with each title on a new line
     with open("/tmp/AUTOSKY/warnings.txt", "w") as file:
@@ -1071,9 +1076,7 @@ def main():
 
         # Initialize pushover message
         pushover_message = (
-            "Alerts Cleared\n"
-            if not alerts
-            else "\n".join(alerts.keys()) + "\n"
+            "Alerts Cleared\n" if not alerts else "\n".join(alerts.keys()) + "\n"
         )
 
         # Check if Courtesy Tones (CT) or ID needs to be changed
