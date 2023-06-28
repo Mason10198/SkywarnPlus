@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # SkyControl.py
-# A Control Script for SkywarnPlus v0.3.0
+# A Control Script for SkywarnPlus v0.3.1
 # by Mason Nelson (N5LSN/WRKF394)
 #
 # This script allows you to change the value of specific keys in the SkywarnPlus config.yaml file.

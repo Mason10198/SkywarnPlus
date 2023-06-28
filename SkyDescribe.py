@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-SkyDescribe.py v0.3.0 by Mason Nelson
+SkyDescribe.py v0.3.1 by Mason Nelson
 ==================================================
 Text to Speech conversion for Weather Descriptions
 
