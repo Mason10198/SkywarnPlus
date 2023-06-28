@@ -373,7 +373,7 @@ DEV:
   # Specify the TMP directory.
   TmpDir: /tmp/SkywarnPlus
 
-  # Write alert titles to /tmp/AUTOSKY/alerts.txt for Supermon backwards compatibility.
+  # Write alert titles to /tmp/AUTOSKY/warnings.txt for Supermon backwards compatibility.
   SupermonCompat: true
 
   # Enable test alert injection instead of calling the NWS API by setting 'INJECT' to 'True'.
