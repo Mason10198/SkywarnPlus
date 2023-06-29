@@ -241,7 +241,7 @@ IDChange:
 SkyDescribe:
   # SkyDescribe is a feature that allows you to request a detailed description of a weather alert.
   # VoiceRSS is a free service that SkyDescribe requires to function. You must obtain an API key from VoiceRSS.org.
-  # See VoiceRSS.ors/api/ for more information
+  # MAKE SURE YOU VERIFY YOUR EMAIL ADDRESS WITH VOICERSS.ORG OR YOUR API KEY WILL NOT WORK.
 
   # API Key for VoiceRSS.org
   APIKey: 
