@@ -2,6 +2,12 @@
 
 ![SkywarnPlus Logo](https://raw.githubusercontent.com/Mason10198/SkywarnPlus/main/Logo_SWP.svg)
 
+![Release Version](https://img.shields.io/github/v/release/Mason10198/SkywarnPlus?label=Version&color=f15d24)
+![Release Date](https://img.shields.io/github/release-date/Mason10198/SkywarnPlus?label=Released&color=f15d24)
+![Total Downloads](https://img.shields.io/github/downloads/Mason10198/SkywarnPlus/total?label=Downloads&color=f15d24)
+![Lines of Code](https://img.shields.io/tokei/lines/github/Mason10198/SkywarnPlus?label=Lines%20of%20Code&color=f15d24)
+![GitHub Repo Size](https://img.shields.io/github/repo-size/Mason10198/SkywarnPlus?label=Size&color=f15d24)
+
 **SkywarnPlus** is an advanced software solution tailored for Asterisk/app_rpt nodes. It is designed to provide important information about local government-issued alerts, thereby broadening the scope and functionality of your node. By intelligently integrating local alert data, SkywarnPlus brings a new layer of relevance and utility to your existing system. **SkywarnPlus** works with all major distributions, including AllstarLink, HAMVOIP, myGMRS, and more.
 
 ## Key Features
