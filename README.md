@@ -1,12 +1,10 @@
-# SkywarnPlus: Your Advanced Weather Alert System
+# SkywarnPlus
 
 ![SkywarnPlus Logo](https://raw.githubusercontent.com/Mason10198/SkywarnPlus/main/Logo_SWP.svg)
 
-SkywarnPlus is a sophisticated software solution that works hand-in-hand with your AllStarLink (Debian) or HAMVOIP (Arch) node to keep you informed and ready for whatever the weather brings. Combining weather data with intuitive features, SkywarnPlus optimizes the efficiency and functionality of your node.
+**SkywarnPlus** is an advanced software solution tailored for Asterisk/app_rpt nodes. It is designed to provide important information about local government-issued alerts, thereby broadening the scope and functionality of your node. By intelligently integrating local alert data, SkywarnPlus brings a new layer of relevance and utility to your existing system. **SkywarnPlus** works with all major distributions, including AllstarLink, HAMVOIP, myGMRS, and more.
 
 ## Key Features
-
-- **Seamless Integration:** SkywarnPlus operates on a Debian (AllStarLink) or Arch (HAMVOIP) node.
 
 - **Real-Time Weather Alerts:** The software checks the NWS CAP v1.2 API for live weather alerts for user-defined areas.
 
@@ -88,7 +86,7 @@ SkywarnPlus supports all 128 alert types included in the [NWS v1.2 API](https://
 
 # Installation
 
-SkywarnPlus is recommended to be installed at the `/usr/local/bin/SkywarnPlus` location on Debian (AllStarLink) and Arch (HAMVOIP) machines.
+SkywarnPlus is recommended to be installed at the `/usr/local/bin/SkywarnPlus` location on both Debian and Arch (HAMVOIP) systems.
 
 Follow the steps below to install:
 
@@ -96,7 +94,7 @@ Follow the steps below to install:
 
    Install the required dependencies using the following commands:
 
-   **Debian (AllStarLink)**
+   **Debian**
 
    ```bash
    apt install unzip python3 python3-pip ffmpeg
