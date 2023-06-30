@@ -1,5 +1,7 @@
 # SkywarnPlus: Your Advanced Weather Alert System
 
+![SkywarnPlus Logo](https://raw.githubusercontent.com/Mason10198/SkywarnPlus/main/Logo_SWP.svg)
+
 SkywarnPlus is a sophisticated software solution that works hand-in-hand with your AllStarLink (Debian) or HAMVOIP (Arch) node to keep you informed and ready for whatever the weather brings. Combining weather data with intuitive features, SkywarnPlus optimizes the efficiency and functionality of your node.
 
 ## Key Features
@@ -524,9 +526,7 @@ SkywarnPlus is open-source and welcomes contributions. If you'd like to contribu
 
 If the spare time I put into the development of SkywarnPlus has helped you, please consider supporting!
 
-<center><a href="https://www.paypal.com/donate/?business=93AJFB9BAVSJL&no_recurring=0&item_name=Thank+you+so+much+for+your+support%21+I+put+a+lot+of+my+spare+time+into+this%2C+and+I+sincerely+appreciate+YOU%21&currency_code=USD">
-  <img src="https://raw.githubusercontent.com/stefan-niedermann/paypal-donate-button/master/paypal-donate-button.png" width=300px alt="Donate with PayPal" />
-</a></center>
+<p align="center"><a href="https://www.paypal.com/donate/?business=93AJFB9BAVSJL&no_recurring=0&item_name=Thank+you+so+much+for+your+support%21+I+put+a+lot+of+my+spare+time+into+this%2C+and+I+sincerely+appreciate+YOU%21&currency_code=USD"><img src="https://raw.githubusercontent.com/stefan-niedermann/paypal-donate-button/master/paypal-donate-button.png" width=300px alt="Donate with PayPal"/></a></p>
 
 # License
 
@@ -535,3 +535,6 @@ SkywarnPlus is open-sourced software licensed under the [MIT license](LICENSE).
 Created by Mason Nelson (N5LSN/WRKF394)
 
 Audio Library voiced by Rachel Nelson
+
+Skywarn® and the Skywarn® logo are registered trademarks of the National
+Oceanic and Atmospheric Administration, used with permission.
