@@ -443,15 +443,15 @@ For added flexibility, `SkyDescribe.py` can also be linked to DTMF commands, all
 
 ```ini
 ; SkyDescribe DTMF Commands
-841 = cmd,/usr/local/bin/SkywarnPlus/SkyDescribe.py 1 ; SkyDescribe the 1st alert
-842 = cmd,/usr/local/bin/SkywarnPlus/SkyDescribe.py 2 ; SkyDescribe the 2nd alert
-843 = cmd,/usr/local/bin/SkywarnPlus/SkyDescribe.py 3 ; SkyDescribe the 3rd alert
-844 = cmd,/usr/local/bin/SkywarnPlus/SkyDescribe.py 4 ; SkyDescribe the 4th alert
-845 = cmd,/usr/local/bin/SkywarnPlus/SkyDescribe.py 5 ; SkyDescribe the 5th alert
-846 = cmd,/usr/local/bin/SkywarnPlus/SkyDescribe.py 6 ; SkyDescribe the 6th alert
-847 = cmd,/usr/local/bin/SkywarnPlus/SkyDescribe.py 7 ; SkyDescribe the 7th alert
-848 = cmd,/usr/local/bin/SkywarnPlus/SkyDescribe.py 8 ; SkyDescribe the 8th alert
-849 = cmd,/usr/local/bin/SkywarnPlus/SkyDescribe.py 9 ; SkyDescribe the 9th alert
+841 = cmd,/usr/bin/python3 /usr/local/bin/SkywarnPlus/SkyDescribe.py 1 ; SkyDescribe the 1st alert
+842 = cmd,/usr/bin/python3 /usr/local/bin/SkywarnPlus/SkyDescribe.py 2 ; SkyDescribe the 2nd alert
+843 = cmd,/usr/bin/python3 /usr/local/bin/SkywarnPlus/SkyDescribe.py 3 ; SkyDescribe the 3rd alert
+844 = cmd,/usr/bin/python3 /usr/local/bin/SkywarnPlus/SkyDescribe.py 4 ; SkyDescribe the 4th alert
+845 = cmd,/usr/bin/python3 /usr/local/bin/SkywarnPlus/SkyDescribe.py 5 ; SkyDescribe the 5th alert
+846 = cmd,/usr/bin/python3 /usr/local/bin/SkywarnPlus/SkyDescribe.py 6 ; SkyDescribe the 6th alert
+847 = cmd,/usr/bin/python3 /usr/local/bin/SkywarnPlus/SkyDescribe.py 7 ; SkyDescribe the 7th alert
+848 = cmd,/usr/bin/python3 /usr/local/bin/SkywarnPlus/SkyDescribe.py 8 ; SkyDescribe the 8th alert
+849 = cmd,/usr/bin/python3 /usr/local/bin/SkywarnPlus/SkyDescribe.py 9 ; SkyDescribe the 9th alert
 ```
 
 ## **NOTE:**
