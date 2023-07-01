@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-SkyDescribe.py v0.3.1 by Mason Nelson
+SkyDescribe v0.3.1 by Mason Nelson
 ==================================================
 Text to Speech conversion for Weather Descriptions
 
@@ -13,6 +13,14 @@ it saves to a WAV file. Finally, it uses the Asterisk PBX system to play this au
 file over a radio transmission system.
 
 The script can be run from the command line with an index or a title of an alert as argument.
+
+This file is part of SkywarnPlus.
+SkywarnPlus is free software: you can redistribute it and/or modify it under the terms of
+the GNU General Public License as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version. SkywarnPlus is distributed in the hope
+that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+You should have received a copy of the GNU General Public License along with SkywarnPlus. If not, see <https://www.gnu.org/licenses/>.
 """
 
 import os

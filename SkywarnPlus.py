@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 
 """
-SkywarnPlus v0.3.1 by Mason Nelson (N5LSN/WRKF394)
-==================================================
+SkywarnPlus v0.3.1 by Mason Nelson
+===============================================================================
 SkywarnPlus is a utility that retrieves severe weather alerts from the National 
 Weather Service and integrates these alerts with an Asterisk/app_rpt based 
 radio repeater controller. 
@@ -18,6 +18,14 @@ of weather conditions such as hurricane warnings, thunderstorms, heat waves, etc
 Configurable through a .yaml file, SkywarnPlus serves as a comprehensive and 
 flexible tool for those who need to stay informed about weather conditions 
 and disseminate this information through their radio repeater system.
+
+This file is part of SkywarnPlus.
+SkywarnPlus is free software: you can redistribute it and/or modify it under the terms of
+the GNU General Public License as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version. SkywarnPlus is distributed in the hope
+that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+You should have received a copy of the GNU General Public License along with SkywarnPlus. If not, see <https://www.gnu.org/licenses/>.
 """
 
 import os

@@ -1,15 +1,26 @@
 #!/usr/bin/python3
-# SkyControl.py
-# A Control Script for SkywarnPlus v0.3.1
-# by Mason Nelson (N5LSN/WRKF394)
-#
-# This script allows you to change the value of specific keys in the SkywarnPlus config.yaml file.
-# It's designed to enable or disable certain features of SkywarnPlus from the command line.
-# It is case-insensitive, accepting both upper and lower case parameters.
-#
-# Usage: SkyControl.py <key> <value>
-# Example: SkyControl.py sayalert false
-# This will set 'SayAlert' to 'False' in the config.yaml file.
+
+"""
+SkyControl v0.3.1 by Mason Nelson
+==================================
+A Control Script for SkywarnPlus
+
+This script allows you to change the value of specific keys in the SkywarnPlus config.yaml file.
+It's designed to enable or disable certain features of SkywarnPlus from the command line.
+It is case-insensitive, accepting both upper and lower case parameters.
+
+Usage: SkyControl.py <key> <value>
+Example: SkyControl.py sayalert false
+This will set 'SayAlert' to 'False' in the config.yaml file.
+
+This file is part of SkywarnPlus.
+SkywarnPlus is free software: you can redistribute it and/or modify it under the terms of
+the GNU General Public License as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version. SkywarnPlus is distributed in the hope
+that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+You should have received a copy of the GNU General Public License along with SkywarnPlus. If not, see <https://www.gnu.org/licenses/>.
+"""
 
 import os
 import shutil
