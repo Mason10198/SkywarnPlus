@@ -91,6 +91,10 @@ SkywarnPlus supports all 128 alert types included in the [NWS v1.2 API](https://
 
 # Installation
 
+## **[Installation Video](https://youtu.be/QyccjEZj20E)**
+
+[![Installation Video](https://img.youtube.com/vi/QyccjEZj20E/maxresdefault.jpg)](https://youtu.be/QyccjEZj20E)
+
 SkywarnPlus is recommended to be installed at the `/usr/local/bin/SkywarnPlus` location on both Debian and Arch (HAMVOIP) systems.
 
 Follow the steps below to install:
