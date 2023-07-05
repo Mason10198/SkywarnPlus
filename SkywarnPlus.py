@@ -905,6 +905,7 @@ def alertScript(alerts):
                 if mapping.get("Type") == "BASH":
                     logger.debug('Mapping type is "BASH"')
                     for cmd in commands:
+                        cmd = cmd.format(alert_title=alert)  # Replace placeholder with alert title
                         logger.info("AlertScript: Executing BASH command: %s", cmd)
                         subprocess.run(cmd, shell=True)
                 elif mapping.get("Type") == "DTMF":

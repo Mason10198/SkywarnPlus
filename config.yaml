@@ -327,10 +327,12 @@ AlertScript:
 
     # This is an example entry that will automatically execute SkyDescribe and
     # announce the full details of a Tornado Warning when it is detected.
+    # The placeholder '{alert_title}' will be replaced with the title of the alert
+    # when AlertScript executes the command.
 
     - Type: BASH
       Commands:
-        - '/usr/local/bin/SkywarnPlus/SkyDescribe.py "Tornado Warning"'
+        - '/usr/local/bin/SkywarnPlus/SkyDescribe.py "{alert_title}"'
       Triggers:
         - Tornado Warning
 
