@@ -905,7 +905,9 @@ def alertScript(alerts):
                 if mapping.get("Type") == "BASH":
                     logger.debug('Mapping type is "BASH"')
                     for cmd in commands:
-                        cmd = cmd.format(alert_title=alert)  # Replace placeholder with alert title
+                        cmd = cmd.format(
+                            alert_title=alert
+                        )  # Replace placeholder with alert title
                         logger.info("AlertScript: Executing BASH command: %s", cmd)
                         subprocess.run(cmd, shell=True)
                 elif mapping.get("Type") == "DTMF":
@@ -1061,11 +1063,9 @@ def main():
         ]
 
         if added_alerts:
-            logger.info("Alerts added: %s", ", ".join(alert for alert in added_alerts))
+            logger.info("Added: %s", ", ".join(alert for alert in added_alerts))
         if removed_alerts:
-            logger.info(
-                "Alerts removed: %s", ", ".join(alert for alert in removed_alerts)
-            )
+            logger.info("Removed: %s", ", ".join(alert for alert in removed_alerts))
 
         state["last_alerts"] = alerts
         save_state(state)
@@ -1084,9 +1084,14 @@ def main():
             supermon_back_compat(alerts)
 
         # Initialize pushover message
-        pushover_message = (
-            "Alerts Cleared\n" if not alerts else "\n".join(alerts.keys()) + "\n"
-        )
+        pushover_message = ""
+        if not added_alerts and not removed_alerts:
+            pushover_message = "Alerts Cleared\n"
+        else:
+            if added_alerts:
+                pushover_message += "Added: {}\n".format(", ".join(added_alerts))
+            if removed_alerts:
+                pushover_message += "Removed: {}\n".format(", ".join(removed_alerts))
 
         # Check if Courtesy Tones (CT) or ID needs to be changed
         change_and_log_CT_or_ID(
