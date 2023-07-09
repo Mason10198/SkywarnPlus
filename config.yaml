@@ -1,4 +1,4 @@
-# SkywarnPlus v0.3.1 Configuration File
+# SkywarnPlus v0.3.2 Configuration File
 # Author: Mason Nelson (N5LSN/WRKF394)
 # Please edit this file according to your specific requirements.
 
@@ -271,10 +271,11 @@ AlertScript:
   Mappings:
     # Define the mapping of alerts to either DTMF commands or bash scripts here.
     # Examples:
-
+    #
+    #Example 1:
     # This entry will execute the bash command 'asterisk -rx "rpt fun 1999 *123*456*789"'
     # when the alerts "Tornado Warning" AND "Tornado Watch" are detected.
-
+    #
     # - Type: DTMF
     #   Nodes:
     #     - 1999
@@ -284,22 +285,24 @@ AlertScript:
     #     - Tornado Warning
     #     - Tornado Watch
     #   Match: ALL
-
+    #
+    # Example 2:
     # This entry will execute the bash command '/home/repeater/testscript.sh'
     # and the bash command '/home/repeater/saytime.sh' when an alert whose
     # title ends with "Statement" is detected.
-  
+    #
     # - Type: BASH
     #   Commands:
     #     - "/home/repeater/testscript.sh"
     #     - "/home/repeater/saytime.sh"
     #   Triggers:
     #     - "*Statement"
-
+    #
+    # Example 3:
     # This entry will execute the bash command 'asterisk -rx "rpt fun 1998 *123*456*789"'
     # and the bash command 'asterisk -rx "rpt fun 1999 *123*456*789"' when an alert
     # titled "Tornado Warning" OR "Tornado Watch" is detected.
-
+    #
     # - Type: DTMF
     #   Nodes:
     #     - 1998
@@ -309,11 +312,12 @@ AlertScript:
     #   Triggers:
     #     - Tornado Warning
     #     - Tornado Watch
-
+    #
+    # Example 4:
     # This entry will execute the bash command 'asterisk -rx "rpt fun 1999 *123*456*789"'
     # and the bash command 'asterisk -rx "rpt fun 1999 *987*654*321"'
     # when an alert titled "Tornado Warning" OR "Tornado Watch" is detected.
-
+    #
     # - Type: DTMF
     #   Nodes:
     #     - 1999
@@ -324,12 +328,13 @@ AlertScript:
     #     - Tornado Warning
     #     - Tornado Watch
     #   Match: ANY
-
+    #
+    # Example 5:
     # This is an example entry that will automatically execute SkyDescribe and
     # announce the full details of a Tornado Warning when it is detected.
     # The placeholder '{alert_title}' will be replaced with the title of the alert
     # when AlertScript executes the command.
-
+    #
     - Type: BASH
       Commands:
         - '/usr/local/bin/SkywarnPlus/SkyDescribe.py "{alert_title}"'
