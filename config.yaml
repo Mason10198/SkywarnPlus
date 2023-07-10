@@ -1,4 +1,4 @@
-# SkywarnPlus v0.3.2 Configuration File
+# SkywarnPlus v0.3.3 Configuration File
 # Author: Mason Nelson (N5LSN/WRKF394)
 # Please edit this file according to your specific requirements.
 
@@ -46,7 +46,7 @@ Alerting:
   SayAlert: true
 
   # Specify a WAV file in the root of the SOUNDS directory to be appended to the end of the alert message.
-  #SayAlertSuffix: 
+  SayAlertSuffix: 
 
   # Enable instant voice announcement when weather alerts are cleared.
   # Set to 'True' for enabling or 'False' for disabling.
@@ -55,11 +55,11 @@ Alerting:
 
   # Limit the maximum number of alerts to process in case of multiple alerts.
   # SkywarnPlus fetches all alerts, orders them by severity, and processes only the 'n' most severe alerts, where 'n' is the MaxAlerts value.
-  #MaxAlerts: 5
+  MaxAlerts: 99
 
   # Specify an alternative path to the directory where sound files are located.
   # Default is SkywarnPlus/SOUNDS.
-  #SoundsPath:
+  SoundsPath: /usr/local/bin/SkywarnPlus/SOUNDS
 
   # 'TimeType' Configuration
   #
@@ -108,11 +108,11 @@ Tailmessage:
   Enable: false
 
   # Specify a WAV file in the root of the SOUNDS directory to be appended to the end of the tail message.
-  #TailmessageSuffix: 
+  TailmessageSuffix: 
 
   # Specify an alternative path and filename for saving the tail message.
   # Default is /tmp/SkywarnPlus/wx-tail.wav.
-  #TailmessagePath:
+  TailmessagePath: /tmp/SkywarnPlus/wx-tail.wav
 
 ################################################################################################################################
 
@@ -124,7 +124,7 @@ CourtesyTones:
 
   # Specify an alternative directory where tone files are located.
   # Default is SkywarnPlus/SOUNDS/TONES.
-  #ToneDir:
+  ToneDir: /usr/local/bin/SkywarnPlus/SOUNDS/TONES
 
   # Define the sound files for courtesy tones.
   Tones:
@@ -188,7 +188,7 @@ IDChange:
 
   # Specify an alternative directory where ID files are located.
   # Default is SkywarnPlus/SOUNDS/ID.
-  #IDDir:
+  IDDir: /usr/local/bin/SkywarnPlus/SOUNDS/ID
 
   # Define the sound files for IDs.
   IDs:
@@ -244,7 +244,7 @@ SkyDescribe:
   # MAKE SURE YOU VERIFY YOUR EMAIL ADDRESS WITH VOICERSS.ORG OR YOUR API KEY WILL NOT WORK.
 
   # API Key for VoiceRSS.org
-  APIKey: 
+  APIKey: YOUR_API_KEY_HERE
 
   # VoiceRSS language code
   Language: en-us
@@ -350,10 +350,10 @@ Pushover:
   Enable: false
 
   # Provide your user key obtained from Pushover.
-  UserKey:
+  UserKey: YOUR_USER_KEY_HERE
 
   # Provide the API token obtained from Pushover.
-  APIToken:
+  APIToken: YOUR_API_KEY_HERE
 
   # Enable verbose messaging
   Debug: false
@@ -367,7 +367,7 @@ Logging:
   Debug: false
 
   # Specify an alternative log file path.
-  #LogPath:
+  LogPath: /tmp/SkywarnPlus.log
 
 ################################################################################################################################
 
