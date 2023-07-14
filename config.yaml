@@ -367,7 +367,7 @@ Logging:
   Debug: false
 
   # Specify an alternative log file path.
-  LogPath: /tmp/SkywarnPlus.log
+  LogPath: /tmp/SkywarnPlus/SkywarnPlus.log
 
 ################################################################################################################################
 
