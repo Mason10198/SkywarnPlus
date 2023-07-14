@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-SkywarnPlus Updater v0.3.3 by Mason Nelson
+SkywarnPlus Updater v0.3.4 by Mason Nelson
 ===============================================================================
 Script to update SkywarnPlus to the latest version. This script will download
 the latest version of SkywarnPlus from GitHub, and then merge the existing
