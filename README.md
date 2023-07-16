@@ -179,13 +179,10 @@ Follow the steps below to install:
 When SkywarnPlus runs for the first time after installation (and for the first time at each boot), **YOU WILL NOT HEAR ANY MESSAGES** until alerts are detected. This is by design. SkywarnPlus announces when alerts change from `none` to `some`, and it announces when alerts change from `some` to `none`. It will announce nothing if the status of alerts does not change (`none` to `none`).
 
 If you want to test SkywarnPlus' operation after installation, please see the **Testing** section of this README.
-# Tailmessage, Courtesy Tones, & IDs
 
-SkywarnPlus can automatically change and manage tailmessages, courtesy tones, and CW / voice IDs on your node. These functions require specific configurations in the `rpt.conf` file.
+# Tail Message
 
-## Tailmessage
-
-SkywarnPlus can automatically create, manage, and remove a tailmessage whenever certain weather alerts are active to keep listeners informed throught the duration of active alerts. The configuration for this is based on your `rpt.conf` file setup. Here's an example:
+SkywarnPlus can automatically create, manage, and remove a tail message whenever certain weather alerts are active to keep listeners informed throught the duration of active alerts. The configuration for this is based on your `rpt.conf` file setup. Here's an example:
 
 ```ini
 tailmessagetime = 600000
@@ -193,9 +190,49 @@ tailsquashedtime = 30000
 tailmessagelist = /tmp/SkywarnPlus/wx-tail
 ```
 
-## Courtesy Tones
+# Courtesy Tones
 
-SkywarnPlus can automatically change the node courtesy tone whenever certain weather alerts are active. The configuration for this is based on your `rpt.conf` file setup. Here's an example:
+SkywarnPlus has the ability to automatically change the node courtesy tone depending on the state of certain weather alerts. This feature can be configured via the `config.yaml` and `rpt.conf` files.
+
+## Configuration 
+
+Here's an explanation of how it works using the default values in the `config.yaml` file:
+
+```yaml
+CourtesyTones:
+  # Configuration for automatic CT changing. Requires initial setup in RPT.CONF.
+
+  # Enable/disable automatic courtesy tones.
+  Enable: false
+
+  # Specify an alternative directory where tone files are located.
+  # Default is SkywarnPlus/SOUNDS/TONES.
+  ToneDir: /usr/local/bin/SkywarnPlus/SOUNDS/TONES
+
+  # Define the sound files for courtesy tones.
+  Tones:
+
+    # Audio file to feed Asterisk as ct1 in "normal" mode
+    CT1: Boop.ulaw
+
+    # Audio file to feed Asterisk as ct2 in "normal" mode
+    CT2: Beep.ulaw
+
+    # Audio file to feed Asterisk as ct1 AND ct2 in "wx" mode
+    WXCT: Stardust.ulaw
+
+    # The file rpt.conf is looking for as ct1
+    RptCT1: CT1.ulaw
+
+    # The file rpt.conf is looking for as ct2
+    RptCT2: CT2.ulaw
+```
+
+In this configuration, if none of the alerts defined in the CTAlerts list are active (i.e., the system is in "NORMAL" mode), SkywarnPlus will replace the files `CT1.ulaw` and `CT2.ulaw` with duplicates of `Boop.ulaw` and `Beep.ulaw` respectively.
+
+However, if any alerts in the CTAlerts list are active (i.e., the system is in "WX" mode), SkywarnPlus will replace both `CT1.ulaw` and `CT2.ulaw` with duplicates of `Stardust.ulaw`.
+
+If you want `CT1.ulaw` to be your "local" traffic tone and `CT2.ulaw` to be your "link" traffic tone, then the following modifications are required in your `rpt.conf` file:
 
 ```ini
 [NODENUMBER]
@@ -208,14 +245,60 @@ ct2 = /usr/local/bin/SkywarnPlus/SOUNDS/TONES/CT2
 remotetx = /usr/local/bin/SkywarnPlus/SOUNDS/TONES/CT1
 ```
 
-## CW / Voice IDs
+With this setup, Asterisk will always use `CT1.ulaw` for "local" traffic, and `CT2.ulaw` for "link" traffic. SkywarnPlus essentially changes the contents of the `CT1.ulaw` and `CT2.ulaw` files while Asterisk "isn't looking".
 
-SkywarnPlus can automatically change the node ID whenever certain weather alerts are active. This requires creating your own audio files; one for the `NORMAL` ID, and one for the `WX` ID. The configuration for this is based on your `rpt.conf` file setup. Here's an example:
+Please note the filenames are case-sensitive, so be sure they match exactly between `rpt.conf` and `config.yaml`.
+
+# CW / Voice IDs
+
+SkywarnPlus has a feature that allows it to automatically change the node ID based on the status of certain weather alerts. This requires the creation of custom audio files for the `NORMAL` and `WX` ID modes.
+
+The configuration for this is in the `config.yaml` file, with additional setup needed in the `rpt.conf` file. Let's take a look at how it's done.
+
+## Configuration 
+
+Here's an example of how the `config.yaml` file should be configured:
+
+```yaml
+IDChange:
+  # Configuration for Automatic ID Changing. Requires initial setup in RPT.CONF and manual creation of audio files.
+
+  # Enable/disable automatic ID changing.
+  Enable: false
+
+  # Specify an alternative directory where ID files are located.
+  # Default is SkywarnPlus/SOUNDS/ID.
+  IDDir: /usr/local/bin/SkywarnPlus/SOUNDS/ID
+
+  # Define the sound files for IDs.
+  IDs:
+
+    # Audio file to feed Asterisk as ID in "normal" mode
+    NormalID: NORMALID.ulaw
+
+    # Audio file to feed Asterisk as ID in "wx" mode
+    WXID: WXID.ulaw
+
+    # Audio file rpt.conf is looking for as ID
+    RptID: RPTID.ulaw
+```
+
+In this setup, if none of the alerts specified in the IDAlerts list are active, SkywarnPlus replaces the file `RPTID.ulaw` with a duplicate of `NORMALID.ulaw`. 
+
+However, if any of the alerts in the IDAlerts list are currently active, SkywarnPlus will replace `RPTID.ulaw` with a duplicate of `WXID.ulaw`.
+
+To enable these changes, the following setup is required in your `rpt.conf` file:
 
 ```ini
 [NODENUMBER]
 idrecording = /usr/local/bin/SkywarnPlus/SOUNDS/ID/RPTID
 ```
+
+In this case, Asterisk will always use `RPTID.ulaw` as the node ID. SkywarnPlus effectively changes the contents of the `RPTID.ulaw` file depending on the weather alert status while Asterisk "isn't looking". 
+
+Note that filenames are case-sensitive, so be sure they match exactly between `rpt.conf` and `config.yaml`.
+
+This is how you can configure SkywarnPlus to automatically change the node ID depending on weather alert conditions. Please don't hesitate to raise a query if you encounter any issues.
 
 # Pushover Integration
 
