@@ -95,6 +95,9 @@ if tailmessage_blocked_events is None:
 # Define Max Alerts
 max_alerts = config.get("Alerting", {}).get("MaxAlerts", 99)
 
+# Define audio_delay
+audio_delay = config.get("Asterisk", {}).get("AudioDelay", 0)
+
 # Define Tailmessage configuration
 tailmessage_config = config.get("Tailmessage", {})
 enable_tailmessage = tailmessage_config.get("Enable", False)
@@ -586,6 +589,11 @@ def sayAlert(alerts):
         suffix_file = os.path.join(sounds_path, alert_suffix)
         suffix_sound = AudioSegment.from_wav(suffix_file)
         combined_sound += suffix_silence + suffix_sound
+        
+    if audio_delay > 0:
+        logger.debug("sayAlert: Prepending audio with %sms of silence", audio_delay)
+        silence = AudioSegment.silent(duration=audio_delay)
+        combined_sound = silence + combined_sound
 
     logger.debug("sayAlert: Exporting alert sound to %s", alert_file)
     converted_combined_sound = convertAudio(combined_sound)
@@ -629,6 +637,15 @@ def sayAllClear():
     save_state(state)
 
     alert_clear = os.path.join(sounds_path, "ALERTS", "SWP_148.wav")
+    
+    if audio_delay > 0:
+        logger.debug("sayAllClear: Prepending audio with %sms of silence", audio_delay)
+        alert_clear_sound = AudioSegment.from_wav(alert_clear)
+        silence = AudioSegment.silent(duration=audio_delay)
+        combined_sound = silence + alert_clear_sound
+        converted_combined_sound = convertAudio(combined_sound)
+        alert_clear = os.path.join(tmp_dir, "SWP_148.wav")
+        converted_combined_sound.export(alert_clear, format="wav")
 
     node_numbers = config.get("Asterisk", {}).get("Nodes", [])
     for node_number in node_numbers:
@@ -706,10 +723,15 @@ def buildTailmessage(alerts):
         suffix_file = os.path.join(sounds_path, tailmessage_suffix)
         suffix_sound = AudioSegment.from_wav(suffix_file)
         combined_sound += suffix_silence + suffix_sound
+    else:
+        if audio_delay > 0:
+            logger.debug("buildTailMessage: Prepending audio with %sms of silence", audio_delay)
+            silence = AudioSegment.silent(duration=audio_delay)
+            combined_sound = silence + combined_sound
 
+    converted_combined_sound = convertAudio(combined_sound)
     logger.info("Built new tailmessage")
     logger.debug("buildTailMessage: Exporting tailmessage to %s", tailmessage_file)
-    converted_combined_sound = convertAudio(combined_sound)
     converted_combined_sound.export(tailmessage_file, format="wav")
 
 
