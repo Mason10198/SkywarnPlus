@@ -39,6 +39,7 @@ import time
 import wave
 import contextlib
 import math
+import sys
 from datetime import datetime, timezone, timedelta
 from dateutil import parser
 from pydub import AudioSegment
@@ -1140,7 +1141,13 @@ def main():
             logger.debug("Sending pushover notification: %s", pushover_message)
             sendPushover(pushover_message, title="Alerts Changed")
     else:
-        logger.debug("No change in alerts")
+        if sys.stdin.isatty():
+            # list of current alerts, unless there arent any, then current_alerts = "None"
+            current_alerts = ("None" if len(alerts) == 0 else ", ".join(alerts.keys()))
+            logger.info("No change in alerts.")
+            logger.info("Current alerts: %s.", current_alerts)
+        else:
+            logger.debug("No change in alerts.")
 
 
 if __name__ == "__main__":
