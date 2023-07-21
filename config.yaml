@@ -43,11 +43,20 @@ Alerting:
   # Enable instant voice announcement when new weather alerts are issued.
   SayAlert: true
 
+  # Specify the WAV file in the SOUNDS/ALERTS directory to use as the alert sound effect
+  AlertSound: StartrekWhistle.wav
+
   # Specify a WAV file in the root of the SOUNDS directory to be appended to the end of the alert message.
   SayAlertSuffix:
 
   # Enable instant voice announcement when weather alerts are cleared.
   SayAllClear: true
+
+  # Specify the WAV file in the SOUNDS/ALERTS directory to use as the all clear sound effect.
+  AllClearSound: Triangles.wav
+  
+  # Specify the WAV file in the SOUNDS/ALERTS directory to use as the alert seperator sound effect
+  AlertSeperator: Woodblock.wav
 
   # Limit the maximum number of alerts to process in case of multiple alerts.
   # SkywarnPlus fetches all alerts, orders them by severity, and processes only the 'n' most severe alerts, where 'n' is the MaxAlerts value.

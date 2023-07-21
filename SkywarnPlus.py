@@ -112,6 +112,11 @@ enable_idchange = idchange_config.get("Enable", False)
 # Data file path
 data_file = os.path.join(tmp_dir, "data.json")
 
+# Tones directory
+tone_dir = config["CourtesyTones"].get(
+    "ToneDir", os.path.join(sounds_path, "TONES")
+)
+
 # Define possible alert strings
 WS = [
     "911 Telephone Outage Emergency",
@@ -549,12 +554,19 @@ def sayAlert(alerts):
     save_state(state)
 
     alert_file = "{}/alert.wav".format(tmp_dir)
+    
+    word_space = AudioSegment.silent(duration=600)
 
-    combined_sound = AudioSegment.from_wav(
-        os.path.join(sounds_path, "ALERTS", "SWP_149.wav")
-    )
     sound_effect = AudioSegment.from_wav(
-        os.path.join(sounds_path, "ALERTS", "SWP_147.wav")
+        os.path.join(sounds_path, "ALERTS", config.get("Alerting", {}).get("AlertSeperator", "Woodblock.wav"))
+    )
+    
+    intro_effect = AudioSegment.from_wav(
+        os.path.join(sounds_path, "ALERTS", config.get("Alerting", {}).get("AlertSound", "StartrekWhistle.wav"))
+    )
+    
+    combined_sound = intro_effect + word_space + AudioSegment.from_wav(
+        os.path.join(sounds_path, "ALERTS", "SWP_148.wav")
     )
 
     alert_count = 0
@@ -636,7 +648,7 @@ def sayAllClear():
     state["last_sayalert"] = []
     save_state(state)
 
-    alert_clear = os.path.join(sounds_path, "ALERTS", "SWP_148.wav")
+    alert_clear = os.path.join(sounds_path, "ALERTS", "SWP_147.wav")
     
     if audio_delay > 0:
         logger.debug("sayAllClear: Prepending audio with %sms of silence", audio_delay)
@@ -644,7 +656,7 @@ def sayAllClear():
         silence = AudioSegment.silent(duration=audio_delay)
         combined_sound = silence + alert_clear_sound
         converted_combined_sound = convertAudio(combined_sound)
-        alert_clear = os.path.join(tmp_dir, "SWP_148.wav")
+        alert_clear = os.path.join(tmp_dir, "SWP_147.wav")
         converted_combined_sound.export(alert_clear, format="wav")
 
     node_numbers = config.get("Asterisk", {}).get("Nodes", [])
@@ -677,7 +689,7 @@ def buildTailmessage(alerts):
 
     combined_sound = AudioSegment.empty()
     sound_effect = AudioSegment.from_wav(
-        os.path.join(sounds_path, "ALERTS", "SWP_147.wav")
+        os.path.join(sounds_path, "ALERTS", config.get("Alerting", {}).get("AlertSeperator", "Woodblock.wav"))
     )
 
     for alert in alert_names:
@@ -743,9 +755,6 @@ def changeCT(ct):
     """
     state = load_state()
     current_ct = state["ct"]
-    tone_dir = config["CourtesyTones"].get(
-        "ToneDir", os.path.join(sounds_path, "TONES")
-    )
     ct1 = config["CourtesyTones"]["Tones"]["CT1"]
     ct2 = config["CourtesyTones"]["Tones"]["CT2"]
     wx_ct = config["CourtesyTones"]["Tones"]["WXCT"]

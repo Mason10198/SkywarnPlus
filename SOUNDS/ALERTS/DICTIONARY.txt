@@ -152,6 +152,5 @@ SWP_143.wav: Tailmessage Enabled
 SWP_144.wav: Tailmessage Disabled
 SWP_145.wav: CourtesyTone Enabled
 SWP_146.wav: CourtesyTone Disabled
-SWP_147.wav: Tic Sound Effect
-SWP_148.wav: All Clear Message
-SWP_149.wav: Updated Weather Information Message
+SWP_147.wav: All Clear Message
+SWP_148.wav: Updated Weather Information Message
