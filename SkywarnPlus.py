@@ -328,7 +328,7 @@ def save_state(state):
         json.dump(state, file, ensure_ascii=False, indent=4)
 
 
-def getAlerts(countyCodes):
+def get_alerts(countyCodes):
     """
     Retrieve severe weather alerts for specified county codes.
     """
@@ -521,7 +521,7 @@ def time_until(start_time_utc, current_time):
     )
 
 
-def sayAlert(alerts):
+def say_alerts(alerts):
     """
     Generate and broadcast severe weather alert sounds on Asterisk.
     """
@@ -622,12 +622,12 @@ def sayAlert(alerts):
         combined_sound = silence + combined_sound
 
     LOGGER.debug("sayAlert: Exporting alert sound to %s", alert_file)
-    converted_combined_sound = convertAudio(combined_sound)
+    converted_combined_sound = convert_audio(combined_sound)
     converted_combined_sound.export(alert_file, format="wav")
 
     LOGGER.debug("sayAlert: Replacing tailmessage with silence")
     silence = AudioSegment.silent(duration=100)
-    converted_silence = convertAudio(silence)
+    converted_silence = convert_audio(silence)
     converted_silence.export(TAILMESSAGE_FILE, format="wav")
 
     node_numbers = config.get("Asterisk", {}).get("Nodes", [])
@@ -644,7 +644,7 @@ def sayAlert(alerts):
         rate = f.getframerate()
         duration = math.ceil(frames / float(rate))
 
-    wait_time = duration + 5
+    wait_time = duration + 10
 
     LOGGER.debug(
         "Waiting %s seconds for Asterisk to make announcement to avoid doubling alerts with tailmessage...",
@@ -653,7 +653,7 @@ def sayAlert(alerts):
     time.sleep(wait_time)
 
 
-def sayAllClear():
+def say_allclear():
     """
     Generate and broadcast 'all clear' message on Asterisk.
     """
@@ -687,7 +687,7 @@ def sayAllClear():
         combined_sound = silence + combined_sound
 
     all_clear_file = os.path.join(TMP_DIR, "allclear.wav")
-    converted_combined_sound = convertAudio(combined_sound)
+    converted_combined_sound = convert_audio(combined_sound)
     converted_combined_sound.export(all_clear_file, format="wav")
 
     node_numbers = config.get("Asterisk", {}).get("Nodes", [])
@@ -699,7 +699,7 @@ def sayAllClear():
         subprocess.run(command, shell=True)
 
 
-def buildTailmessage(alerts):
+def build_tailmessage(alerts):
     """
     Build a tailmessage, which is a short message appended to the end of a
     transmission to update on the weather conditions.
@@ -714,7 +714,7 @@ def buildTailmessage(alerts):
     if not alerts:
         LOGGER.debug("buildTailMessage: No alerts, creating silent tailmessage")
         silence = AudioSegment.silent(duration=100)
-        converted_silence = convertAudio(silence)
+        converted_silence = convert_audio(silence)
         converted_silence.export(TAILMESSAGE_FILE, format="wav")
         return
 
@@ -781,13 +781,13 @@ def buildTailmessage(alerts):
             silence = AudioSegment.silent(duration=AUDIO_DELAY)
             combined_sound = silence + combined_sound
 
-    converted_combined_sound = convertAudio(combined_sound)
+    converted_combined_sound = convert_audio(combined_sound)
     LOGGER.info("Built new tailmessage")
     LOGGER.debug("buildTailMessage: Exporting tailmessage to %s", TAILMESSAGE_FILE)
     converted_combined_sound.export(TAILMESSAGE_FILE, format="wav")
 
 
-def changeCT(ct):
+def change_ct(ct):
     """
     Change the current Courtesy Tone (CT) to the one specified.
     This function first checks if the specified CT is already in use. If so, it does not make any changes.
@@ -852,7 +852,7 @@ def changeCT(ct):
     return True
 
 
-def changeID(id):
+def change_id(id):
     """
     Change the current Identifier (ID) to the one specified.
     This function first checks if the specified ID is already in use. If so, it does not make any changes.
@@ -902,7 +902,7 @@ def changeID(id):
     return True
 
 
-def alertScript(alerts):
+def alert_script(alerts):
     """
     This function reads a list of alerts, then performs actions based
     on the alert triggers defined in the global configuration file.
@@ -1002,7 +1002,7 @@ def alertScript(alerts):
     save_state(state)
 
 
-def sendPushover(message, title=None, priority=0):
+def send_pushover(message, title=None, priority=0):
     """
     Send a push notification via the Pushover service.
     This function constructs the payload for the request, including the user key, API token, message, title, and priority.
@@ -1030,14 +1030,14 @@ def sendPushover(message, title=None, priority=0):
         LOGGER.error("Failed to send Pushover notification: %s", response.text)
 
 
-def convertAudio(audio):
+def convert_audio(audio):
     """
     Convert audio file to 8000Hz mono for compatibility with Asterisk.
     """
     return audio.set_frame_rate(8000).set_channels(1)
 
 
-def change_and_log_CT_or_ID(
+def change_ct_id_helper(
     alerts,
     specified_alerts,
     auto_change_enabled,
@@ -1069,7 +1069,7 @@ def change_and_log_CT_or_ID(
             for alert in intersecting_alerts:
                 LOGGER.debug("Alert %s requires a %s change", alert, alert_type)
                 if (
-                    changeCT("WX") if alert_type == "CT" else changeID("WX")
+                    change_ct("WX") if alert_type == "CT" else change_id("WX")
                 ):  # If the CT/ID was actually changed
                     if pushover_debug:
                         pushover_message += "Changed {} to WX\n".format(alert_type)
@@ -1079,7 +1079,7 @@ def change_and_log_CT_or_ID(
                 "No alerts require a %s change, reverting to normal.", alert_type
             )
             if (
-                changeCT("NORMAL") if alert_type == "CT" else changeID("NORMAL")
+                change_ct("NORMAL") if alert_type == "CT" else change_id("NORMAL")
             ):  # If the CT/ID was actually changed
                 if pushover_debug:
                     pushover_message += "Changed {} to NORMAL\n".format(alert_type)
@@ -1121,7 +1121,7 @@ def main():
     last_alerts = state["last_alerts"]
 
     # Fetch new alerts
-    alerts = getAlerts(COUNTY_CODES)
+    alerts = get_alerts(COUNTY_CODES)
 
     # If new alerts differ from old ones, process new alerts
     if [alert[0] for alert in last_alerts.keys()] != [
@@ -1166,7 +1166,7 @@ def main():
                 pushover_message += "Removed: {}\n".format(", ".join(removed_alerts))
 
         # Check if Courtesy Tones (CT) or ID needs to be changed
-        change_and_log_CT_or_ID(
+        change_ct_id_helper(
             alerts,
             ct_alerts,
             enable_ct_auto_change,
@@ -1174,7 +1174,7 @@ def main():
             pushover_debug,
             pushover_message,
         )
-        change_and_log_CT_or_ID(
+        change_ct_id_helper(
             alerts,
             id_alerts,
             enable_id_auto_change,
@@ -1184,21 +1184,21 @@ def main():
         )
 
         if alertscript_enabled:
-            alertScript(alerts)
+            alert_script(alerts)
 
         # Check if alerts need to be communicated
         if len(alerts) == 0:
             LOGGER.info("Alerts cleared")
             if say_all_clear_enabled:
-                sayAllClear()
+                say_allclear()
         else:
             if say_alert_enabled:
-                sayAlert(alerts)
+                say_alerts(alerts)
 
         # Check if tailmessage needs to be built
         enable_tailmessage = config.get("Tailmessage", {}).get("Enable", False)
         if enable_tailmessage:
-            buildTailmessage(alerts)
+            build_tailmessage(alerts)
             if pushover_debug:
                 pushover_message += (
                     "WX tailmessage removed\n"
@@ -1210,7 +1210,7 @@ def main():
         if pushover_enabled:
             pushover_message = pushover_message.rstrip("\n")
             LOGGER.debug("Sending pushover notification: %s", pushover_message)
-            sendPushover(pushover_message, title="Alerts Changed")
+            send_pushover(pushover_message, title="Alerts Changed")
     else:
         if sys.stdin.isatty():
             # list of current alerts, unless there arent any, then current_alerts = "None"

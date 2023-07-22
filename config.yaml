@@ -44,7 +44,7 @@ Alerting:
   SayAlert: true
 
   # Specify the WAV file in the SOUNDS/ALERTS directory to use as the alert sound effect
-  AlertSound: StartrekWhistle.wav
+  AlertSound: Duncecap.wav
 
   # Specify a WAV file in the root of the SOUNDS directory to be appended to the end of the alert message.
   SayAlertSuffix:
