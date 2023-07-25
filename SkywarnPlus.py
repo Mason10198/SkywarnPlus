@@ -375,8 +375,14 @@ def get_alerts(countyCodes):
         LOGGER.debug("getAlerts: Using effective time for alerting")
         time_type_start = "effective"
         time_type_end = "expires"
-    else:
+    elif timetype_mode == "onset":
         LOGGER.debug("getAlerts: Using onset time for alerting")
+        time_type_start = "onset"
+        time_type_end = "ends"
+    else:
+        LOGGER.error(
+            "getAlerts: Invalid TimeType specified in config.yaml. Using onset time instead."
+        )
         time_type_start = "onset"
         time_type_end = "ends"
 
