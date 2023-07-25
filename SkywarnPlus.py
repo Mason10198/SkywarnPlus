@@ -333,7 +333,7 @@ def get_alerts(countyCodes):
     This function retrieves severe weather alerts for specified county codes.
     """
 
-    # Mapping dictionaries are defined for converting the severity level from the 
+    # Mapping dictionaries are defined for converting the severity level from the
     # API's terminology to a numeric scale and from common alert language to the same numeric scale.
     severity_mapping_api = {
         "Extreme": 4,
@@ -495,7 +495,7 @@ def get_alerts(countyCodes):
         alerts = OrderedDict(list(alerts.items())[:MAX_ALERTS])
 
     # We store the alerts in a file for future use if the API is unreachable.
-    with open(DATA_FILE, 'w') as f:
+    with open(DATA_FILE, "w") as f:
         json.dump({"alerts": dict(alerts)}, f)
 
     return alerts
