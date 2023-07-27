@@ -41,6 +41,7 @@ import contextlib
 import math
 import sys
 import itertools
+import random
 from datetime import datetime, timezone, timedelta
 from dateutil import parser
 from pydub import AudioSegment
@@ -279,9 +280,6 @@ LOGGER.addHandler(F_HANDLER)
 # Get the "CountyCodes" from the config
 COUNTY_CODES_CONFIG = config.get("Alerting", {}).get("CountyCodes", [])
 
-# Log the obtained COUNTY_CODES_CONFIG for debugging
-LOGGER.debug(f"COUNTY_CODES_CONFIG: {COUNTY_CODES_CONFIG}")
-
 # Initialize COUNTY_CODES and COUNTY_WAVS
 COUNTY_CODES = []
 COUNTY_WAVS = []
@@ -308,9 +306,6 @@ else:
     # Invalid format, set it to an empty list
     COUNTY_CODES = []
     COUNTY_WAVS = []
-
-# Log the final COUNTY_CODES and COUNTY_WAVS for debugging
-LOGGER.debug(f"COUNTY_CODES: {COUNTY_CODES}, COUNTY_WAVS: {COUNTY_WAVS}")
 
 # Log some debugging information
 LOGGER.debug("Base directory: %s", BASE_DIR)
@@ -399,22 +394,27 @@ def get_alerts(countyCodes):
             countyCodes
         )  # Create an iterator that returns elements from the iterable in a cyclic manner
 
+        counter = 0
         for i, event in enumerate(injected_alerts):
             last_word = event.split()[-1]
             severity = severity_mapping_words.get(last_word, 0)
             description = "This alert was manually injected as a test."
-            end_time_utc = current_time + timedelta(hours=1)
-            county_data = [
-                {
-                    "county_code": next(county_codes_cycle),
-                    "severity": severity,
-                    "description": description,
-                    "end_time_utc": end_time_utc.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                }
-                for _ in range(
-                    i + 1
-                )  # Here we increase the number of county codes for each alert
-            ]  # Create a list of dictionaries
+
+            county_data = []
+            for j in range(
+                i + 1
+            ):  # Here we increase the number of county codes for each alert
+                end_time_utc = current_time + timedelta(hours=counter + 1)
+                county_data.append(
+                    {
+                        "county_code": next(county_codes_cycle),
+                        "severity": severity,
+                        "description": description,
+                        "end_time_utc": end_time_utc.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                    }
+                )
+                counter += 1  # Increase counter here
+
             alerts[event] = county_data  # Add the list of dictionaries to the alert
 
         # We limit the number of alerts to the maximum defined constant.
@@ -696,6 +696,8 @@ def say_alerts(alerts):
     ) in alerts.items():  # Now we loop over both alert name and its associated counties
         if alert in filtered_alerts:
             try:
+                descriptions = [county["description"] for county in counties]
+                end_times = [county["end_time_utc"] for county in counties]
                 index = ALERT_STRINGS.index(alert)
                 audio_file = AudioSegment.from_wav(
                     os.path.join(
@@ -708,6 +710,17 @@ def say_alerts(alerts):
                     alert,
                     ALERT_INDEXES[index],
                 )
+                if len(set(descriptions)) > 1 or len(set(end_times)) > 1:
+                    LOGGER.debug(
+                        "sayAlert: Found multiple unique instances of the alert %s",
+                        alert,
+                    )
+                    multiples_sound = AudioSegment.from_wav(
+                        os.path.join(SOUNDS_PATH, "ALERTS", "SWP_149.wav")
+                    )
+                    combined_sound += (
+                        AudioSegment.silent(duration=200) + multiples_sound
+                    )
                 alert_count += 1
 
                 # Add county names if they exist
@@ -905,6 +918,18 @@ def build_tailmessage(alerts):
                 alert,
                 ALERT_INDEXES[index],
             )
+
+            descriptions = [county["description"] for county in counties]
+            end_times = [county["end_time_utc"] for county in counties]
+            if len(set(descriptions)) > 1 or len(set(end_times)) > 1:
+                LOGGER.debug(
+                    "buildTailMessage: Found multiple unique instances of the alert %s",
+                    alert,
+                )
+                multiples_sound = AudioSegment.from_wav(
+                    os.path.join(SOUNDS_PATH, "ALERTS", "SWP_149.wav")
+                )
+                combined_sound += AudioSegment.silent(duration=200) + multiples_sound
 
             # Add county names if they exist
             if county_identifiers:
