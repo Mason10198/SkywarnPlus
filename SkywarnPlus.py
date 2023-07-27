@@ -40,6 +40,7 @@ import wave
 import contextlib
 import math
 import sys
+import itertools
 from datetime import datetime, timezone, timedelta
 from dateutil import parser
 from pydub import AudioSegment
@@ -393,19 +394,26 @@ def get_alerts(countyCodes):
         LOGGER.debug("getAlerts: Injecting alerts: %s", injected_alerts)
         if injected_alerts is None:
             injected_alerts = []
-        for event in injected_alerts:
+
+        county_codes_cycle = itertools.cycle(
+            countyCodes
+        )  # Create an iterator that returns elements from the iterable in a cyclic manner
+
+        for i, event in enumerate(injected_alerts):
             last_word = event.split()[-1]
             severity = severity_mapping_words.get(last_word, 0)
             description = "This alert was manually injected as a test."
             end_time_utc = current_time + timedelta(hours=1)
             county_data = [
                 {
-                    "county_code": county_code,
+                    "county_code": next(county_codes_cycle),
                     "severity": severity,
                     "description": description,
                     "end_time_utc": end_time_utc.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 }
-                for county_code in ["DCC001", "MDC033"]
+                for _ in range(
+                    i + 1
+                )  # Here we increase the number of county codes for each alert
             ]  # Create a list of dictionaries
             alerts[event] = county_data  # Add the list of dictionaries to the alert
 
@@ -720,7 +728,7 @@ def say_alerts(alerts):
                             alert,
                         )
                         combined_sound += word_space + AudioSegment.from_wav(
-                            os.path.join(SOUNDS_PATH, "ALERTS", county_name_file)
+                            os.path.join(SOUNDS_PATH, county_name_file)
                         )
                         # if this is the last county name, add 600ms of silence after the county name
                         if counties.index(county) == len(counties) - 1:
@@ -917,7 +925,7 @@ def build_tailmessage(alerts):
                             alert,
                         )
                         combined_sound += word_space + AudioSegment.from_wav(
-                            os.path.join(SOUNDS_PATH, "ALERTS", county_name_file)
+                            os.path.join(SOUNDS_PATH, county_name_file)
                         )
                         # if this is the last county name, add 600ms of silence after the county name
                         if counties.index(county) == len(counties) - 1:
