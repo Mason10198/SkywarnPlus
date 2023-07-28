@@ -145,7 +145,7 @@ VALID_KEYS = {
         "section": "",
         "true_file": "SWP_129.wav",
         "false_file": "SWP_130.wav",
-        "available_values": ["WX", "NORMAL"],
+        "available_values": ["wx", "normal"],
     },
 }
 
