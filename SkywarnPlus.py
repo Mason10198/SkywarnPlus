@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-SkywarnPlus v0.3.5 by Mason Nelson
+SkywarnPlus v0.4.0 by Mason Nelson
 ===============================================================================
 SkywarnPlus is a utility that retrieves severe weather alerts from the National 
 Weather Service and integrates these alerts with an Asterisk/app_rpt based 
@@ -40,6 +40,7 @@ import wave
 import contextlib
 import math
 import sys
+import itertools
 from datetime import datetime, timezone, timedelta
 from dateutil import parser
 from pydub import AudioSegment
@@ -69,9 +70,6 @@ TMP_DIR = config.get("DEV", {}).get("TmpDir", "/tmp/SkywarnPlus")
 SOUNDS_PATH = config.get("Alerting", {}).get(
     "SoundsPath", os.path.join(BASE_DIR, "SOUNDS")
 )
-
-# Define countyCodes
-COUNTY_CODES = config.get("Alerting", {}).get("CountyCodes", [])
 
 # Create tmp_dir if it doesn't exist
 if TMP_DIR:
@@ -278,6 +276,36 @@ F_HANDLER = logging.FileHandler(LOG_FILE)
 F_HANDLER.setFormatter(LOG_FORMATTER)
 LOGGER.addHandler(F_HANDLER)
 
+# Get the "CountyCodes" from the config
+COUNTY_CODES_CONFIG = config.get("Alerting", {}).get("CountyCodes", [])
+
+# Initialize COUNTY_CODES and COUNTY_WAVS
+COUNTY_CODES = []
+COUNTY_WAVS = []
+
+# Check the type of "CountyCodes" config to handle both list and dictionary
+if isinstance(COUNTY_CODES_CONFIG, list):
+    # If it's a list, check if it's a list of strings or dictionaries
+    if all(isinstance(i, str) for i in COUNTY_CODES_CONFIG):
+        # It's the old format and we can use it directly
+        COUNTY_CODES = COUNTY_CODES_CONFIG
+    elif all(isinstance(i, dict) for i in COUNTY_CODES_CONFIG):
+        # It's a list of dictionaries with WAV files
+        # We need to separate the county codes and the WAVs
+        for dic in COUNTY_CODES_CONFIG:
+            for key, value in dic.items():
+                COUNTY_CODES.append(key)
+                COUNTY_WAVS.append(value)
+elif isinstance(COUNTY_CODES_CONFIG, dict):
+    # If it's a dictionary, it's got WAV files
+    # We need to separate the county codes and the WAVs
+    COUNTY_CODES = list(COUNTY_CODES_CONFIG.keys())
+    COUNTY_WAVS = list(COUNTY_CODES_CONFIG.values())
+else:
+    # Invalid format, set it to an empty list
+    COUNTY_CODES = []
+    COUNTY_WAVS = []
+
 # Log some debugging information
 LOGGER.debug("Base directory: %s", BASE_DIR)
 LOGGER.debug("Temporary directory: %s", TMP_DIR)
@@ -296,12 +324,11 @@ def load_state():
         with open(DATA_FILE, "r") as file:
             state = json.load(file)
             state["alertscript_alerts"] = state.get("alertscript_alerts", [])
+
+            # Process 'last_alerts' and maintain the order of alerts
             last_alerts = state.get("last_alerts", [])
-            last_alerts = [
-                (tuple(x[0]), x[1]) if isinstance(x[0], list) else x
-                for x in last_alerts
-            ]
-            state["last_alerts"] = OrderedDict(last_alerts)
+            state["last_alerts"] = OrderedDict((x[0], x[1]) for x in last_alerts)
+
             state["last_sayalert"] = state.get("last_sayalert", [])
             state["active_alerts"] = state.get("active_alerts", [])
             return state
@@ -330,9 +357,11 @@ def save_state(state):
 
 def get_alerts(countyCodes):
     """
-    Retrieve severe weather alerts for specified county codes.
+    This function retrieves severe weather alerts for specified county codes.
     """
-    # Mapping for severity for API response and the 'words' severity
+
+    # Mapping dictionaries are defined for converting the severity level from the
+    # API's terminology to a numeric scale and from common alert language to the same numeric scale.
     severity_mapping_api = {
         "Extreme": 4,
         "Severe": 3,
@@ -342,58 +371,94 @@ def get_alerts(countyCodes):
     }
     severity_mapping_words = {"Warning": 4, "Watch": 3, "Advisory": 2, "Statement": 1}
 
+    # 'alerts' will store the alert data we retrieve.
+    # 'seen_alerts' is used to keep track of the alerts we've already processed.
     alerts = OrderedDict()
-    seen_alerts = set()  # Store seen alerts
+    seen_alerts = set()
+
+    # We retrieve the current time and log it for debugging purposes.
     current_time = datetime.now(timezone.utc)
     LOGGER.debug("getAlerts: Current time: %s", current_time)
 
-    # Check if injection is enabled
+    # The script allows for alert injection for testing purposes.
+    # If injection is enabled in the configuration, we process these injected alerts first.
     if config.get("DEV", {}).get("INJECT", False):
         LOGGER.debug("getAlerts: DEV Alert Injection Enabled")
         injected_alerts = config["DEV"].get("INJECTALERTS", [])
         LOGGER.debug("getAlerts: Injecting alerts: %s", injected_alerts)
         if injected_alerts is None:
             injected_alerts = []
-        for event in injected_alerts:
+
+        county_codes_cycle = itertools.cycle(
+            countyCodes
+        )  # Create an iterator that returns elements from the iterable in a cyclic manner
+
+        counter = 0
+        for i, event in enumerate(injected_alerts):
             last_word = event.split()[-1]
             severity = severity_mapping_words.get(last_word, 0)
             description = "This alert was manually injected as a test."
-            end_time_utc = current_time + timedelta(hours=1)
-            alerts[(event)] = (
-                severity,
-                description,
-                end_time_utc.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-            )
 
+            county_data = []
+            for j in range(
+                i + 1
+            ):  # Here we increase the number of county codes for each alert
+                end_time_utc = current_time + timedelta(hours=counter + 1)
+                county_data.append(
+                    {
+                        "county_code": next(county_codes_cycle),
+                        "severity": severity,
+                        "description": description,
+                        "end_time_utc": end_time_utc.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                    }
+                )
+                counter += 1  # Increase counter here
+
+            alerts[event] = county_data  # Add the list of dictionaries to the alert
+
+        # We limit the number of alerts to the maximum defined constant.
         alerts = OrderedDict(list(alerts.items())[:MAX_ALERTS])
 
+        # If injected alerts are used, we return them here and don't proceed with the function.
         return alerts
 
-    # Determine whether to use 'effective' or 'onset' time
+    # Configuration specifies whether to use 'effective' or 'onset' time for alerts.
+    # Depending on the configuration, we set the appropriate keys for start and end time.
     timetype_mode = config.get("Alerting", {}).get("TimeType", "onset")
     if timetype_mode == "effective":
         LOGGER.debug("getAlerts: Using effective time for alerting")
         time_type_start = "effective"
         time_type_end = "expires"
-    else:
+    elif timetype_mode == "onset":
         LOGGER.debug("getAlerts: Using onset time for alerting")
         time_type_start = "onset"
         time_type_end = "ends"
+    else:
+        LOGGER.error(
+            "getAlerts: Invalid TimeType specified in config.yaml. Using onset time instead."
+        )
+        time_type_start = "onset"
+        time_type_end = "ends"
 
+    # Loop over each county code and retrieve alerts from the API.
     for countyCode in countyCodes:
         url = "https://api.weather.gov/alerts/active?zone={}".format(countyCode)
+        #
+        # WARNING: ONLY USE THIS FOR DEVELOPMENT PURPOSES
+        # THIS URL WILL RETURN ALL ACTIVE ALERTS IN THE UNITED STATES
+        # url = "https://api.weather.gov/alerts/active"
         try:
+            # If we can get a successful response from the API, we process the alerts from the response.
             response = requests.get(url)
-            response.raise_for_status()  # will raise an exception if the status code is not 200
-
+            response.raise_for_status()
             LOGGER.debug(
                 "getAlerts: Checking for alerts in %s at URL: %s", countyCode, url
             )
             alert_data = response.json()
             for feature in alert_data["features"]:
+                # Extract start and end times. If end time is missing, use 'expires' time.
                 start = feature["properties"].get(time_type_start)
                 end = feature["properties"].get(time_type_end)
-                # if end is null, use effective time
                 if not end:
                     end = feature["properties"].get("expires")
                     LOGGER.debug(
@@ -403,20 +468,21 @@ def get_alerts(countyCodes):
                         end,
                     )
                 if start and end:
+                    # If both start and end times are available, convert them to datetime objects.
                     start_time = parser.isoparse(start)
                     end_time = parser.isoparse(end)
-                    # Convert alert times to UTC
+
+                    # Convert alert times to UTC.
                     start_time_utc = start_time.astimezone(timezone.utc)
                     end_time_utc = end_time.astimezone(timezone.utc)
                     event = feature["properties"]["event"]
+
+                    # If the current time is within the alert's active period, we process it further.
                     if start_time_utc <= current_time < end_time_utc:
                         description = feature["properties"].get("description", "")
                         severity = feature["properties"].get("severity", None)
-                        # Check if alert has already been seen
-                        if event in seen_alerts:
-                            continue
 
-                        # Initialize a flag to check if the event is globally blocked
+                        # Check if the event is globally blocked as per the configuration. If it is, skip this event.
                         is_blocked = False
                         for global_blocked_event in GLOBAL_BLOCKED_EVENTS:
                             if fnmatch.fnmatch(event, global_blocked_event):
@@ -426,22 +492,54 @@ def get_alerts(countyCodes):
                                 )
                                 is_blocked = True
                                 break
-
-                        # Skip to the next feature if the event is globally blocked
+                        # If the event is globally blocked, we skip the remaining code in this loop iteration and move to the next one.
                         if is_blocked:
                             continue
 
+                        # Determine severity from event name or API's severity value.
                         if severity is None:
                             last_word = event.split()[-1]
                             severity = severity_mapping_words.get(last_word, 0)
                         else:
                             severity = severity_mapping_api.get(severity, 0)
-                        alerts[(event)] = (
+
+                        # Log the alerts and their severity level for debugging purposes.
+                        LOGGER.debug(
+                            "getAlerts: %s - %s - Severity: %s",
+                            countyCode,
+                            event,
                             severity,
-                            description,
-                            end_time_utc.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                         )
-                        seen_alerts.add(event)
+
+                        # Check if the event has already been processed (seen).
+                        # If it has been seen, we add a new dictionary to its list of alerts. This dictionary contains details about the alert.
+                        if event in seen_alerts:
+                            alerts[event].append(
+                                {
+                                    "county_code": countyCode,  # the county code the alert is for
+                                    "severity": severity,  # the severity level of the alert
+                                    "description": description,  # a description of the alert
+                                    "end_time_utc": end_time_utc.strftime(
+                                        "%Y-%m-%dT%H:%M:%S.%fZ"
+                                    ),  # the time the alert ends in UTC
+                                }
+                            )
+                        # If the event hasn't been seen before, we create a new list entry in the 'alerts' dictionary for this event.
+                        else:
+                            alerts[event] = [
+                                {
+                                    "county_code": countyCode,  # the county code the alert is for
+                                    "severity": severity,  # the severity level of the alert
+                                    "description": description,  # a description of the alert
+                                    "end_time_utc": end_time_utc.strftime(
+                                        "%Y-%m-%dT%H:%M:%S.%fZ"
+                                    ),  # the time the alert ends in UTC
+                                }
+                            ]
+                            # Add the event to the set of seen alerts.
+                            seen_alerts.add(event)
+
+                    # If the current time is not within the alert's active period, we skip it.
                     else:
                         time_difference = time_until(start_time_utc, current_time)
                         LOGGER.debug(
@@ -455,10 +553,15 @@ def get_alerts(countyCodes):
                             start_time_utc,
                             end_time_utc,
                         )
+                else:
+                    LOGGER.debug(
+                        "getAlerts: Skipping %s, missing start or end time.",
+                        feature["properties"]["event"],
+                    )
 
         except requests.exceptions.RequestException as e:
-            LOGGER.error("Failed to retrieve alerts for %s. Reason: %s", countyCode, e)
-            LOGGER.info("API unreachable. Using stored data instead.")
+            LOGGER.debug("Failed to retrieve alerts for %s. Reason: %s", countyCode, e)
+            LOGGER.debug("API unreachable. Using stored data instead.")
 
             # Load alerts from data.json
             if os.path.isfile(DATA_FILE):
@@ -472,35 +575,43 @@ def get_alerts(countyCodes):
                     )
                     LOGGER.debug("Current time: %s", current_time_str)
                     alerts = {}
-                    for event, alert in stored_alerts:
-                        end_time_str = alert[2]
-                        if parser.parse(end_time_str) >= parser.parse(current_time_str):
-                            LOGGER.debug(
-                                "getAlerts: Keeping %s because it does not expire until %s",
-                                event,
-                                end_time_str,
-                            )
-                            alerts[event] = alert
-                        else:
-                            LOGGER.debug(
-                                "getAlerts: Removing %s because it expired at %s",
-                                event,
-                                end_time_str,
-                            )
+                    for stored_alert in stored_alerts:
+                        event = stored_alert[0]
+                        alert_list = stored_alert[1]
+                        alerts[event] = []
+                        for alert in alert_list:
+                            end_time_str = alert["end_time_utc"]
+                            if parser.parse(end_time_str) >= parser.parse(
+                                current_time_str
+                            ):
+                                LOGGER.debug(
+                                    "getAlerts: Keeping %s because it does not expire until %s",
+                                    event,
+                                    end_time_str,
+                                )
+                                alerts[event].append(alert)
+                            else:
+                                LOGGER.debug(
+                                    "getAlerts: Removing %s because it expired at %s",
+                                    event,
+                                    end_time_str,
+                                )
             else:
                 LOGGER.error("No stored data available.")
+            break
 
     alerts = OrderedDict(
         sorted(
             alerts.items(),
             key=lambda item: (
-                item[1][0],  # Severity
+                max([x["severity"] for x in item[1]]),  # Max Severity
                 severity_mapping_words.get(item[0].split()[-1], 0),  # Words severity
             ),
             reverse=True,
         )
     )
 
+    # If the number of alerts exceeds the maximum defined constant, we truncate the alerts.
     alerts = OrderedDict(list(alerts.items())[:MAX_ALERTS])
 
     return alerts
@@ -543,9 +654,7 @@ def say_alerts(alerts):
 
     # Check if the filtered alerts are the same as the last run
     if filtered_alerts == state["last_sayalert"]:
-        LOGGER.debug(
-            "sayAlert: The filtered alerts are the same as the last run. Not broadcasting."
-        )
+        LOGGER.debug("sayAlert: alerts are the same as the last broadcast - skipping.")
         return
 
     state["last_sayalert"] = filtered_alerts
@@ -569,7 +678,7 @@ def say_alerts(alerts):
             SOUNDS_PATH,
             "ALERTS",
             "EFFECTS",
-            config.get("Alerting", {}).get("AlertSound", "StartrekWhistle.wav"),
+            config.get("Alerting", {}).get("AlertSound", "Duncecap.wav.wav"),
         )
     )
 
@@ -580,29 +689,71 @@ def say_alerts(alerts):
     )
 
     alert_count = 0
-    for alert in filtered_alerts:
-        try:
-            index = ALERT_STRINGS.index(alert)
-            audio_file = AudioSegment.from_wav(
-                os.path.join(
-                    SOUNDS_PATH, "ALERTS", "SWP_{}.wav".format(ALERT_INDEXES[index])
+    for (
+        alert,
+        counties,
+    ) in alerts.items():  # Now we loop over both alert name and its associated counties
+        if alert in filtered_alerts:
+            try:
+                descriptions = [county["description"] for county in counties]
+                end_times = [county["end_time_utc"] for county in counties]
+                index = ALERT_STRINGS.index(alert)
+                audio_file = AudioSegment.from_wav(
+                    os.path.join(
+                        SOUNDS_PATH, "ALERTS", "SWP_{}.wav".format(ALERT_INDEXES[index])
+                    )
                 )
-            )
-            combined_sound += sound_effect + audio_file
-            LOGGER.debug(
-                "sayAlert: Added %s (SWP_%s.wav) to alert sound",
-                alert,
-                ALERT_INDEXES[index],
-            )
-            alert_count += 1
-        except ValueError:
-            LOGGER.error("sayAlert: Alert not found: %s", alert)
-        except FileNotFoundError:
-            LOGGER.error(
-                "sayAlert: Audio file not found: %s/ALERTS/SWP_%s.wav",
-                SOUNDS_PATH,
-                ALERT_INDEXES[index],
-            )
+                combined_sound += sound_effect + audio_file
+                LOGGER.debug(
+                    "sayAlert: Added %s (SWP_%s.wav) to alert sound",
+                    alert,
+                    ALERT_INDEXES[index],
+                )
+                if len(set(descriptions)) > 1 or len(set(end_times)) > 1:
+                    LOGGER.debug(
+                        "sayAlert: Found multiple unique instances of the alert %s",
+                        alert,
+                    )
+                    multiples_sound = AudioSegment.from_wav(
+                        os.path.join(SOUNDS_PATH, "ALERTS", "SWP_149.wav")
+                    )
+                    combined_sound += (
+                        AudioSegment.silent(duration=200) + multiples_sound
+                    )
+                alert_count += 1
+
+                # Add county names if they exist
+                for county in counties:
+                    # if its the first county, word_space is 600ms of silence. else it is 400ms
+                    if counties.index(county) == 0:
+                        word_space = AudioSegment.silent(duration=600)
+                    else:
+                        word_space = AudioSegment.silent(duration=400)
+                    county_code = county["county_code"]
+                    if COUNTY_WAVS and county_code in COUNTY_CODES:
+                        index = COUNTY_CODES.index(county_code)
+                        county_name_file = COUNTY_WAVS[index]
+                        LOGGER.debug(
+                            "sayAlert: Adding %s ID %s to %s",
+                            county_code,
+                            county_name_file,
+                            alert,
+                        )
+                        combined_sound += word_space + AudioSegment.from_wav(
+                            os.path.join(SOUNDS_PATH, county_name_file)
+                        )
+                        # if this is the last county name, add 600ms of silence after the county name
+                        if counties.index(county) == len(counties) - 1:
+                            combined_sound += AudioSegment.silent(duration=600)
+
+            except ValueError:
+                LOGGER.error("sayAlert: Alert not found: %s", alert)
+            except FileNotFoundError:
+                LOGGER.error(
+                    "sayAlert: Audio file not found: %s/ALERTS/SWP_%s.wav",
+                    SOUNDS_PATH,
+                    ALERT_INDEXES[index],
+                )
 
     if alert_count == 0:
         LOGGER.debug("sayAlert: All alerts were blocked, not broadcasting any alerts.")
@@ -610,7 +761,7 @@ def say_alerts(alerts):
 
     alert_suffix = config.get("Alerting", {}).get("SayAlertSuffix", None)
     if alert_suffix is not None:
-        suffix_silence = AudioSegment.silent(duration=1000)
+        suffix_silence = AudioSegment.silent(duration=600)
         LOGGER.debug("sayAlert: Adding alert suffix %s", alert_suffix)
         suffix_file = os.path.join(SOUNDS_PATH, alert_suffix)
         suffix_sound = AudioSegment.from_wav(suffix_file)
@@ -690,6 +841,15 @@ def say_allclear():
     converted_combined_sound = convert_audio(combined_sound)
     converted_combined_sound.export(all_clear_file, format="wav")
 
+    if config.get("Alerting", {}).get("SayAllClearSuffix", None) is not None:
+        suffix_file = os.path.join(
+            SOUNDS_PATH, config.get("Alerting", {}).get("SayAllClearSuffix")
+        )
+        LOGGER.debug("sayAllClear: Adding all clear suffix %s", suffix_file)
+        suffix_sound = AudioSegment.from_wav(suffix_file)
+        converted_suffix_sound = convert_audio(suffix_sound)
+        converted_suffix_sound.export(all_clear_file, format="wav")
+
     node_numbers = config.get("Asterisk", {}).get("Nodes", [])
     for node_number in node_numbers:
         LOGGER.info("Broadcasting all clear message on node %s", node_number)
@@ -704,6 +864,9 @@ def build_tailmessage(alerts):
     Build a tailmessage, which is a short message appended to the end of a
     transmission to update on the weather conditions.
     """
+
+    # Determine whether the user has enabled county identifiers
+    county_identifiers = config.get("Tailmessage", {}).get("TailmessageCounties", False)
 
     # Extract only the alert names from the OrderedDict keys
     alert_names = [alert for alert in alerts.keys()]
@@ -728,7 +891,10 @@ def build_tailmessage(alerts):
         )
     )
 
-    for alert in alert_names:
+    for (
+        alert,
+        counties,
+    ) in alerts.items():  # Now we loop over both alert name and its associated counties
         if any(
             fnmatch.fnmatch(alert, blocked_event)
             for blocked_event in TAILMESSAGE_BLOCKED_EVENTS
@@ -751,6 +917,44 @@ def build_tailmessage(alerts):
                 alert,
                 ALERT_INDEXES[index],
             )
+
+            descriptions = [county["description"] for county in counties]
+            end_times = [county["end_time_utc"] for county in counties]
+            if len(set(descriptions)) > 1 or len(set(end_times)) > 1:
+                LOGGER.debug(
+                    "buildTailMessage: Found multiple unique instances of the alert %s",
+                    alert,
+                )
+                multiples_sound = AudioSegment.from_wav(
+                    os.path.join(SOUNDS_PATH, "ALERTS", "SWP_149.wav")
+                )
+                combined_sound += AudioSegment.silent(duration=200) + multiples_sound
+
+            # Add county names if they exist
+            if county_identifiers:
+                for county in counties:
+                    # if its the first county, word_space is 600ms of silence. else it is 400ms
+                    if counties.index(county) == 0:
+                        word_space = AudioSegment.silent(duration=600)
+                    else:
+                        word_space = AudioSegment.silent(duration=400)
+                    county_code = county["county_code"]
+                    if COUNTY_WAVS and county_code in COUNTY_CODES:
+                        index = COUNTY_CODES.index(county_code)
+                        county_name_file = COUNTY_WAVS[index]
+                        LOGGER.debug(
+                            "buildTailMessage: Adding %s ID %s to %s",
+                            county_code,
+                            county_name_file,
+                            alert,
+                        )
+                        combined_sound += word_space + AudioSegment.from_wav(
+                            os.path.join(SOUNDS_PATH, county_name_file)
+                        )
+                        # if this is the last county name, add 600ms of silence after the county name
+                        if counties.index(county) == len(counties) - 1:
+                            combined_sound += AudioSegment.silent(duration=600)
+
         except ValueError:
             LOGGER.error("Alert not found: %s", alert)
         except FileNotFoundError:
@@ -1193,7 +1397,10 @@ def main():
                 say_allclear()
         else:
             if say_alert_enabled:
-                say_alerts(alerts)
+                if config["Alerting"].get("SayAlertAll", False):
+                    say_alerts(alerts)
+                else:
+                    say_alerts({alert: alerts[alert] for alert in added_alerts})
 
         # Check if tailmessage needs to be built
         enable_tailmessage = config.get("Tailmessage", {}).get("Enable", False)

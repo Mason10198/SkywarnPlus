@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-SkyDescribe v0.3.5 by Mason Nelson
+SkyDescribe v0.4.0 by Mason Nelson
 ==================================================
 Text to Speech conversion for Weather Descriptions
 
@@ -37,75 +37,71 @@ from ruamel.yaml import YAML
 from collections import OrderedDict
 
 # Use ruamel.yaml instead of PyYAML
-yaml = YAML()
+YAML = YAML()
 
 # Directories and Paths
-baseDir = os.path.dirname(os.path.realpath(__file__))
-configPath = os.path.join(baseDir, "config.yaml")
+BASE_DIR = os.path.dirname(os.path.realpath(__file__))
+CONFIG_PATH = os.path.join(BASE_DIR, "config.yaml")
 
 # Open and read configuration file
-with open(configPath, "r") as config_file:
-    config = yaml.load(config_file)
+with open(CONFIG_PATH, "r") as config_file:
+    config = YAML.load(config_file)
 
 # Define tmp_dir
-tmp_dir = config.get("DEV", []).get("TmpDir", "/tmp/SkywarnPlus")
+TMP_DIR = config.get("DEV", []).get("TmpDir", "/tmp/SkywarnPlus")
 
 # Define VoiceRSS settings
 # get api key, fellback 150
-api_key = config.get("SkyDescribe", []).get("APIKey", "")
-language = config.get("SkyDescribe", []).get("Language", "en-us")
-speed = config.get("SkyDescribe", []).get("Speed", 0)
-voice = config.get("SkyDescribe", []).get("Voice", "John")
-max_words = config.get("SkyDescribe", []).get("MaxWords", 150)
+API_KEY = config.get("SkyDescribe", []).get("APIKey", "")
+LANGUAGE = config.get("SkyDescribe", []).get("Language", "en-us")
+SPEED = config.get("SkyDescribe", []).get("Speed", 0)
+VOICE = config.get("SkyDescribe", []).get("Voice", "John")
+MAX_WORDS = config.get("SkyDescribe", []).get("MaxWords", 150)
 
 # Path to the data file
-data_file = os.path.join(tmp_dir, "data.json")
+DATA_FILE = os.path.join(TMP_DIR, "data.json")
 
 # Define logger
-logger = logging.getLogger(__name__)
+LOGGER = logging.getLogger(__name__)
 if config.get("Logging", []).get("Debug", False):
-    logger.setLevel(logging.DEBUG)
+    LOGGER.setLevel(logging.DEBUG)
 else:
-    logger.setLevel(logging.INFO)
+    LOGGER.setLevel(logging.INFO)
 
 # Define formatter
-formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
+FORMATTER = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
 
 # Define and attach console handler
-ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
-ch.setFormatter(formatter)
-logger.addHandler(ch)
+CH = logging.StreamHandler()
+CH.setLevel(logging.DEBUG)
+CH.setFormatter(FORMATTER)
+LOGGER.addHandler(CH)
 
 # Define and attach file handler
-log_path = os.path.join(tmp_dir, "SkyDescribe.log")
-fh = logging.FileHandler(log_path)
-fh.setLevel(logging.DEBUG)
-fh.setFormatter(formatter)
-logger.addHandler(fh)
+LOG_PATH = os.path.join(TMP_DIR, "SkyDescribe.log")
+FH = logging.FileHandler(LOG_PATH)
+FH.setLevel(logging.DEBUG)
+FH.setFormatter(FORMATTER)
+LOGGER.addHandler(FH)
 
-if not api_key:
-    logger.error("SkyDescribe: No VoiceRSS API key found in config.yaml")
+if not API_KEY:
+    LOGGER.error("SkyDescribe: No VoiceRSS API key found in config.yaml")
     sys.exit(1)
 
 
 def load_state():
     """
     Load the state from the state file if it exists, else return an initial state.
-
-    Returns:
-        OrderedDict: A dictionary containing data.
     """
-    if os.path.exists(data_file):
-        with open(data_file, "r") as file:
+    if os.path.exists(DATA_FILE):
+        with open(DATA_FILE, "r") as file:
             state = json.load(file)
             state["alertscript_alerts"] = state.get("alertscript_alerts", [])
+
+            # Process 'last_alerts' and maintain the order of alerts
             last_alerts = state.get("last_alerts", [])
-            last_alerts = [
-                (tuple(x[0]), x[1]) if isinstance(x[0], list) else x
-                for x in last_alerts
-            ]
-            state["last_alerts"] = OrderedDict(last_alerts)
+            state["last_alerts"] = OrderedDict((x[0], x[1]) for x in last_alerts)
+
             state["last_sayalert"] = state.get("last_sayalert", [])
             state["active_alerts"] = state.get("active_alerts", [])
             return state
@@ -222,10 +218,10 @@ def modify_description(description):
 
     # Limit the description to a maximum number of words
     words = description.split()
-    logger.debug("SkyDescribe: Description has %d words.", len(words))
-    if len(words) > max_words:
-        description = " ".join(words[:max_words])
-        logger.info("SkyDescribe: Description has been limited to %d words.", max_words)
+    LOGGER.debug("SkyDescribe: Description has %d words.", len(words))
+    if len(words) > MAX_WORDS:
+        description = " ".join(words[:MAX_WORDS])
+        LOGGER.info("SkyDescribe: Description has been limited to %d words.", MAX_WORDS)
 
     return description
 
@@ -244,23 +240,28 @@ def convert_to_audio(api_key, text):
     base_url = "http://api.voicerss.org/"
     params = {
         "key": api_key,
-        "hl": str(language),
+        "hl": str(LANGUAGE),
         "src": text,
         "c": "WAV",
         "f": "8khz_16bit_mono",
-        "r": str(speed),
-        "v": str(voice),
+        "r": str(SPEED),
+        "v": str(VOICE),
     }
 
-    logger.debug(
+    LOGGER.debug(
         "SkyDescribe: Voice RSS API URL: %s",
         base_url + "?" + urllib.parse.urlencode(params),
     )
 
     response = requests.get(base_url, params=params)
     response.raise_for_status()
+    # if responce text contains "ERROR" then log it and exit
+    if "ERROR" in response.text:
+        LOGGER.error("SkyDescribe: %s", response.text)
+        sys.exit(1)
 
-    audio_file_path = os.path.join(tmp_dir, "describe.wav")
+    audio_file_path = os.path.join(TMP_DIR, "describe.wav")
+    LOGGER.debug("SkyDescribe: Saving audio file to %s", audio_file_path)
     with open(audio_file_path, "wb") as file:
         file.write(response.content)
     return audio_file_path
@@ -270,65 +271,70 @@ def main(index_or_title):
     state = load_state()
     alerts = list(state["last_alerts"].items())
 
+    # list the alerts in order as a numbered list
+    LOGGER.debug("SkyDescribe: List of alerts:")
+    for i, alert in enumerate(alerts):
+        LOGGER.debug("SkyDescribe: %d. %s", i + 1, alert[0])
+
     # Determine if the argument is an index or a title
     if str(index_or_title).isdigit():
         index = int(index_or_title) - 1
         if index >= len(alerts):
-            logger.error("SkyDescribe: No alert found at index %d.", index + 1)
+            LOGGER.error("SkyDescribe: No alert found at index %d.", index + 1)
             description = "Sky Describe error, no alert found at index {}.".format(
                 index + 1
             )
         else:
             alert, alert_data = alerts[index]
-            (_, description, _) = alert_data
+            description = alert_data[0]["description"]
     else:
         # Argument is not an index, assume it's a title
         title = index_or_title
         for alert, alert_data in alerts:
             if alert == title:  # Assuming alert is a title
-                _, description, _ = alert_data
+                description = alert_data[0]["description"]
                 break
         else:
-            logger.error("SkyDescribe: No alert with title %s found.", title)
+            LOGGER.error("SkyDescribe: No alert with title %s found.", title)
             description = "Sky Describe error, no alert found with title {}.".format(
                 title
             )
 
-    logger.debug("\n\nSkyDescribe: Original description: %s", description)
+    LOGGER.debug("\n\nSkyDescribe: Original description: %s", description)
 
     # If the description is not an error message, extract the alert title
     if not "Sky Describe error" in description:
         alert_title = alert  # As alert itself is the title now
-        logger.info("SkyDescribe: Generating description for alert: %s", alert_title)
+        LOGGER.info("SkyDescribe: Generating description for alert: %s", alert_title)
         # Add the alert title at the beginning
         description = "Detailed alert information for {}. {}".format(
             alert_title, description
         )
         description = modify_description(description)
 
-    logger.debug("\n\nSkyDescribe: Modified description: %s\n\n", description)
+    LOGGER.debug("\n\nSkyDescribe: Modified description: %s\n\n", description)
 
-    audio_file = convert_to_audio(api_key, description)
+    audio_file = convert_to_audio(API_KEY, description)
 
     with contextlib.closing(wave.open(audio_file, "r")) as f:
         frames = f.getnframes()
         rate = f.getframerate()
         duration = frames / float(rate)
-    logger.debug("SkyDescribe: Length of the audio file in seconds: %s", duration)
+    LOGGER.debug("SkyDescribe: Length of the audio file in seconds: %s", duration)
 
     nodes = config["Asterisk"]["Nodes"]
     for node in nodes:
-        logger.info("SkyDescribe: Broadcasting description on node %s.", node)
+        LOGGER.info("SkyDescribe: Broadcasting description on node %s.", node)
         command = "/usr/sbin/asterisk -rx 'rpt localplay {} {}'".format(
             node, audio_file.rsplit(".", 1)[0]
         )
-        logger.debug("SkyDescribe: Running command: %s", command)
+        LOGGER.debug("SkyDescribe: Running command: %s", command)
         subprocess.run(command, shell=True)
 
 
 # Script entry point
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        logger.error("Usage: SkyDescribe.py <alert index or title>")
+        LOGGER.error("Usage: SkyDescribe.py <alert index or title>")
         sys.exit(1)
     main(sys.argv[1])

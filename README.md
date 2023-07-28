@@ -7,21 +7,23 @@
 ![Total Downloads](https://img.shields.io/github/downloads/Mason10198/SkywarnPlus/total?label=Downloads&color=f15d24)
 ![GitHub Repo Size](https://img.shields.io/github/repo-size/Mason10198/SkywarnPlus?label=Size&color=f15d24)
 
-**SkywarnPlus** is an advanced software solution tailored for Asterisk/app_rpt nodes. It is designed to provide important information about local government-issued alerts, thereby broadening the scope and functionality of your node. By intelligently integrating local alert data, SkywarnPlus brings a new layer of relevance and utility to your existing system. **SkywarnPlus** works with all major distributions, including AllstarLink, HAMVOIP, myGMRS, and more.
+**SkywarnPlus** is an advanced software solution tailored for Asterisk/app_rpt nodes. It is designed to provide important information about local government-issued alerts in the United States, thereby broadening the scope and functionality of your node. By intelligently integrating local alert data, SkywarnPlus brings a new layer of relevance and utility to your existing system. **SkywarnPlus** works with all major distributions, including AllstarLink, HAMVOIP, myGMRS, and more.
 
 ## Key Features
 
-- **Real-Time Weather Alerts:** The software checks the NWS CAP v1.2 API for live weather alerts for user-defined areas.
+- **Real-Time Alerts:** The software watches the new NWS v1.2 API for real-time alerts for user-defined areas.
+
+- **Automatic Announcements:** Alerts, including when all warnings have been cleared, are announced automatically on the node.
+
+- **Human Speech:** Announcements are delivered in a natural, human speech for easier understanding.
 
 - **Unlimited Area & Node Numbers:** Users can define as many areas and local node numbers as desired.
-
-- **Automatic Announcements:** Weather alerts, including when all warnings have been cleared, are announced automatically on the node.
 
 - **Tailmessage Creation:** The software generates tailmessages for the node to continuously inform listeners about active alerts after the initial broadcast.
 
 - **Dynamic Changes to Node:** Courtesy tones and node CW / voice ID automatically change according to user-defined alerts, optimizing communication during severe weather.
 
-- **Human Speech:** Announcements are delivered in a natural, human speech for easier understanding.
+- **County Identification:** Dynamically and automatically inform listeners which county or counties an alert is affecting
 
 - **Efficiency & Speed:** SkywarnPlus is optimized for speed and efficiency to provide real-time information without delay.
 
@@ -31,7 +33,7 @@
 
 - **Detailed Alert Descriptions:** In addition to standard alert announcements, SkywarnPlus includes SkyDescribe, a feature for announcing detailed NWS provided descriptions of alert details.
 
-- **Highly Customizable:** SkywarnPlus is extremely customizable, offering advanced filtering parameters to block certain alerts or types of alerts from different functions. Users can even map DTMF macros or shell commands to specified weather alerts, expanding the software's capabilities according to user needs.
+- **Highly Customizable:** SkywarnPlus is extremely customizable, offering advanced filtering parameters to block certain alerts or types of alerts from different functions. Users can easily modify the sound effects and audio files used in SkywarnPlus. Users can even map DTMF macros or shell commands to specified weather alerts, infinitely expanding the software's capabilities according to user needs.
 
 - **Pushover Integration:** With Pushover integration, SkywarnPlus can send weather alert notifications directly to your phone or other devices.
 
@@ -194,7 +196,7 @@ tailmessagelist = /tmp/SkywarnPlus/wx-tail
 
 SkywarnPlus has the ability to automatically change the node courtesy tone depending on the state of certain weather alerts. This feature can be configured via the `config.yaml` and `rpt.conf` files.
 
-## Configuration 
+## Configuration
 
 Here's an explanation of how it works using the default values in the `config.yaml` file:
 
@@ -211,7 +213,6 @@ CourtesyTones:
 
   # Define the sound files for courtesy tones.
   Tones:
-
     # Audio file to feed Asterisk as ct1 in "normal" mode
     CT1: Boop.ulaw
 
@@ -249,13 +250,15 @@ With this setup, Asterisk will always use `CT1.ulaw` for "local" traffic, and `C
 
 Please note the filenames are case-sensitive, so be sure they match exactly between `rpt.conf` and `config.yaml`.
 
+After initially setting up automatic courtesy tones, the audio files will not refresh until the next time the alert status changes. To refresh immediately, run `/usr/local/bin/SkywarnPlys/SkyControl.py changect normal` to force the CTs to "normal" mode.
+
 # CW / Voice IDs
 
 SkywarnPlus has a feature that allows it to automatically change the node ID based on the status of certain weather alerts. This requires the creation of custom audio files for the `NORMAL` and `WX` ID modes.
 
 The configuration for this is in the `config.yaml` file, with additional setup needed in the `rpt.conf` file. Let's take a look at how it's done.
 
-## Configuration 
+## Configuration
 
 Here's an example of how the `config.yaml` file should be configured:
 
@@ -272,7 +275,6 @@ IDChange:
 
   # Define the sound files for IDs.
   IDs:
-
     # Audio file to feed Asterisk as ID in "normal" mode
     NormalID: NORMALID.ulaw
 
@@ -283,7 +285,7 @@ IDChange:
     RptID: RPTID.ulaw
 ```
 
-In this setup, if none of the alerts specified in the IDAlerts list are active, SkywarnPlus replaces the file `RPTID.ulaw` with a duplicate of `NORMALID.ulaw`. 
+In this setup, if none of the alerts specified in the IDAlerts list are active, SkywarnPlus replaces the file `RPTID.ulaw` with a duplicate of `NORMALID.ulaw`.
 
 However, if any of the alerts in the IDAlerts list are currently active, SkywarnPlus will replace `RPTID.ulaw` with a duplicate of `WXID.ulaw`.
 
@@ -294,11 +296,11 @@ To enable these changes, the following setup is required in your `rpt.conf` file
 idrecording = /usr/local/bin/SkywarnPlus/SOUNDS/ID/RPTID
 ```
 
-In this case, Asterisk will always use `RPTID.ulaw` as the node ID. SkywarnPlus effectively changes the contents of the `RPTID.ulaw` file depending on the weather alert status while Asterisk "isn't looking". 
+In this case, Asterisk will always use `RPTID.ulaw` as the node ID. SkywarnPlus effectively changes the contents of the `RPTID.ulaw` file depending on the weather alert status while Asterisk "isn't looking".
 
 Note that filenames are case-sensitive, so be sure they match exactly between `rpt.conf` and `config.yaml`.
 
-This is how you can configure SkywarnPlus to automatically change the node ID depending on weather alert conditions. Please don't hesitate to raise a query if you encounter any issues.
+After initially setting up automatic IDs, the audio files will not refresh until the next time the alert status changes. To refresh immediately, run `/usr/local/bin/SkywarnPlys/SkyControl.py changeid normal` to force the ID to "normal" mode.
 
 # Pushover Integration
 
@@ -549,9 +551,48 @@ In _most_ cases, any multiple counties that SkywarnPlus is set up to monitor wil
 
 # Customizing the Audio Files
 
-SkywarnPlus comes with a library of audio files that can be replaced with any 8kHz mono PCM16 WAV files you want. These are found in the `SOUNDS/` directory by default, along with `DICTIONARY.txt` which explains audio file assignments.
+SkywarnPlus comes with a library of audio files that can be replaced with any 8kHz mono PCM16 WAV files you want. These are found in the `SOUNDS/` directory by default, along with `DICTIONARY.txt` which explains audio file assignments. Several customizations can be easily made in `config.yaml`, but the sound files are always available for you to modify directly as well.
 
-If you'd like to enable IDChange, you must create your own ID audio files. Follow **[this guide](https://wiki.allstarlink.org/images/d/dd/RecordingSoundFiles.pdf)** on how to create audio files for use with Asterisk/app_rpt.
+If you'd like to use IDChange or add county identifiers, you must create your own audio files. Follow **[this guide](https://wiki.allstarlink.org/images/d/dd/RecordingSoundFiles.pdf)** on how to record/convert audio files for use with Asterisk/app_rpt.
+
+>**For users wishing to maintain vocal continuity in their SkywarnPlus installation, the original creator of SkywarnPlus (N5LSN) and the woman behind the voice of it's included library of audio recordings (N5LSN XYL) will, for a small fee, record custom audio files for your SkywarnPlus installation. Contact information is readily available via QRZ.**
+
+## County Identifiers
+
+SkywarnPlus features the capability to play county-specific audio files to reference the affected area of alerts. It enhances the user's awareness of the geographic area affected by an event, making the system more informative and valuable to users monitoring systems that provide coverage for multiple counties. By assigning unique audio tags to each county, users can immediately recognize which county is affected by an event as soon as it is detected by SkywarnPlus.
+
+### How to use it?
+
+To use the county-specific audio tags, you need to specify the audio files to use for each county in your `config.yaml` file. You must create or otherwise aquire these audio files yourself. The audio files must be located in the root of the `SkywarnPlus/SOUNDS/` directory.
+
+The `config.yaml` explains how to use the free VoiceRSS API to generate these files using a computer synthesized voice.
+
+Here is an example of how to configure the `config.yaml` to utilize this feature:
+
+```yaml
+Alerting:
+  # Specify the county codes for which you want to pull weather data.
+  # Find your county codes at https://alerts.weather.gov/.
+  # Make sure to use county codes ONLY, NOT zone codes, otherwise you might miss out on alerts.
+  #
+  # SkywarnPlus allows adding county-specific audio indicators to each alert in the message.
+  # To enable this feature, specify an audio file containing a recording of the county name in the
+  # ROOT of the SOUNDS/ directory as shown in the below example. You must create these files yourself.
+  # You can use the same VoiceRSS API used for SkyDescribe (see below) to generate these files with a synthetic voice:
+  # http://api.voicerss.org/?key=[YOUR_API_KEY_HERE]=en-us&f=8khz_16bit_mono&v=John&src=[YOUR COUNTY NAME HERE]
+  # http://api.voicerss.org/?key=1234567890QWERTY&hl=en-us&f=8khz_16bit_mono&v=John&src=Saline County
+  CountyCodes:
+    - DCC001: "County1.wav"
+    - MDC031: "County2.wav"
+    - MDC033: "County3.wav"
+    - VAC013: "County4.wav"
+    - VAC059: "County5.wav"
+    - VAC510: "County6.wav"
+    - VAC107: "County7.wav"
+    - VAC047: "County8.wav"
+    - MDC510: "County9.wav"
+    - VAC683: "County10.wav"
+```
 
 # Testing
 
@@ -624,7 +665,7 @@ SkywarnPlus is open-sourced software licensed under the [GPL-3.0 license](LICENS
 
 Created by Mason Nelson (N5LSN/WRKF394)
 
-Audio Library voiced by Rachel Nelson
+Audio Library voiced by Rachel Nelson (N5LSN/WRKF394 XYL)
 
 Skywarn® and the Skywarn® logo are registered trademarks of the National
 Oceanic and Atmospheric Administration, used with permission.
