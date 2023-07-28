@@ -42,7 +42,7 @@ Alerting:
   # To enable this feature, specify an audio file containing a recording of the county name in the
   # ROOT of the SOUNDS/ directory as shown in the below example. You must create these files yourself.
   # You can use the same VoiceRSS API used for SkyDescribe (see below) to generate these files with a synthetic voice:
-  # http://api.voicerss.org/?key=[YOUR_API_KEY_HERE]=en-us&f=8khz_16bit_mono&v=John&src=[YOUR COUNTY NAME HERE]
+  # http://api.voicerss.org/?key=[YOUR_API_KEY_HERE]&hl=en-us&f=8khz_16bit_mono&v=John&src=[YOUR COUNTY NAME HERE]
   # http://api.voicerss.org/?key=1234567890QWERTY&hl=en-us&f=8khz_16bit_mono&v=John&src=Saline County
   # Example:
   # CountyCodes:
