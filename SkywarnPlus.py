@@ -914,6 +914,7 @@ def build_tailmessage(alerts):
         )
     )
 
+    added_counties = set()
     for (
         alert,
         counties,
@@ -965,7 +966,11 @@ def build_tailmessage(alerts):
                     else:
                         word_space = AudioSegment.silent(duration=400)
                     county_code = county["county_code"]
-                    if COUNTY_WAVS and county_code in COUNTY_CODES:
+                    if (
+                        COUNTY_WAVS
+                        and county_code in COUNTY_CODES
+                        and county_code not in added_counties
+                    ):
                         index = COUNTY_CODES.index(county_code)
                         county_name_file = COUNTY_WAVS[index]
                         LOGGER.debug(
@@ -974,18 +979,25 @@ def build_tailmessage(alerts):
                             county_name_file,
                             alert,
                         )
-                        combined_sound += word_space + AudioSegment.from_wav(
-                            os.path.join(SOUNDS_PATH, county_name_file)
-                        )
-                        # if this is the last county name, add 600ms of silence after the county name
-                        if counties.index(county) == len(counties) - 1:
-                            combined_sound += AudioSegment.silent(duration=600)
+                        try:
+                            combined_sound += word_space + AudioSegment.from_wav(
+                                os.path.join(SOUNDS_PATH, county_name_file)
+                            )
+                            # if this is the last county name, add 600ms of silence after the county name
+                            if counties.index(county) == len(counties) - 1:
+                                combined_sound += AudioSegment.silent(duration=600)
+                            added_counties.add(county_code)
+                        except FileNotFoundError:
+                            LOGGER.error(
+                                "buildTailMessage: Audio file not found: %s",
+                                os.path.join(SOUNDS_PATH, county_name_file),
+                            )
 
         except ValueError:
             LOGGER.error("Alert not found: %s", alert)
         except FileNotFoundError:
             LOGGER.error(
-                "Audio file not found: %s/ALERTS/SWP_%s.wav",
+                "buildTailMessage: Audio file not found: %s/ALERTS/SWP_%s.wav",
                 SOUNDS_PATH,
                 ALERT_INDEXES[index],
             )
