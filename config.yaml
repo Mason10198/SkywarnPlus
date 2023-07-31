@@ -1,4 +1,4 @@
-# SkywarnPlus v0.4.0 Configuration File
+# SkywarnPlus v0.4.2 Configuration File
 # Author: Mason Nelson (N5LSN/WRKF394)
 # Please edit this file according to your specific requirements.
 
@@ -74,6 +74,10 @@ Alerting:
   
   # Specify the WAV file in the SOUNDS/ALERTS directory to use as the alert seperator sound effect
   AlertSeperator: Woodblock.wav
+
+  # Enable audio tagging an alert as having "multiples" if there is more than one unique instance of that alert type
+  # If enabled, and there are 2x different Severe Thunderstorm Warnings in your area, the audio will be: "Severe Thunderstorm Warning, with multiples"
+  WithMultiples: true
 
   # Limit the maximum number of alerts to process in case of multiple alerts.
   # SkywarnPlus fetches all alerts, orders them by severity, and processes only the 'n' most severe alerts, where 'n' is the MaxAlerts value.
@@ -409,8 +413,21 @@ DEV:
   # Enable test alert injection instead of calling the NWS API by setting 'INJECT' to 'True'.
   INJECT: false
 
-  # List the test alerts to inject. Use a case-sensitive list. One alert per line.
+  # List the test alerts to inject. Alert titles are case sensitive.
+  # Optionally specify the CountyCodes and/or EndTime for each alert.
+  # CountyCodes used here must be defined at the top of this configuration file.
+  # Example:
+  # INJECTALERTS:
+  #   - Title: "Tornado Warning"
+  #     CountyCodes: ["ARC119", "ARC120"]
+  #   - Title: "Tornado Watch"
+  #     CountyCodes: ["ARC125"]
+  #     EndTime: "2023-08-01T12:00:00Z"
+  #   - Title: "Severe Thunderstorm Warning"
   INJECTALERTS:
-    - Tornado Warning
-    - Tornado Watch
-    - Severe Thunderstorm Warning
+  - Title: "Tornado Warning"
+    CountyCodes: ["ARC119", "ARC120"]
+  - Title: "Tornado Watch"
+    CountyCodes: ["ARC125"]
+  - Title: "Severe Thunderstorm Warning"
+    CountyCodes: ["ARC085"]

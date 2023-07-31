@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-SkyDescribe v0.4.0 by Mason Nelson
+SkyDescribe v0.4.2 by Mason Nelson
 ==================================================
 Text to Speech conversion for Weather Descriptions
 
@@ -45,25 +45,25 @@ CONFIG_PATH = os.path.join(BASE_DIR, "config.yaml")
 
 # Open and read configuration file
 with open(CONFIG_PATH, "r") as config_file:
-    config = YAML.load(config_file)
+    CONFIG = YAML.load(config_file)
 
 # Define tmp_dir
-TMP_DIR = config.get("DEV", []).get("TmpDir", "/tmp/SkywarnPlus")
+TMP_DIR = CONFIG.get("DEV", []).get("TmpDir", "/tmp/SkywarnPlus")
 
 # Define VoiceRSS settings
 # get api key, fellback 150
-API_KEY = config.get("SkyDescribe", []).get("APIKey", "")
-LANGUAGE = config.get("SkyDescribe", []).get("Language", "en-us")
-SPEED = config.get("SkyDescribe", []).get("Speed", 0)
-VOICE = config.get("SkyDescribe", []).get("Voice", "John")
-MAX_WORDS = config.get("SkyDescribe", []).get("MaxWords", 150)
+API_KEY = CONFIG.get("SkyDescribe", []).get("APIKey", "")
+LANGUAGE = CONFIG.get("SkyDescribe", []).get("Language", "en-us")
+SPEED = CONFIG.get("SkyDescribe", []).get("Speed", 0)
+VOICE = CONFIG.get("SkyDescribe", []).get("Voice", "John")
+MAX_WORDS = CONFIG.get("SkyDescribe", []).get("MaxWords", 150)
 
 # Path to the data file
 DATA_FILE = os.path.join(TMP_DIR, "data.json")
 
 # Define logger
 LOGGER = logging.getLogger(__name__)
-if config.get("Logging", []).get("Debug", False):
+if CONFIG.get("Logging", []).get("Debug", False):
     LOGGER.setLevel(logging.DEBUG)
 else:
     LOGGER.setLevel(logging.INFO)
@@ -286,13 +286,42 @@ def main(index_or_title):
             )
         else:
             alert, alert_data = alerts[index]
-            description = alert_data[0]["description"]
+
+            # Count the unique instances of the alert
+            unique_instances = len(
+                set((data["description"], data["end_time_utc"]) for data in alert_data)
+            )
+
+            # Modify the description
+            if unique_instances == 1:
+                description = alert_data[0]["description"]
+            else:
+                description = "{} unique instances of this alert exist. Describing the first instance. {}".format(
+                    unique_instances, alert_data[0]["description"]
+                )
+
     else:
         # Argument is not an index, assume it's a title
         title = index_or_title
         for alert, alert_data in alerts:
             if alert == title:  # Assuming alert is a title
-                description = alert_data[0]["description"]
+                # Count the unique instances of the alert
+                unique_instances = len(
+                    set(
+                        (data["description"], data["end_time_utc"])
+                        for data in alert_data
+                    )
+                )
+
+                # Modify the description
+                if unique_instances == 1:
+                    description = alert_data[0]["description"]
+                else:
+                    description = "There are {} unique instances of {}. Describing the first instance. {}".format(
+                        unique_instances,
+                        alert,
+                        alert_data[0]["description"]
+                    )
                 break
         else:
             LOGGER.error("SkyDescribe: No alert with title %s found.", title)
@@ -322,7 +351,7 @@ def main(index_or_title):
         duration = frames / float(rate)
     LOGGER.debug("SkyDescribe: Length of the audio file in seconds: %s", duration)
 
-    nodes = config["Asterisk"]["Nodes"]
+    nodes = CONFIG["Asterisk"]["Nodes"]
     for node in nodes:
         LOGGER.info("SkyDescribe: Broadcasting description on node %s.", node)
         command = "/usr/sbin/asterisk -rx 'rpt localplay {} {}'".format(

@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-SkywarnPlus v0.4.0 by Mason Nelson
+SkywarnPlus v0.4.2 by Mason Nelson
 ===============================================================================
 SkywarnPlus is a utility that retrieves severe weather alerts from the National 
 Weather Service and integrates these alerts with an Asterisk/app_rpt based 
@@ -386,35 +386,50 @@ def get_alerts(countyCodes):
         LOGGER.debug("getAlerts: DEV Alert Injection Enabled")
         injected_alerts = config["DEV"].get("INJECTALERTS", [])
         LOGGER.debug("getAlerts: Injecting alerts: %s", injected_alerts)
-        if injected_alerts is None:
-            injected_alerts = []
 
-        county_codes_cycle = itertools.cycle(
-            countyCodes
-        )  # Create an iterator that returns elements from the iterable in a cyclic manner
+        max_counties = len(countyCodes)  # Assuming countyCodes is a list of counties
+        county_codes_cycle = itertools.cycle(countyCodes)
 
-        counter = 0
-        for i, event in enumerate(injected_alerts):
-            last_word = event.split()[-1]
+        for alert_info in injected_alerts:
+            if isinstance(alert_info, dict):
+                alert_title = alert_info.get("Title", "")
+                specified_counties = alert_info.get("CountyCodes", [])
+            else:
+                continue  # Ignore if not a dictionary
+
+            last_word = alert_title.split()[-1]
             severity = severity_mapping_words.get(last_word, 0)
             description = "This alert was manually injected as a test."
 
+            end_time_str = alert_info.get("EndTime")
+
             county_data = []
-            for j in range(
-                i + 1
-            ):  # Here we increase the number of county codes for each alert
-                end_time_utc = current_time + timedelta(hours=counter + 1)
+            for county in specified_counties:
+                if county not in countyCodes:
+                    LOGGER.error(
+                        "Specified county code '%s' is not defined in the config. Using next available county code from the config.",
+                        county,
+                    )
+                    county = next(county_codes_cycle)
+
+                end_time = (
+                    datetime.strptime(end_time_str, "%Y-%m-%dT%H:%M:%SZ")
+                    if end_time_str
+                    else current_time + timedelta(hours=1)
+                )
+
                 county_data.append(
                     {
-                        "county_code": next(county_codes_cycle),
+                        "county_code": county,
                         "severity": severity,
                         "description": description,
-                        "end_time_utc": end_time_utc.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                        "end_time_utc": end_time.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                     }
                 )
-                counter += 1  # Increase counter here
 
-            alerts[event] = county_data  # Add the list of dictionaries to the alert
+            alerts[
+                alert_title
+            ] = county_data  # Add the list of dictionaries to the alert
 
         # We limit the number of alerts to the maximum defined constant.
         alerts = OrderedDict(list(alerts.items())[:MAX_ALERTS])
@@ -689,10 +704,7 @@ def say_alerts(alerts):
     )
 
     alert_count = 0
-    for (
-        alert,
-        counties,
-    ) in alerts.items():  # Now we loop over both alert name and its associated counties
+    for alert, counties in alerts.items():
         if alert in filtered_alerts:
             try:
                 descriptions = [county["description"] for county in counties]
@@ -722,15 +734,18 @@ def say_alerts(alerts):
                     )
                 alert_count += 1
 
-                # Add county names if they exist
+                added_county_codes = set()
                 for county in counties:
-                    # if its the first county, word_space is 600ms of silence. else it is 400ms
                     if counties.index(county) == 0:
                         word_space = AudioSegment.silent(duration=600)
                     else:
                         word_space = AudioSegment.silent(duration=400)
                     county_code = county["county_code"]
-                    if COUNTY_WAVS and county_code in COUNTY_CODES:
+                    if (
+                        COUNTY_WAVS
+                        and county_code in COUNTY_CODES
+                        and county_code not in added_county_codes
+                    ):
                         index = COUNTY_CODES.index(county_code)
                         county_name_file = COUNTY_WAVS[index]
                         LOGGER.debug(
@@ -739,10 +754,17 @@ def say_alerts(alerts):
                             county_name_file,
                             alert,
                         )
-                        combined_sound += word_space + AudioSegment.from_wav(
-                            os.path.join(SOUNDS_PATH, county_name_file)
-                        )
-                        # if this is the last county name, add 600ms of silence after the county name
+                        try:
+                            combined_sound += word_space + AudioSegment.from_wav(
+                                os.path.join(SOUNDS_PATH, county_name_file)
+                            )
+                        except FileNotFoundError:
+                            LOGGER.error(
+                                "sayAlert: County audio file not found: %s",
+                                os.path.join(SOUNDS_PATH, county_name_file),
+                            )
+                        added_county_codes.add(county_code)
+
                         if counties.index(county) == len(counties) - 1:
                             combined_sound += AudioSegment.silent(duration=600)
 
@@ -750,7 +772,7 @@ def say_alerts(alerts):
                 LOGGER.error("sayAlert: Alert not found: %s", alert)
             except FileNotFoundError:
                 LOGGER.error(
-                    "sayAlert: Audio file not found: %s/ALERTS/SWP_%s.wav",
+                    "sayAlert: Alert audio file not found: %s/ALERTS/SWP_%s.wav",
                     SOUNDS_PATH,
                     ALERT_INDEXES[index],
                 )
@@ -920,15 +942,16 @@ def build_tailmessage(alerts):
 
             descriptions = [county["description"] for county in counties]
             end_times = [county["end_time_utc"] for county in counties]
-            if len(set(descriptions)) > 1 or len(set(end_times)) > 1:
-                LOGGER.debug(
-                    "buildTailMessage: Found multiple unique instances of the alert %s",
-                    alert,
-                )
-                multiples_sound = AudioSegment.from_wav(
-                    os.path.join(SOUNDS_PATH, "ALERTS", "SWP_149.wav")
-                )
-                combined_sound += AudioSegment.silent(duration=200) + multiples_sound
+            if config["Alerting"]["WithMultiples"]:
+                if len(set(descriptions)) > 1 or len(set(end_times)) > 1:
+                    LOGGER.debug(
+                        "buildTailMessage: Found multiple unique instances of the alert %s",
+                        alert,
+                    )
+                    multiples_sound = AudioSegment.from_wav(
+                        os.path.join(SOUNDS_PATH, "ALERTS", "SWP_149.wav")
+                    )
+                    combined_sound += AudioSegment.silent(duration=200) + multiples_sound
 
             # Add county names if they exist
             if county_identifiers:
