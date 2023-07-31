@@ -721,17 +721,18 @@ def say_alerts(alerts):
                     alert,
                     ALERT_INDEXES[index],
                 )
-                if len(set(descriptions)) > 1 or len(set(end_times)) > 1:
-                    LOGGER.debug(
-                        "sayAlert: Found multiple unique instances of the alert %s",
-                        alert,
-                    )
-                    multiples_sound = AudioSegment.from_wav(
-                        os.path.join(SOUNDS_PATH, "ALERTS", "SWP_149.wav")
-                    )
-                    combined_sound += (
-                        AudioSegment.silent(duration=200) + multiples_sound
-                    )
+                if config["Alerting"]["WithMultiples"]:
+                    if len(set(descriptions)) > 1 or len(set(end_times)) > 1:
+                        LOGGER.debug(
+                            "sayAlert: Found multiple unique instances of the alert %s",
+                            alert,
+                        )
+                        multiples_sound = AudioSegment.from_wav(
+                            os.path.join(SOUNDS_PATH, "ALERTS", "SWP_149.wav")
+                        )
+                        combined_sound += (
+                            AudioSegment.silent(duration=200) + multiples_sound
+                        )
                 alert_count += 1
 
                 added_county_codes = set()
@@ -951,7 +952,9 @@ def build_tailmessage(alerts):
                     multiples_sound = AudioSegment.from_wav(
                         os.path.join(SOUNDS_PATH, "ALERTS", "SWP_149.wav")
                     )
-                    combined_sound += AudioSegment.silent(duration=200) + multiples_sound
+                    combined_sound += (
+                        AudioSegment.silent(duration=200) + multiples_sound
+                    )
 
             # Add county names if they exist
             if county_identifiers:
