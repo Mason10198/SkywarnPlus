@@ -296,8 +296,10 @@ def main(index_or_title):
             if unique_instances == 1:
                 description = alert_data[0]["description"]
             else:
-                description = "{} unique instances of this alert exist. Describing the first instance. {}".format(
-                    unique_instances, alert_data[0]["description"]
+                description = "There are {} unique instances of {}. Describing the first one. {}".format(
+                    unique_instances,
+                    alert,
+                    alert_data[0]["description"]
                 )
 
     else:
@@ -317,7 +319,7 @@ def main(index_or_title):
                 if unique_instances == 1:
                     description = alert_data[0]["description"]
                 else:
-                    description = "There are {} unique instances of {}. Describing the first instance. {}".format(
+                    description = "There are {} unique instances of {}. Describing the first one. {}".format(
                         unique_instances,
                         alert,
                         alert_data[0]["description"]
