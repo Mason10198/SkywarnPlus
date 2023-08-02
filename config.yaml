@@ -426,8 +426,5 @@ DEV:
   #   - Title: "Severe Thunderstorm Warning"
   INJECTALERTS:
   - Title: "Tornado Warning"
-    CountyCodes: ["ARC119", "ARC120"]
   - Title: "Tornado Watch"
-    CountyCodes: ["ARC125"]
   - Title: "Severe Thunderstorm Warning"
-    CountyCodes: ["ARC085"]
