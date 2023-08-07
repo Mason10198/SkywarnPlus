@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-SkyDescribe v0.4.3 by Mason Nelson
+SkyDescribe v0.4.2 by Mason Nelson
 ==================================================
 Text to Speech conversion for Weather Descriptions
 
@@ -267,13 +267,6 @@ def convert_to_audio(api_key, text):
     return audio_file_path
 
 
-def pluralize(word):
-    if word.endswith('s') or word.endswith('sh') or word.endswith('ch') or word.endswith('x'):
-        return word + 'es'
-    else:
-        return word + 's'
-
-
 def main(index_or_title):
     state = load_state()
     alerts = list(state["last_alerts"].items())
@@ -303,9 +296,9 @@ def main(index_or_title):
             if unique_instances == 1:
                 description = alert_data[0]["description"]
             else:
-                description = "There are {} unique {} in the area. Describing the first one. {}".format(
+                description = "There are {} unique instances of {}. Describing the first one. {}".format(
                     unique_instances,
-                    pluralize(alert),
+                    alert,
                     alert_data[0]["description"]
                 )
 
@@ -326,9 +319,9 @@ def main(index_or_title):
                 if unique_instances == 1:
                     description = alert_data[0]["description"]
                 else:
-                    description = "There are {} unique {} in the area. Describing the first one. {}".format(
+                    description = "There are {} unique instances of {}. Describing the first one. {}".format(
                         unique_instances,
-                        pluralize(alert),
+                        alert,
                         alert_data[0]["description"]
                     )
                 break

@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-SkywarnPlus v0.4.3 by Mason Nelson
+SkywarnPlus v0.4.2 by Mason Nelson
 ===============================================================================
 SkywarnPlus is a utility that retrieves severe weather alerts from the National 
 Weather Service and integrates these alerts with an Asterisk/app_rpt based 
@@ -1345,34 +1345,6 @@ def supermon_back_compat(alerts):
         file.write("<br>".join(alert_titles))
 
 
-def detect_new_counties(old_alerts, new_alerts):
-    """
-    Detect if any new counties have been added to an alert.
-    """
-    is_new_counties = False
-    alerts_with_new_counties = {}
-
-    for alert_name, alert_info in new_alerts.items():
-        old_alert_info = old_alerts.get(alert_name, [])
-        old_county_codes = {info['county_code'] for info in old_alert_info}
-        new_county_codes = {info['county_code'] for info in alert_info}
-        added_counties = new_county_codes - old_county_codes
-        old_county_codes = {code.replace("{", "").replace("}", "").replace('"', "") for code in old_county_codes}
-        added_counties = {code.replace("{", "").replace("}", "").replace('"', "") for code in added_counties}
-
-        if added_counties:
-            alerts_with_new_counties[alert_name] = new_alerts[alert_name]
-            LOGGER.info('{} for {} is now also affecting: {}'.format(alert_name, ", ".join(old_county_codes), ", ".join(added_counties)))
-            is_new_counties = True
-
-    if COUNTY_WAVS and alerts_with_new_counties:
-        say_alerts(alerts_with_new_counties)
-        if config.get("Tailmessage", {}).get("TailmessageCounties", False):
-            build_tailmessage(alerts_with_new_counties)
-
-    return is_new_counties
-
-
 def main():
     """
     The main function that orchestrates the entire process of fetching and
@@ -1485,17 +1457,13 @@ def main():
             LOGGER.debug("Sending pushover notification: %s", pushover_message)
             send_pushover(pushover_message, title="Alerts Changed")
     else:
-        if not detect_new_counties(last_alerts, alerts):
-            if sys.stdin.isatty():
-                # list of current alerts, unless there arent any, then current_alerts = "None"
-                current_alerts = "None" if len(alerts) == 0 else ", ".join(alerts.keys())
-                LOGGER.info("No change in alerts.")
-                LOGGER.info("Current alerts: %s.", current_alerts)
-            else:
-                LOGGER.debug("No change in alerts.")
+        if sys.stdin.isatty():
+            # list of current alerts, unless there arent any, then current_alerts = "None"
+            current_alerts = "None" if len(alerts) == 0 else ", ".join(alerts.keys())
+            LOGGER.info("No change in alerts.")
+            LOGGER.info("Current alerts: %s.", current_alerts)
         else:
-            state["last_alerts"] = alerts
-            save_state(state)
+            LOGGER.debug("No change in alerts.")
 
 
 if __name__ == "__main__":
