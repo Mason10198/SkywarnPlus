@@ -1473,10 +1473,10 @@ def load_county_names(md_file):
     county_data = {}
     in_table = False
     for line in lines:
-        if line.startswith("| County Name"):
+        if line.startswith("| County |"):
             in_table = True
             continue  # Skip the header
-        elif not in_table or line.strip() == "":
+        elif not in_table or line.strip() == "" or line.startswith("##"):
             continue
         else:
             name, code = [s.strip() for s in line.split("|")[1:-1]]
