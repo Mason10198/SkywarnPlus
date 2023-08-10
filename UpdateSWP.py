@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-SkywarnPlus Updater v0.4.2 by Mason Nelson
+UpdateSWP.py by Mason Nelson
 ===============================================================================
 Script to update SkywarnPlus to the latest version. This script will download
 the latest version of SkywarnPlus from GitHub, and then merge the existing
@@ -112,6 +112,35 @@ def remove_duplicate_comments(filename):
     # Write the new lines back to the file
     with open(filename, "w") as f:
         f.writelines(new_lines)
+        
+
+# Display the initial warning
+def display_update_warning():
+    warning_message = """
+    ============================================================
+    WARNING: Please read the following information carefully before updating.
+
+    This utility is designed to update SkywarnPlus to the latest version by fetching it 
+    directly from GitHub. Before updating:
+    
+    - A backup of the existing SkywarnPlus directory will be created to ensure safety.
+    
+    - The updater will attempt to merge your existing config.yaml with the new version's 
+      config.yaml. ALWAYS double-check your config.yaml after updating. This script is not 
+      perfect and may not merge your configuration correctly.
+    
+    - If you've made significant changes to the SkywarnPlus code, directory structure, or 
+      configuration, this updater might not work correctly. In such cases, manual updating 
+      is recommended.
+    
+    Remember, this script's primary goal is to help with the updating process. However, 
+    given the complexities of merging and updating, always verify the results yourself to 
+      ensure your system continues to operate as expected.
+
+    Proceed with caution.
+    ============================================================
+    """
+    print(warning_message)
 
 
 # Check for root privileges
@@ -125,17 +154,10 @@ if not os.path.isfile("SkywarnPlus.py"):
     )
     exit()
 
-# Prompt for confirmation unless -f flag is present
+# Display the warning message
 if not args.force:
-    print("\nThis script will update SkywarnPlus to the latest version.")
-    print(
-        "It will create a backup of the existing SkywarnPlus directory before updating."
-    )
-    print(
-        "Be aware that if you've made significant changes to the code or directory structure, this may cause issues."
-    )
-    print("If you've made significant changes, it is recommended to update manually.\n")
-    print("ALWAYS DOUBLE CHECK YOUR CONFIG.YAML AFTER UPDATING! This script is not perfect and may not merge your config.yaml correctly.\n")
+    display_update_warning()
+    
     confirmation = input("\nDo you want to continue with the update? (yes/no) ")
     if confirmation.lower() != "yes":
         log("Update cancelled by user.")

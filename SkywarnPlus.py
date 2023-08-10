@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-SkywarnPlus v0.4.2 by Mason Nelson
+SkywarnPlus.py v0.5.0 by Mason Nelson
 ===============================================================================
 SkywarnPlus is a utility that retrieves severe weather alerts from the National 
 Weather Service and integrates these alerts with an Asterisk/app_rpt based 
@@ -53,6 +53,7 @@ yaml = YAML()
 # Directories and Paths
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 CONFIG_PATH = os.path.join(BASE_DIR, "config.yaml")
+COUNTY_CODES_PATH = os.path.join(BASE_DIR, "CountyCodes.md")
 
 # Open and read configuration file
 with open(CONFIG_PATH, "r") as config_file:
@@ -319,19 +320,31 @@ LOGGER.debug("Tailmessage Blocked events: %s", TAILMESSAGE_BLOCKED_EVENTS)
 def load_state():
     """
     Load the state from the state file if it exists, else return an initial state.
+
+    The state file is expected to be a JSON file. If certain keys are missing in the
+    loaded state, this function will provide default values for those keys.
     """
+
+    # Check if the state data file exists
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE, "r") as file:
             state = json.load(file)
+
+            # Ensure 'alertscript_alerts' key is present in the state, default to an empty list
             state["alertscript_alerts"] = state.get("alertscript_alerts", [])
 
-            # Process 'last_alerts' and maintain the order of alerts
+            # Process 'last_alerts' key to maintain the order of alerts using OrderedDict
+            # This step is necessary because JSON does not preserve order by default
             last_alerts = state.get("last_alerts", [])
             state["last_alerts"] = OrderedDict((x[0], x[1]) for x in last_alerts)
 
+            # Ensure 'last_sayalert' and 'active_alerts' keys are present in the state
             state["last_sayalert"] = state.get("last_sayalert", [])
             state["active_alerts"] = state.get("active_alerts", [])
+
             return state
+
+    # If the state data file does not exist, return a default state
     else:
         return {
             "ct": None,
@@ -346,22 +359,33 @@ def load_state():
 def save_state(state):
     """
     Save the state to the state file.
+
+    The state is saved as a JSON file. The function ensures certain keys in the state
+    are converted to lists before saving, ensuring consistency and ease of processing
+    when the state is later loaded.
     """
+
+    # Convert 'alertscript_alerts', 'last_sayalert', and 'active_alerts' keys to lists
+    # This ensures consistency in data format, especially useful when loading the state later
     state["alertscript_alerts"] = list(state["alertscript_alerts"])
-    state["last_alerts"] = list(state["last_alerts"].items())
     state["last_sayalert"] = list(state["last_sayalert"])
     state["active_alerts"] = list(state["active_alerts"])
+
+    # Convert 'last_alerts' from OrderedDict to list of items
+    # This step is necessary because JSON does not natively support OrderedDict
+    state["last_alerts"] = list(state["last_alerts"].items())
+
+    # Save the state to the data file in a formatted manner
     with open(DATA_FILE, "w") as file:
         json.dump(state, file, ensure_ascii=False, indent=4)
 
 
 def get_alerts(countyCodes):
     """
-    This function retrieves severe weather alerts for specified county codes.
+    Retrieves severe weather alerts for specified county codes and processes them.
     """
 
-    # Mapping dictionaries are defined for converting the severity level from the
-    # API's terminology to a numeric scale and from common alert language to the same numeric scale.
+    # Define mappings to convert severity levels from various terminologies to a numeric scale
     severity_mapping_api = {
         "Extreme": 4,
         "Severe": 3,
@@ -371,17 +395,15 @@ def get_alerts(countyCodes):
     }
     severity_mapping_words = {"Warning": 4, "Watch": 3, "Advisory": 2, "Statement": 1}
 
-    # 'alerts' will store the alert data we retrieve.
-    # 'seen_alerts' is used to keep track of the alerts we've already processed.
+    # Initialize storage for the alerts and a set to keep track of processed alerts
     alerts = OrderedDict()
     seen_alerts = set()
 
-    # We retrieve the current time and log it for debugging purposes.
+    # Log current time for reference
     current_time = datetime.now(timezone.utc)
     LOGGER.debug("getAlerts: Current time: %s", current_time)
 
-    # The script allows for alert injection for testing purposes.
-    # If injection is enabled in the configuration, we process these injected alerts first.
+    # Handle alert injection for development/testing purposes
     if config.get("DEV", {}).get("INJECT", False):
         LOGGER.debug("getAlerts: DEV Alert Injection Enabled")
         injected_alerts = config["DEV"].get("INJECTALERTS", [])
@@ -389,6 +411,8 @@ def get_alerts(countyCodes):
 
         max_counties = len(countyCodes)  # Assuming countyCodes is a list of counties
         county_codes_cycle = itertools.cycle(countyCodes)
+
+        county_assignment_counter = 1
 
         for alert_info in injected_alerts:
             if isinstance(alert_info, dict):
@@ -404,6 +428,17 @@ def get_alerts(countyCodes):
             end_time_str = alert_info.get("EndTime")
 
             county_data = []
+
+            # If no counties are specified, use the ones provided to the function in an increasing manner
+            if not specified_counties:
+                # Limit the number of counties assigned to not exceed max_counties
+                counties_to_assign = min(county_assignment_counter, max_counties)
+
+                specified_counties = [
+                    next(county_codes_cycle) for _ in range(counties_to_assign)
+                ]
+                county_assignment_counter += 1  # Increment for the next injected alert
+
             for county in specified_counties:
                 if county not in countyCodes:
                     LOGGER.error(
@@ -431,11 +466,8 @@ def get_alerts(countyCodes):
                 alert_title
             ] = county_data  # Add the list of dictionaries to the alert
 
-        # We limit the number of alerts to the maximum defined constant.
-        alerts = OrderedDict(list(alerts.items())[:MAX_ALERTS])
-
         # If injected alerts are used, we return them here and don't proceed with the function.
-        return alerts
+        return sort_alerts(alerts)
 
     # Configuration specifies whether to use 'effective' or 'onset' time for alerts.
     # Depending on the configuration, we set the appropriate keys for start and end time.
@@ -632,16 +664,52 @@ def get_alerts(countyCodes):
     return alerts
 
 
+def sort_alerts(alerts):
+    """
+    Sorts and limits the alerts based on their severity and word severity.
+    """
+
+    # Define mapping for converting common alert terminologies to a numeric severity scale
+    severity_mapping_words = {"Warning": 4, "Watch": 3, "Advisory": 2, "Statement": 1}
+
+    # Sort the alerts first by their maximum severity, and then by their word severity
+    sorted_alerts = OrderedDict(
+        sorted(
+            alerts.items(),
+            key=lambda item: (
+                max([x["severity"] for x in item[1]]),  # Max Severity for the alert
+                severity_mapping_words.get(
+                    item[0].split()[-1], 0
+                ),  # Severity based on last word in the alert title
+            ),
+            reverse=True,  # Sort in descending order
+        )
+    )
+
+    # Truncate the list of alerts to the maximum allowed number (MAX_ALERTS)
+    limited_alerts = OrderedDict(list(sorted_alerts.items())[:MAX_ALERTS])
+
+    return limited_alerts
+
+
 def time_until(start_time_utc, current_time):
     """
     Calculate the time difference between two datetime objects and returns it
     as a formatted string.
     """
+
+    # Calculate the time difference between the two datetime objects
     delta = start_time_utc - current_time
+
+    # Determine the sign (used for formatting)
     sign = "-" if delta < timedelta(0) else ""
+
+    # Decompose the time difference into days, hours, and minutes
     days, remainder = divmod(abs(delta.total_seconds()), 86400)
     hours, remainder = divmod(remainder, 3600)
     minutes, _ = divmod(remainder, 60)
+
+    # Return the time difference as a formatted string
     return "{}{} days, {} hours, {} minutes".format(
         sign, int(days), int(hours), int(minutes)
     )
@@ -651,34 +719,41 @@ def say_alerts(alerts):
     """
     Generate and broadcast severe weather alert sounds on Asterisk.
     """
-    # Define the path of the alert file
+
+    # Load the current state
     state = load_state()
 
-    # Extract only the alert names from the OrderedDict keys
-    alert_names = [alert for alert in alerts.keys()]
+    # Extract only the alert names and associated counties
+    alert_names_and_counties = {
+        alert: [county["county_code"] for county in counties]
+        for alert, counties in alerts.items()
+    }
 
-    filtered_alerts = []
-    for alert in alert_names:
+    # Filter out alerts that are blocked based on configuration
+    filtered_alerts_and_counties = {}
+    for alert, county_codes in alert_names_and_counties.items():
         if any(
             fnmatch.fnmatch(alert, blocked_event)
             for blocked_event in SAYALERT_BLOCKED_EVENTS
         ):
             LOGGER.debug("sayAlert: blocking %s as per configuration", alert)
             continue
-        filtered_alerts.append(alert)
+        filtered_alerts_and_counties[alert] = county_codes
 
     # Check if the filtered alerts are the same as the last run
-    if filtered_alerts == state["last_sayalert"]:
-        LOGGER.debug("sayAlert: alerts are the same as the last broadcast - skipping.")
+    if filtered_alerts_and_counties == state.get("last_sayalert", {}):
+        LOGGER.debug(
+            "sayAlert: alerts and counties are the same as the last broadcast - skipping."
+        )
         return
 
-    state["last_sayalert"] = filtered_alerts
+    # Update the state with the current alerts
+    state["last_sayalert"] = filtered_alerts_and_counties
     save_state(state)
 
+    # Initialize the audio segments and paths
     alert_file = "{}/alert.wav".format(TMP_DIR)
-
     word_space = AudioSegment.silent(duration=600)
-
     sound_effect = AudioSegment.from_wav(
         os.path.join(
             SOUNDS_PATH,
@@ -687,7 +762,6 @@ def say_alerts(alerts):
             config.get("Alerting", {}).get("AlertSeperator", "Woodblock.wav"),
         )
     )
-
     intro_effect = AudioSegment.from_wav(
         os.path.join(
             SOUNDS_PATH,
@@ -696,16 +770,16 @@ def say_alerts(alerts):
             config.get("Alerting", {}).get("AlertSound", "Duncecap.wav.wav"),
         )
     )
-
     combined_sound = (
         intro_effect
         + word_space
         + AudioSegment.from_wav(os.path.join(SOUNDS_PATH, "ALERTS", "SWP_148.wav"))
     )
 
+    # Build the combined sound with alerts and county names
     alert_count = 0
     for alert, counties in alerts.items():
-        if alert in filtered_alerts:
+        if alert in filtered_alerts_and_counties:
             try:
                 descriptions = [county["description"] for county in counties]
                 end_times = [county["end_time_utc"] for county in counties]
@@ -831,12 +905,13 @@ def say_allclear():
     """
     Generate and broadcast 'all clear' message on Asterisk.
     """
-    # Empty the last_sayalert list so that the next run will broadcast alerts
+
+    # Load current state and clear the last_sayalert list
     state = load_state()
     state["last_sayalert"] = []
     save_state(state)
 
-    # Load sound file paths
+    # Define file paths for the sounds
     all_clear_sound_file = os.path.join(
         config.get("Alerting", {}).get("SoundsPath"),
         "ALERTS",
@@ -845,25 +920,28 @@ def say_allclear():
     )
     swp_147_file = os.path.join(SOUNDS_PATH, "ALERTS", "SWP_147.wav")
 
-    # Create AudioSegment objects
+    # Load sound files into AudioSegment objects
     all_clear_sound = AudioSegment.from_wav(all_clear_sound_file)
     swp_147_sound = AudioSegment.from_wav(swp_147_file)
 
-    # Create silence
-    silence = AudioSegment.silent(duration=600)  # 600 ms silence
+    # Generate silence for spacing between sounds
+    silence = AudioSegment.silent(duration=600)  # 600 ms of silence
 
-    # Combine the sounds with silence in between
+    # Combine the sound clips
     combined_sound = all_clear_sound + silence + swp_147_sound
 
+    # Add a delay before the sound if configured
     if AUDIO_DELAY > 0:
         LOGGER.debug("sayAllClear: Prepending audio with %sms of silence", AUDIO_DELAY)
         silence = AudioSegment.silent(duration=AUDIO_DELAY)
         combined_sound = silence + combined_sound
 
+    # Export the combined sound to a file
     all_clear_file = os.path.join(TMP_DIR, "allclear.wav")
     converted_combined_sound = convert_audio(combined_sound)
     converted_combined_sound.export(all_clear_file, format="wav")
 
+    # Append a suffix to the sound if configured
     if config.get("Alerting", {}).get("SayAllClearSuffix", None) is not None:
         suffix_file = os.path.join(
             SOUNDS_PATH, config.get("Alerting", {}).get("SayAllClearSuffix")
@@ -873,6 +951,7 @@ def say_allclear():
         converted_suffix_sound = convert_audio(suffix_sound)
         converted_suffix_sound.export(all_clear_file, format="wav")
 
+    # Play the "all clear" sound on the configured Asterisk nodes
     node_numbers = config.get("Asterisk", {}).get("Nodes", [])
     for node_number in node_numbers:
         LOGGER.info("Broadcasting all clear message on node %s", node_number)
@@ -897,6 +976,7 @@ def build_tailmessage(alerts):
     # Get the suffix config
     tailmessage_suffix = config.get("Tailmessage", {}).get("TailmessageSuffix", None)
 
+    # If alerts is empty
     if not alerts:
         LOGGER.debug("buildTailMessage: No alerts, creating silent tailmessage")
         silence = AudioSegment.silent(duration=100)
@@ -1345,6 +1425,73 @@ def supermon_back_compat(alerts):
         file.write("<br>".join(alert_titles))
 
 
+def detect_county_changes(old_alerts, new_alerts):
+    """
+    Detect if any counties have been added to or removed from an alert and return the alerts
+    with added or removed counties.
+    """
+    alerts_with_changed_counties = OrderedDict()
+    changes_detected = {}
+
+    for alert_name, alert_info in new_alerts.items():
+        if alert_name not in old_alerts:
+            continue
+        old_alert_info = old_alerts.get(alert_name, [])
+        old_county_codes = {info["county_code"] for info in old_alert_info}
+        new_county_codes = {info["county_code"] for info in alert_info}
+
+        added_counties = new_county_codes - old_county_codes
+        removed_counties = old_county_codes - new_county_codes
+
+        added_counties = {
+            code.replace("{", "").replace("}", "").replace('"', "")
+            for code in added_counties
+        }
+        removed_counties = {
+            code.replace("{", "").replace("}", "").replace('"', "")
+            for code in removed_counties
+        }
+
+        if added_counties or removed_counties:
+            alerts_with_changed_counties[alert_name] = new_alerts[alert_name]
+            changes_detected[alert_name] = {
+                "old": old_county_codes,
+                "added": added_counties,
+                "removed": removed_counties,
+            }
+
+    return alerts_with_changed_counties, changes_detected
+
+
+def load_county_names(md_file):
+    """
+    Load county names from separate markdown tables so that county codes can be replaced with county names.
+    """
+    with open(md_file, "r") as f:
+        lines = f.readlines()
+
+    county_data = {}
+    in_table = False
+    for line in lines:
+        if line.startswith("| County Name"):
+            in_table = True
+            continue  # Skip the header
+        elif not in_table or line.strip() == "":
+            continue
+        else:
+            name, code = [s.strip() for s in line.split("|")[1:-1]]
+            county_data[code] = name
+
+    return county_data
+
+
+def replace_with_county_name(county_code, county_data):
+    """
+    Translate county code to county name.
+    """
+    return county_data.get(county_code, county_code)
+
+
 def main():
     """
     The main function that orchestrates the entire process of fetching and
@@ -1353,96 +1500,220 @@ def main():
     """
     # Fetch configurations
     say_alert_enabled = config["Alerting"].get("SayAlert", False)
+    say_alert_all = config["Alerting"].get("SayAlertAll", False)
     say_all_clear_enabled = config["Alerting"].get("SayAllClear", False)
     alertscript_enabled = config["AlertScript"].get("Enable", False)
+    ct_alerts = config["CourtesyTones"].get("CTAlerts", [])
+    enable_ct_auto_change = config["CourtesyTones"].get("Enable", False)
+    id_alerts = config["IDChange"].get("IDAlerts", [])
+    enable_id_auto_change = config["IDChange"].get("Enable", False)
+    pushover_enabled = config["Pushover"].get("Enable", False)
+    pushover_debug = config["Pushover"].get("Debug", False)
+    supermon_compat_enabled = config["DEV"].get("SupermonCompat", True)
+    say_alerts_changed = config["Alerting"].get("SayAlertsChanged", True)
 
-    # Fetch state
+    # If data file does not exist, assume this is the first run and initialize CT/ID/Tailmessage files if enabled
+    if not os.path.isfile(DATA_FILE):
+        LOGGER.info("Data file does not exist, assuming first run.")
+        if enable_ct_auto_change:
+            LOGGER.info("Initializing CT files")
+            change_ct("NORMAL")
+        if enable_id_auto_change:
+            LOGGER.info("Initializing ID files")
+            change_id("NORMAL")
+        if ENABLE_TAILMESSAGE:
+            LOGGER.info("Initializing Tailmessage file")
+            empty_alerts = OrderedDict()
+            build_tailmessage(empty_alerts)
+
+    # Load previous alert data to compare changes
     state = load_state()
-
-    # Load old alerts
     last_alerts = state["last_alerts"]
 
-    # Fetch new alerts
+    # Fetch new alert data
     alerts = get_alerts(COUNTY_CODES)
 
-    # If new alerts differ from old ones, process new alerts
-    if [alert[0] for alert in last_alerts.keys()] != [
-        alert[0] for alert in alerts.keys()
-    ]:
-        added_alerts = [
-            alert for alert in alerts.keys() if alert not in last_alerts.keys()
-        ]
-        removed_alerts = [
-            alert for alert in last_alerts.keys() if alert not in alerts.keys()
-        ]
+    # Load county names from YAML file so that county codes can be replaced with county names in messages
+    county_data = load_county_names(COUNTY_CODES_PATH)
 
-        if added_alerts:
-            LOGGER.info("Added: %s", ", ".join(alert for alert in added_alerts))
-        if removed_alerts:
-            LOGGER.info("Removed: %s", ", ".join(alert for alert in removed_alerts))
+    # Placeholder for constructing a pushover message
+    pushover_message = ""
 
+    # Determine which alerts have been added since the last check
+    added_alerts = [alert for alert in alerts if alert not in last_alerts]
+    for alert in added_alerts:
+        counties_str = (
+            "["
+            + ", ".join(
+                [
+                    replace_with_county_name(x["county_code"], county_data)
+                    for x in alerts[alert]
+                ]
+            )
+            + "]"
+        )
+        LOGGER.info("Added: {} for {}".format(alert, counties_str))
+        pushover_message += "Added: {} for {}\n".format(alert, counties_str)
+
+    # Determine which alerts have been removed since the last check
+    removed_alerts = [alert for alert in last_alerts if alert not in alerts]
+    for alert in removed_alerts:
+        counties_str = (
+            "["
+            + ", ".join(
+                [
+                    replace_with_county_name(x["county_code"], county_data)
+                    for x in last_alerts[alert]
+                ]
+            )
+            + "]"
+        )
+        LOGGER.info("Removed: {} for {}".format(alert, counties_str))
+        pushover_message += "Removed: {} for {}\n".format(alert, counties_str)
+
+    # Placeholder for storing alerts with changed county codes
+    changed_alerts = {}
+
+    # If the list of alerts is not empty
+    if alerts:
+        # Compare old and new alerts to detect changes in affected counties
+        changed_alerts, changes_details = detect_county_changes(last_alerts, alerts)
+
+        for alert, details in changes_details.items():
+            old_counties_str = (
+                "["
+                + ", ".join(
+                    [
+                        replace_with_county_name(county, county_data)
+                        for county in details["old"]
+                    ]
+                )
+                + "]"
+            )
+
+            added_msg = ""
+            if details["added"]:
+                added_counties_str = (
+                    "["
+                    + ", ".join(
+                        [
+                            replace_with_county_name(county, county_data)
+                            for county in details["added"]
+                        ]
+                    )
+                    + "]"
+                )
+                added_msg = "is now also affecting {}".format(added_counties_str)
+
+            removed_msg = ""
+            if details["removed"]:
+                removed_counties_str = (
+                    "["
+                    + ", ".join(
+                        [
+                            replace_with_county_name(county, county_data)
+                            for county in details["removed"]
+                        ]
+                    )
+                    + "]"
+                )
+                removed_msg = "is no longer affecting {}".format(removed_counties_str)
+
+            # Combining the log messages
+            combined_msg_parts = [f"Changed: {alert} for {old_counties_str}"]
+            combined_msg_parts = ["Changed: {} for {}".format(alert, old_counties_str)]
+            if added_msg:
+                combined_msg_parts.append(added_msg)
+            if removed_msg:
+                if (
+                    added_msg
+                ):  # if there's an 'added' message, then use 'and' to combine with 'removed' message
+                    combined_msg_parts.append("and")
+                combined_msg_parts.append(removed_msg)
+
+            log_msg = " ".join(combined_msg_parts)
+            LOGGER.info(log_msg)
+            pushover_message += log_msg + "\n"
+
+    # Process changes in alerts
+    if added_alerts or removed_alerts or changed_alerts:
+        # Save the data
         state["last_alerts"] = alerts
         save_state(state)
 
-        ct_alerts = config["CourtesyTones"].get("CTAlerts", [])
-        enable_ct_auto_change = config["CourtesyTones"].get("Enable", False)
-
-        id_alerts = config["IDChange"].get("IDAlerts", [])
-        enable_id_auto_change = config["IDChange"].get("Enable", False)
-
-        pushover_enabled = config["Pushover"].get("Enable", False)
-        pushover_debug = config["Pushover"].get("Debug", False)
-
-        supermon_compat_enabled = config["DEV"].get("SupermonCompat", True)
-        if supermon_compat_enabled:
-            supermon_back_compat(alerts)
-
-        # Initialize pushover message
-        pushover_message = ""
-        if not added_alerts and not removed_alerts:
-            pushover_message = "Alerts Cleared\n"
-        else:
-            if added_alerts:
-                pushover_message += "Added: {}\n".format(", ".join(added_alerts))
-            if removed_alerts:
-                pushover_message += "Removed: {}\n".format(", ".join(removed_alerts))
-
-        # Check if Courtesy Tones (CT) or ID needs to be changed
-        change_ct_id_helper(
-            alerts,
-            ct_alerts,
-            enable_ct_auto_change,
-            "CT",
-            pushover_debug,
-            pushover_message,
-        )
-        change_ct_id_helper(
-            alerts,
-            id_alerts,
-            enable_id_auto_change,
-            "ID",
-            pushover_debug,
-            pushover_message,
-        )
-
-        if alertscript_enabled:
-            alert_script(alerts)
-
-        # Check if alerts need to be communicated
-        if len(alerts) == 0:
+        # Send "all clear" messages if alerts have changed but are empty
+        if not alerts:
             LOGGER.info("Alerts cleared")
+            # Call say_allclear if enabled
             if say_all_clear_enabled:
                 say_allclear()
-        else:
-            if say_alert_enabled:
-                if config["Alerting"].get("SayAlertAll", False):
-                    say_alerts(alerts)
-                else:
-                    say_alerts({alert: alerts[alert] for alert in added_alerts})
+            # Add "Alerts Cleared" to pushover message
+            pushover_message += "Alerts Cleared\n"
 
-        # Check if tailmessage needs to be built
-        enable_tailmessage = config.get("Tailmessage", {}).get("Enable", False)
-        if enable_tailmessage:
+        # If alerts have been added, removed
+        if added_alerts or removed_alerts:
+            # Push alert titles to Supermon if enabled
+            if supermon_compat_enabled:
+                supermon_back_compat(alerts)
+
+            # Change CT/ID if necessary and enabled
+            change_ct_id_helper(
+                alerts,
+                ct_alerts,
+                enable_ct_auto_change,
+                "CT",
+                pushover_debug,
+                pushover_message,
+            )
+            change_ct_id_helper(
+                alerts,
+                id_alerts,
+                enable_id_auto_change,
+                "ID",
+                pushover_debug,
+                pushover_message,
+            )
+
+            # Call alert_script if enabled
+            if alertscript_enabled:
+                alert_script(alerts)
+
+            # Say alerts if enabled
+            if say_alert_enabled:
+                # If say_alert_all is enabled, say all currently active alerts
+                if say_alert_all:
+                    alerts_to_say = alerts
+
+                # Otherwise, only say newly added alerts
+                else:
+                    alerts_to_say = {alert: alerts[alert] for alert in added_alerts}
+                    # If County IDs have been set up and there is more than one county code, then also say alerts with county changes
+                    # Only if enabled
+                    if (
+                        changed_alerts
+                        and say_alerts_changed
+                        and COUNTY_WAVS
+                        and len(COUNTY_CODES) > 1
+                    ):
+                        alerts_to_say.update(changed_alerts)
+
+                # Sort alerts based on severity
+                alerts_to_say = sort_alerts(alerts_to_say)
+
+                # Say the alerts
+                say_alerts(alerts_to_say)
+
+        # If alerts have changed, but none added or removed
+        elif changed_alerts:
+            # Say changed alerts only if enabled, County IDs have been set up, and there is more than one county code
+            if say_alerts_changed and COUNTY_WAVS and len(COUNTY_CODES) > 1:
+                # Sort alerts based on severity
+                changed_alerts = sort_alerts(changed_alerts)
+                # Say the alerts
+                say_alerts(changed_alerts)
+
+        # Alerts have changed, update tailmessage if enabled
+        if ENABLE_TAILMESSAGE:
             build_tailmessage(alerts)
             if pushover_debug:
                 pushover_message += (
@@ -1451,17 +1722,35 @@ def main():
                     else "Built WX tailmessage\n"
                 )
 
-        # Send pushover notification
+        # Send pushover message if enabled
         if pushover_enabled:
             pushover_message = pushover_message.rstrip("\n")
-            LOGGER.debug("Sending pushover notification: %s", pushover_message)
-            send_pushover(pushover_message, title="Alerts Changed")
+            LOGGER.debug("Sending Pushover message: %s", pushover_message)
+            send_pushover(pushover_message, title="SkywarnPlus")
+
+    # If no changes detected in alerts
     else:
+        # If this is being run interactively, inform the user that nothing has changed
         if sys.stdin.isatty():
-            # list of current alerts, unless there arent any, then current_alerts = "None"
-            current_alerts = "None" if len(alerts) == 0 else ", ".join(alerts.keys())
+            # Log list of current alerts, unless there aren't any, then current_alerts = "None"
+            if len(alerts) == 0:
+                current_alerts = "None"
+            else:
+                alert_details = []
+                for alert, counties in alerts.items():
+                    counties_str = ", ".join(
+                        [
+                            replace_with_county_name(county["county_code"], county_data)
+                            for county in counties
+                        ]
+                    )
+                    alert_details.append(f"{alert} ({counties_str})")
+                current_alerts = "; ".join(alert_details)
+
             LOGGER.info("No change in alerts.")
             LOGGER.info("Current alerts: %s.", current_alerts)
+
+        # If this is being run non-interactively, only log if debug is enabled
         else:
             LOGGER.debug("No change in alerts.")
 

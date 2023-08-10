@@ -1,4 +1,4 @@
-# SkywarnPlus v0.4.2 Configuration File
+# SkywarnPlus v0.5.0 Configuration File
 # Author: Mason Nelson (N5LSN/WRKF394)
 # Please edit this file according to your specific requirements.
 
@@ -41,7 +41,8 @@ Alerting:
   # SkywarnPlus allows adding county-specific audio indicators to each alert in the message.
   # To enable this feature, specify an audio file containing a recording of the county name in the
   # ROOT of the SOUNDS/ directory as shown in the below example. You must create these files yourself.
-  # You can use the same VoiceRSS API used for SkyDescribe (see below) to generate these files with a synthetic voice:
+  # A helper script is provided in the SkywarnPlus repository to help generate these files.
+  # You can manually use the same VoiceRSS API used for SkyDescribe (see below) to generate these files with a synthetic voice:
   # http://api.voicerss.org/?key=[YOUR_API_KEY_HERE]&hl=en-us&f=8khz_16bit_mono&v=John&src=[YOUR COUNTY NAME HERE]
   # http://api.voicerss.org/?key=1234567890QWERTY&hl=en-us&f=8khz_16bit_mono&v=John&src=Saline County
   # Example:
@@ -53,6 +54,10 @@ Alerting:
 
   # Enable instant voice announcement when new weather alerts are issued.
   SayAlert: true
+
+  # Enable SayAlert to "say" any alerts whose list of affected counties has changed, in addition to new alerts.
+  # Only applies if more than one CountyCode is specified AND County IDs have been setup.
+  SayAlertsChanged: true
 
   # When a change is detected, make SayAlert say ALL of the currently active alerts, not just newly detected one(s)
   SayAlertAll: false

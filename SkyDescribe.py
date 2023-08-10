@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-SkyDescribe v0.4.2 by Mason Nelson
+SkyDescribe.py v0.5.0 by Mason Nelson
 ==================================================
 Text to Speech conversion for Weather Descriptions
 
@@ -297,9 +297,7 @@ def main(index_or_title):
                 description = alert_data[0]["description"]
             else:
                 description = "There are {} unique instances of {}. Describing the first one. {}".format(
-                    unique_instances,
-                    alert,
-                    alert_data[0]["description"]
+                    unique_instances, alert, alert_data[0]["description"]
                 )
 
     else:
@@ -320,9 +318,7 @@ def main(index_or_title):
                     description = alert_data[0]["description"]
                 else:
                     description = "There are {} unique instances of {}. Describing the first one. {}".format(
-                        unique_instances,
-                        alert,
-                        alert_data[0]["description"]
+                        unique_instances, alert, alert_data[0]["description"]
                     )
                 break
         else:

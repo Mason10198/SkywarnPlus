@@ -120,7 +120,7 @@ Follow the steps below to install:
    pacman -S ffmpeg
    wget https://bootstrap.pypa.io/pip/3.5/get-pip.py
    python get-pip.py
-   pip install pyyaml requests python-dateutil pydub
+   pip install requests python-dateutil pydub
    pip install ruamel.yaml==0.15.100
    ```
 
@@ -152,7 +152,7 @@ Follow the steps below to install:
    nano config.yaml
    ```
 
-   You can find your area code(s) at https://alerts.weather.gov/. Select `County List` to the right of your state, and use the `County Code` associated with the area(s) you want SkywarnPlus to poll for WX alerts.
+    You can find your county codes in the [CountyCodes.md](CountyCodes.md) file included in this repository. Navigate to the file and look for your state and then your specific county to find the associated County Code you'll use in SkywarnPlus to poll for alerts.
 
    ## **IMPORTANT**: YOU WILL MISS ALERTS IF YOU USE A **ZONE** CODE. DO NOT USE **ZONE** CODES UNLESS YOU KNOW WHAT YOU ARE DOING.
 
@@ -553,7 +553,7 @@ In _most_ cases, any multiple counties that SkywarnPlus is set up to monitor wil
 
 SkywarnPlus comes with a library of audio files that can be replaced with any 8kHz mono PCM16 WAV files you want. These are found in the `SOUNDS/` directory by default, along with `DICTIONARY.txt` which explains audio file assignments. Several customizations can be easily made in `config.yaml`, but the sound files are always available for you to modify directly as well.
 
-If you'd like to use IDChange or add county identifiers, you must create your own audio files. Follow **[this guide](https://wiki.allstarlink.org/images/d/dd/RecordingSoundFiles.pdf)** on how to record/convert audio files for use with Asterisk/app_rpt.
+If you'd like to use IDChange, you must create your own audio files. Follow **[this guide](https://wiki.allstarlink.org/images/d/dd/RecordingSoundFiles.pdf)** on how to record/convert audio files for use with Asterisk/app_rpt.
 
 >**For users wishing to maintain vocal continuity in their SkywarnPlus installation, the original creator of SkywarnPlus (N5LSN) and the woman behind the voice of it's included library of audio recordings (N5LSN XYL) will, for a small fee, record custom audio files for your SkywarnPlus installation. Contact information is readily available via QRZ.**
 
@@ -561,13 +561,25 @@ If you'd like to use IDChange or add county identifiers, you must create your ow
 
 SkywarnPlus features the capability to play county-specific audio files to reference the affected area of alerts. It enhances the user's awareness of the geographic area affected by an event, making the system more informative and valuable to users monitoring systems that provide coverage for multiple counties. By assigning unique audio tags to each county, users can immediately recognize which county is affected by an event as soon as it is detected by SkywarnPlus.
 
-### How to use it?
+### Automated Setup using `CountyIDGen.py`
 
-To use the county-specific audio tags, you need to specify the audio files to use for each county in your `config.yaml` file. You must create or otherwise aquire these audio files yourself. The audio files must be located in the root of the `SkywarnPlus/SOUNDS/` directory.
+To simplify the process of setting up county-specific audio tags, SkywarnPlus provides a utility script called CountyIDGen.py. This script is designed to:
+
+- Generate WAV audio files for each county code defined in the config.yaml using the Voice RSS Text-to-Speech API.
+- Save these generated files in the proper directory.
+- Modify the config.yaml automatically to reference these files.
+
+To use the script for automated setup, simply make sure you have already set up all of your county codes (`Alerting` section) and VoiceRSS details (`SkyDescribe` section) in `config.yaml`, and then execute the script:
+```bash
+./CountyIDGen.py
+```
+### Manual Setup
+
+Manual setup involves creating or otherwise aquire these audio files yourself. The audio files must be located in the root of the `SkywarnPlus/SOUNDS/` directory.
 
 The `config.yaml` explains how to use the free VoiceRSS API to generate these files using a computer synthesized voice.
 
-Here is an example of how to configure the `config.yaml` to utilize this feature:
+Here is an example of how to manually configure the `config.yaml` to utilize this feature:
 
 ```yaml
 Alerting:
