@@ -1,6 +1,6 @@
 # County Codes
 
-## ⚠️ WARNING ⚠️
+## WARNING
 This file is integral to the functioning of SkywarnPlus. 
 Modifying this file without proper knowledge can result in unexpected behavior or system malfunctions. 
 Unless you are absolutely certain about the changes you're making, DO NOT MODIFY THIS FILE.
