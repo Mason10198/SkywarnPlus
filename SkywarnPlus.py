@@ -1620,7 +1620,6 @@ def main():
                 removed_msg = "is no longer affecting {}".format(removed_counties_str)
 
             # Combining the log messages
-            combined_msg_parts = [f"Changed: {alert} for {old_counties_str}"]
             combined_msg_parts = ["Changed: {} for {}".format(alert, old_counties_str)]
             if added_msg:
                 combined_msg_parts.append(added_msg)
@@ -1744,7 +1743,7 @@ def main():
                             for county in counties
                         ]
                     )
-                    alert_details.append(f"{alert} ({counties_str})")
+                    alert_details.append("{} ({})".format(alert, counties_str))
                 current_alerts = "; ".join(alert_details)
 
             LOGGER.info("No change in alerts.")
