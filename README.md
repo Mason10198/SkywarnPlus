@@ -4,6 +4,7 @@
 
 ![Release Version](https://img.shields.io/github/v/release/Mason10198/SkywarnPlus?label=Version&color=f15d24)
 ![Release Date](https://img.shields.io/github/release-date/Mason10198/SkywarnPlus?label=Released&color=f15d24)
+![Hits](https://img.shields.io/endpoint?url=https%3A%2F%2Fhits.dwyl.com%2FMason10198%2FSkywarnPlus.json&label=Hits&color=f15d24)
 ![Total Downloads](https://img.shields.io/github/downloads/Mason10198/SkywarnPlus/total?label=Downloads&color=f15d24)
 ![GitHub Repo Size](https://img.shields.io/github/repo-size/Mason10198/SkywarnPlus?label=Size&color=f15d24)
 
