@@ -303,17 +303,20 @@ AlertScript:
 
   Mappings:
     # Define the mapping of alerts to either DTMF commands or bash scripts here.
-    # Examples:
     #
-    #Example 1:
+    # Example 1:
     # This entry will execute the bash command 'asterisk -rx "rpt fun 1999 *123*456*789"'
-    # when the alerts "Tornado Warning" AND "Tornado Watch" are detected.
+    # when the alerts "Tornado Warning" AND "Tornado Watch" are detected. It will execute the
+    # bash command 'asterisk -rx "rpt fun 1999 *987*654*321"' when there are no longer ANY alerts matching
+    # "Tornado Warning" OR "Tornado Watch".
     #
     # - Type: DTMF
     #   Nodes:
     #     - 1999
     #   Commands:
     #     - "*123*456*789"
+    #   ClearCommands:
+    #     - "*987*654*321"
     #   Triggers:
     #     - Tornado Warning
     #     - Tornado Watch

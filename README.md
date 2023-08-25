@@ -425,13 +425,17 @@ AlertScript:
     # Examples:
     #
     # This entry will execute the bash command 'asterisk -rx "rpt fun 1999 *123*456*789"'
-    # when the alerts "Tornado Warning" AND "Tornado Watch" are detected.
+    # when the alerts "Tornado Warning" AND "Tornado Watch" are detected. It will execute the
+    # bash command 'asterisk -rx "rpt fun 1999 *987*654*321"' when there are no longer ANY alerts matching
+    # "Tornado Warning" OR "Tornado Watch".
     #
     - Type: DTMF
       Nodes:
         - 1999
       Commands:
         - "*123*456*789"
+      ClearCommands:
+        - "*987*654*321"
       Triggers:
         - Tornado Warning
         - Tornado Watch
@@ -490,6 +494,30 @@ AlertScript:
 ## Matching
 
 The `Match:` parameter tells `AlertScript` how to handle the triggers. If `Match: ANY`, then only 1 of the triggers needs to be matched for the command(s) to execute. If `Match: ALL`, then all of the triggers must be matched for the command(s) to execute. If `Match:` is not defined, then `ANY` is used by default.
+
+## ClearCommands: Responding to Alert Clearance
+
+With the introduction of `ClearCommands`, `AlertScript` now allows you to define actions that should be executed once a specific alert has been cleared. This can be particularly useful for scenarios where you want to notify users that a previously active alert is no longer in effect or to reset certain systems to their default state after an alert ends.
+
+In the `config.yaml` file, under each mapping in the `AlertScript` section, you can specify the `ClearCommands` that should be executed when the corresponding alert(s) are cleared.
+
+For example:
+
+```yaml
+- Type: DTMF
+  Nodes:
+    - 1999
+  Commands:
+    - "*123*456*789"
+  ClearCommands:
+    - "*987*654*321"
+  Triggers:
+    - Tornado Warning
+    - Tornado Watch
+  Match: ALL
+```
+
+In the above configuration, when the alerts "Tornado Warning" AND "Tornado Watch" are detected, the DTMF macro `*123*456*789` will be executed. However, when there are no longer ANY alerts matching "Tornado Warning" OR "Tornado Watch", the DTMF macro `*987*654*321` will be executed.
 
 ## The Power of YOU
 

@@ -1234,18 +1234,16 @@ def alert_script(alerts):
     state = load_state()
     processed_alerts = set(
         state["alertscript_alerts"]
-    )  # Change this to a set for easier processing
+    )  # Convert to a set for easier processing
     active_alerts = set(
         state.get("active_alerts", [])
     )  # Load active alerts from state, also as a set
 
     # Extract only the alert names from the OrderedDict keys
-    alert_names = set([alert for alert in alerts.keys()])  # This should also be a set
+    alert_names = set([alert for alert in alerts.keys()])
 
-    # New alerts are those that are in the current alerts but were not active before
+    # Identify new alerts and cleared alerts
     new_alerts = alert_names - active_alerts
-
-    # Alerts to be cleared are those that were previously active but are no longer present
     cleared_alerts = active_alerts - alert_names
 
     # Update the active alerts in the state
@@ -1263,41 +1261,26 @@ def alert_script(alerts):
         mappings = []
     LOGGER.debug("Mappings: %s", mappings)
 
-    # Iterate over each mapping
+    # Process each mapping for new alerts
     for mapping in mappings:
-        LOGGER.debug("Processing mapping: %s", mapping)
-
         triggers = mapping.get("Triggers", [])
         commands = mapping.get("Commands", [])
         nodes = mapping.get("Nodes", [])
         match_type = mapping.get("Match", "ANY").upper()
 
-        matched_alerts = []
-        for alert in new_alerts:  # We only check the new alerts
-            for trigger in triggers:
-                if fnmatch.fnmatch(alert, trigger):
-                    LOGGER.debug(
-                        'Match found: Alert "%s" matches trigger "%s"', alert, trigger
-                    )
-                    matched_alerts.append(alert)
+        matched_alerts = [alert for alert in new_alerts if alert in triggers]
 
-        # Check if alerts matched the triggers as per the match type
+        # Check if new alerts matched the triggers as per the match type
         if (
             match_type == "ANY"
             and matched_alerts
             or match_type == "ALL"
             and len(matched_alerts) == len(triggers)
         ):
-            LOGGER.debug(
-                'Alerts matched the triggers as per the match type "%s"', match_type
-            )
-
-            # Execute commands based on the Type of mapping
             for alert in matched_alerts:
                 processed_alerts.add(alert)
 
                 if mapping.get("Type") == "BASH":
-                    LOGGER.debug('Mapping type is "BASH"')
                     for cmd in commands:
                         cmd = cmd.format(
                             alert_title=alert
@@ -1305,7 +1288,6 @@ def alert_script(alerts):
                         LOGGER.info("AlertScript: Executing BASH command: %s", cmd)
                         subprocess.run(cmd, shell=True)
                 elif mapping.get("Type") == "DTMF":
-                    LOGGER.debug('Mapping type is "DTMF"')
                     for node in nodes:
                         for cmd in commands:
                             dtmf_cmd = 'asterisk -rx "rpt fun {} {}"'.format(node, cmd)
@@ -1314,8 +1296,34 @@ def alert_script(alerts):
                             )
                             subprocess.run(dtmf_cmd, shell=True)
 
-    # Clear alerts that are no longer active
-    processed_alerts -= cleared_alerts
+    # Process each mapping for cleared alerts
+    for mapping in mappings:
+        clear_commands = mapping.get("ClearCommands", [])
+        triggers = mapping.get("Triggers", [])
+        match_type = mapping.get("Match", "ANY").upper()
+
+        matched_cleared_alerts = [
+            alert for alert in cleared_alerts if alert in triggers
+        ]
+
+        # Check if cleared alerts matched the triggers as per the match type
+        if (
+            match_type == "ANY"
+            and matched_cleared_alerts
+            or match_type == "ALL"
+            and len(matched_cleared_alerts) == len(triggers)
+        ):
+            for cmd in clear_commands:
+                if mapping.get("Type") == "BASH":
+                    LOGGER.info("AlertScript: Executing BASH ClearCommand: %s", cmd)
+                    subprocess.run(cmd, shell=True)
+                elif mapping.get("Type") == "DTMF":
+                    for node in mapping.get("Nodes", []):
+                        dtmf_cmd = 'asterisk -rx "rpt fun {} {}"'.format(node, cmd)
+                        LOGGER.info(
+                            "AlertScript: Executing DTMF ClearCommand: %s", dtmf_cmd
+                        )
+                        subprocess.run(dtmf_cmd, shell=True)
 
     # Update the state with the alerts processed in this run
     state["alertscript_alerts"] = list(
