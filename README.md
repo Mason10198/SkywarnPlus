@@ -163,7 +163,25 @@ Follow the steps below to install:
    > by NWS public forecast zones or fire weather zones. These zones differ in size and can cross county
    > boundaries."
 
-   > "...county based alerts are not mapped to zones but zone based alerts are mapped to counties."
+   > "...county based alerts are not mapped to zones but zone based alerts are mapped to counties. The effect this has is for requests such as:
+   >
+   > https://api.weather.gov/alerts/active?zone=MDZ013
+   >
+   > or
+   >
+   > https://api.weather.gov/alerts?zone=MDZ013
+   >
+   > Will not contain county based products. However requests such as:
+   >
+   > https://api.weather.gov/alerts?zone=MDC033
+   >
+   > or
+   >
+   > https://api.weather.gov/alerts/active?zone=MDC033
+   >
+   > Will contain all county based alerts and all zone based alerts that are associated to the county or counties requested. If there are multiple zones associated with that county, the response from API will include all alerts for those zones."
+
+   [This information was obtained from this document.](https://www.weather.gov/media/documentation/docs/NWS_Geolocation.pdf)
 
    This means that if you use a County code, you will receive all alerts for both your County **AND** your Zone - but if you use a Zone code, you will **ONLY** receive alerts that cover the entire Zone, and none of the alerts specific to your County.
 
