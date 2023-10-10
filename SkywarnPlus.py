@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-SkywarnPlus.py v0.5.1 by Mason Nelson
+SkywarnPlus.py v0.5.3 by Mason Nelson
 ===============================================================================
 SkywarnPlus is a utility that retrieves severe weather alerts from the National 
 Weather Service and integrates these alerts with an Asterisk/app_rpt based 
@@ -1520,9 +1520,15 @@ def main():
     supermon_compat_enabled = config["DEV"].get("SupermonCompat", True)
     say_alerts_changed = config["Alerting"].get("SayAlertsChanged", True)
 
-    # If data file does not exist, assume this is the first run and initialize CT/ID/Tailmessage files if enabled
+    # Load previous alert data to compare changes
+    state = load_state()
+    last_alerts = state["last_alerts"]
+
+    # If data file does not exist, assume this is the first run and initialize data file and CT/ID/Tailmessage files if enabled
     if not os.path.isfile(DATA_FILE):
         LOGGER.info("Data file does not exist, assuming first run.")
+        LOGGER.info("Initializing data file")
+        save_state(state)
         if enable_ct_auto_change:
             LOGGER.info("Initializing CT files")
             change_ct("NORMAL")
@@ -1533,10 +1539,6 @@ def main():
             LOGGER.info("Initializing Tailmessage file")
             empty_alerts = OrderedDict()
             build_tailmessage(empty_alerts)
-
-    # Load previous alert data to compare changes
-    state = load_state()
-    last_alerts = state["last_alerts"]
 
     # Fetch new alert data
     alerts = get_alerts(COUNTY_CODES)
