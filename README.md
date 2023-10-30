@@ -146,14 +146,48 @@ Follow the steps below to install:
 
    Install the required dependencies using the following commands:
 
-   1. **Debian**
+   1. **Debian 11 and Older**
 
    ```bash
    apt install unzip python3 python3-pip ffmpeg
    pip3 install ruamel.yaml requests python-dateutil pydub
    ```
 
-   2. **Arch (HAMVOIP)**
+   2. **Debian 12 and Newer**
+   
+   Beginning around Debian 12 "Bookworm", installing Python packages via `pip` will have Debian throw a fit about package managers and externally managed virtual environments, etc:
+   
+    ```
+    error: externally-managed-environment
+
+    × This environment is externally managed
+    ╰─> To install Python packages system-wide, try apt install
+      python3-xyz, where xyz is the package you are trying to
+      install.
+
+      If you wish to install a non-Debian-packaged Python package,
+      create a virtual environment using python3 -m venv path/to/venv.
+      Then use path/to/venv/bin/python and path/to/venv/bin/pip. Make
+      sure you have python3-full installed.
+
+      If you wish to install a non-Debian packaged Python application,
+      it may be easiest to use pipx install xyz, which will manage a
+      virtual environment for you. Make sure you have pipx installed.
+
+      See /usr/share/doc/python3.11/README.venv for more information.
+
+    note: If you believe this is a mistake, please contact your Python installation or OS distribution provider. You can override this, at the risk of breaking your Python installation or OS, by passing --break-system-packages.
+    hint: See PEP 668 for the detailed specification.
+    ```
+
+    Use these commands instead when experiencing this on newer distros.
+
+    ```bash
+    apt install unzip python3 python3-pip ffmpeg
+    apt install python3-ruamel.yaml python3-requests python3-dateutil python3-pydub
+    ```
+
+   1. **Arch (HAMVOIP)**
 
    It is a good idea to first update your HAMVOIP system using **Option 1** in the HAMVOIP menu before installing the dependencies.
 
@@ -165,7 +199,7 @@ Follow the steps below to install:
    pip install ruamel.yaml==0.15.100
    ```
 
-2. **Download SkywarnPlus**
+1. **Download SkywarnPlus**
 
    Download the latest release of SkywarnPlus from GitHub
 
@@ -176,7 +210,7 @@ Follow the steps below to install:
    rm SkywarnPlus.zip
    ```
 
-3. **Configure Permissions**
+2. **Configure Permissions**
 
    The scripts must be made executable. Use the chmod command to change the file permissions:
 
@@ -185,7 +219,7 @@ Follow the steps below to install:
    chmod +x *.py
    ```
 
-4. **Edit Configuration**
+3. **Edit Configuration**
 
    SkywarnPlus was designed with customization in mind, making it possible to fit nearly any usage scenario you can throw at it. However, this can make the configuration seem a bit daunting. Be patient, and when in doubt, read the documentation.
 
@@ -227,7 +261,7 @@ Follow the steps below to install:
 
    This means that if you use a County code, you will receive all alerts for both your County **AND** your Zone - but if you use a Zone code, you will **ONLY** receive alerts that cover the entire Zone, and none of the alerts specific to your County.
 
-5. **Crontab Entry**
+4. **Crontab Entry**
 
    Add a crontab entry to call SkywarnPlus on an interval. Open your crontab file using the `crontab -e` command, and add the following line:
 
