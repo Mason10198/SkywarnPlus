@@ -11,6 +11,7 @@
 - [Installation](#installation)
   - [**Instructional Video**](#instructional-video)
   - [Written Instructions](#written-instructions)
+- [TimeType Configuration](#timetype-configuration)
 - [Tail Messages](#tail-messages)
 - [Courtesy Tones](#courtesy-tones)
   - [Configuration](#configuration)
@@ -45,6 +46,7 @@
     - [What does "with multiples" mean?](#what-does-with-multiples-mean)
     - [Why is SkywarnPlus saying the same thing every 60 seconds?](#why-is-skywarnplus-saying-the-same-thing-every-60-seconds)
     - [I just installed SkywarnPlus, why don't I hear anything?](#i-just-installed-skywarnplus-why-dont-i-hear-anything)
+    - [There is an active alert in my area, but SkywarnPlus isn't doing anything. What gives?](#there-is-an-active-alert-in-my-area-but-skywarnplus-isnt-doing-anything-what-gives)
     - [Why aren't my test alerts working?](#why-arent-my-test-alerts-working)
     - [Can SkywarnPlus automatically read the full alert description?](#can-skywarnplus-automatically-read-the-full-alert-description)
 - [License](#license)
@@ -276,6 +278,26 @@ Follow the steps below to install:
 When SkywarnPlus runs for the first time after installation (and for the first time at each boot), **YOU WILL NOT HEAR ANY MESSAGES** until alerts are detected. This is by design. SkywarnPlus announces when alerts change from `none` to `some`, and it announces when alerts change from `some` to `none`. It will announce nothing if the status of alerts does not change (`none` to `none`).
 
 If you want to test SkywarnPlus' operation after installation, please see the **Testing** section of this README.
+
+# TimeType Configuration
+This setting in SkywarnPlus determines the timing for issuing weather alerts. Users have the option to select between "onset" and "effective" time types, which influence the alerting strategy as follows:
+
+- **ONSET**
+  - With the ONSET setting, alerts are issued based on the anticipated start time of the weather event. This ensures that alerts are timely and relevant, focusing on imminent events. For instance, consider an Air Quality Alert issued due to a distant wildfire's smoke predicted to affect the area in three days time. While the alert might be issued early by the NWS, SkywarnPlus will only process the alert at the actual onset of the deteriorating air quality, avoiding premature notifications about conditions that are not yet affecting the area. Additionally, if Tailmessages are enabled, then using the ONSET setting prevents unnecessary repeated notifications of an event over an extended period of time.
+
+- **EFFECTIVE**
+  - In contrast, the EFFECTIVE setting triggers SkywarnPlus to process alerts immediately upon their issuance from the NWS, regardless of the time until the subject matter is considered to be onset. This can result in alerts being announced well in advance of the actual event. Using the same Air Quality Alert scenario, the alert would be processed and announced as soon as it is issued, regardless of the smoke's actual arrival time, potentially leading to early warnings about conditions that are days away from materializing. Additionally, if Tailmessages are enabled, then the Air Quality Alert notifications would be continuously repeated for 3 days prior to the event actually occuring.
+
+The default ONSET setting is recommended for ensuring that alerts are pertinent and actionable. It helps in maintaining the alert system's credibility by avoiding unnecessary alarms about conditions that are forecasted but not yet imminent, thereby aiding in better preparedness and response when the event actually occurs.
+
+When in doubt, you can verity the exact data being provided by the NWS API, and whether an alert is currently EFFECTIVE or ONSET, by visiting the API endpoing in the following format:
+```
+https://api.weather.gov/alerts/active?zone=YOUR_COUNTY_CODE_HERE
+```
+
+**NOTE:**
+
+Most weather websites and applications, including the NWS's own website, use the EFFECTIVE time when displaying "active" alerts. This often leads SkywarnPlus users to believe that their SkywarnPlus-enabled system is not functioning correctly when an alert is visible on the NWS website, but SkywarnPlus has not processed it yet. This discrepancy is due to the different alert processing times based on the chosen TimeType setting in SkywarnPlus. While other services might show alerts as soon as they become effective, SkywarnPlus, when set to ONSET, waits until the conditions are imminent. It's important for users to understand this distinction to accurately assess the functionality of their SkywarnPlus system.
 
 # Tail Messages
 
@@ -824,6 +846,12 @@ You probably have the `CLEANSLATE` developer option enabled in the `config.yaml`
 
 ### I just installed SkywarnPlus, why don't I hear anything?
 Assuming you installed it correctly, SkywarnPlus will not do anything until it detects alerts provided by the NWS.
+
+### There is an active alert in my area, but SkywarnPlus isn't doing anything. What gives?
+It is very likely that the alert is not technically active yet in your area, and SkywarnPlus is holding off on announcing that alert until it is imminent. Please see the [TimeType Configuration](#timetype-configuration) section for more information. When in doubt, you can verity the exact data being provided by the NWS API, and whether an alert is currently EFFECTIVE or ONSET, by visiting the API endpoing in the following format:
+```
+https://api.weather.gov/alerts/active?zone=YOUR_COUNTY_CODE_HERE
+```
 
 ### Why aren't my test alerts working?
 Make sure you're injecting alerts with the correct format, shown in the [Testing](#testing) section.
