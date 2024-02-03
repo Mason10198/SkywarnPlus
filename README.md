@@ -1,5 +1,3 @@
-# SkywarnPlus
-
 ![SkywarnPlus Logo](https://raw.githubusercontent.com/Mason10198/SkywarnPlus/main/Logo_SWP.svg)
 
 ![Release Version](https://img.shields.io/github/v/release/Mason10198/SkywarnPlus?label=Version&color=f15d24)
@@ -9,6 +7,53 @@
 ![GitHub Repo Size](https://img.shields.io/github/repo-size/Mason10198/SkywarnPlus?label=Size&color=f15d24)
 
 **SkywarnPlus** is an advanced software solution tailored for Asterisk/app_rpt nodes. It is designed to provide important information about local government-issued alerts in the United States, thereby broadening the scope and functionality of your node. By intelligently integrating local alert data, SkywarnPlus brings a new layer of relevance and utility to your existing system. **SkywarnPlus** works with all major distributions, including AllstarLink, HAMVOIP, myGMRS, and more.
+
+- [Installation](#installation)
+  - [**Instructional Video**](#instructional-video)
+  - [Written Instructions](#written-instructions)
+- [TimeType Configuration](#timetype-configuration)
+- [Tail Messages](#tail-messages)
+- [Courtesy Tones](#courtesy-tones)
+  - [Configuration Overview](#configuration-overview)
+    - [`config.yaml` Configuration](#configyaml-configuration)
+    - [`rpt.conf` Configuration](#rptconf-configuration)
+    - [Dynamic Tone Switching](#dynamic-tone-switching)
+    - [Consistent Filenames](#consistent-filenames)
+- [CW / Voice IDs](#cw--voice-ids)
+  - [Configuration](#configuration)
+- [Pushover Integration](#pushover-integration)
+- [SkyControl](#skycontrol)
+  - [Usage](#usage)
+  - [Spoken Feedback](#spoken-feedback)
+  - [Mapping to DTMF Commands](#mapping-to-dtmf-commands)
+- [AlertScript](#alertscript)
+  - [Understanding AlertScript](#understanding-alertscript)
+  - [Matching](#matching)
+  - [ClearCommands: Responding to Alert Clearance](#clearcommands-responding-to-alert-clearance)
+  - [The Power of YOU](#the-power-of-you)
+- [SkyDescribe](#skydescribe)
+  - [Usage](#usage-1)
+  - [Integration with AlertScript](#integration-with-alertscript)
+  - [Mapping to DTMF commands](#mapping-to-dtmf-commands-1)
+- [Customizing the Audio Files](#customizing-the-audio-files)
+  - [County Identifiers](#county-identifiers)
+    - [Automated Setup using `CountyIDGen.py`](#automated-setup-using-countyidgenpy)
+    - [Manual Setup](#manual-setup)
+- [Testing](#testing)
+- [Debugging](#debugging)
+- [Maintenance and Bug Reporting](#maintenance-and-bug-reporting)
+- [Contributing](#contributing)
+- [Frequently Asked Questions](#frequently-asked-questions)
+    - [I just installed SkywarnPlus on my HAMVOIP node, why is it giving me errors?](#i-just-installed-skywarnplus-on-my-hamvoip-node-why-is-it-giving-me-errors)
+    - [Why do I see depreciation warnings when installing SWP on my HAMVOIP node?](#why-do-i-see-depreciation-warnings-when-installing-swp-on-my-hamvoip-node)
+    - [Can I change the crontab interval to something other than 60 seconds?](#can-i-change-the-crontab-interval-to-something-other-than-60-seconds)
+    - [What does "with multiples" mean?](#what-does-with-multiples-mean)
+    - [Why is SkywarnPlus saying the same thing every 60 seconds?](#why-is-skywarnplus-saying-the-same-thing-every-60-seconds)
+    - [I just installed SkywarnPlus, why don't I hear anything?](#i-just-installed-skywarnplus-why-dont-i-hear-anything)
+    - [There is an active alert in my area, but SkywarnPlus isn't doing anything. What gives?](#there-is-an-active-alert-in-my-area-but-skywarnplus-isnt-doing-anything-what-gives)
+    - [Why aren't my test alerts working?](#why-arent-my-test-alerts-working)
+    - [Can SkywarnPlus automatically read the full alert description?](#can-skywarnplus-automatically-read-the-full-alert-description)
+- [License](#license)
 
 ## Key Features
 
@@ -42,7 +87,7 @@
 
 Whether you wish to auto-link to a Skywarn net during severe weather, program your node to control an external device like a siren during a tornado warning, or simply want to stay updated on changing weather conditions, SkywarnPlus offers a comprehensive, efficient, and customizable solution for your weather alert needs.
 
-# Comprehensive Information
+## Comprehensive Information
 
 SkywarnPlus supports all 128 alert types included in the [NWS v1.2 API](https://www.weather.gov/documentation/services-web-api).
 
@@ -94,10 +139,11 @@ SkywarnPlus supports all 128 alert types included in the [NWS v1.2 API](https://
 
 # Installation
 
-## **[Installation Video](https://youtu.be/QyccjEZj20E)**
+## **[Instructional Video](https://youtu.be/QyccjEZj20E)**
 
-[![Installation Video](https://img.youtube.com/vi/QyccjEZj20E/maxresdefault.jpg)](https://youtu.be/QyccjEZj20E)
+[![Instructional Video](https://img.youtube.com/vi/QyccjEZj20E/maxresdefault.jpg)](https://youtu.be/QyccjEZj20E)
 
+## Written Instructions
 SkywarnPlus is recommended to be installed at the `/usr/local/bin/SkywarnPlus` location on both Debian and Arch (HAMVOIP) systems.
 
 Follow the steps below to install:
@@ -106,14 +152,48 @@ Follow the steps below to install:
 
    Install the required dependencies using the following commands:
 
-   **Debian**
+   1. **Debian 11 and Older**
 
    ```bash
    apt install unzip python3 python3-pip ffmpeg
    pip3 install ruamel.yaml requests python-dateutil pydub
    ```
 
-   **Arch (HAMVOIP)**
+   2. **Debian 12 and Newer**
+   
+   Beginning around Debian 12 "Bookworm", installing Python packages via `pip` will have Debian throw a fit about package managers and externally managed virtual environments, etc:
+   
+    ```
+    error: externally-managed-environment
+
+    × This environment is externally managed
+    ╰─> To install Python packages system-wide, try apt install
+      python3-xyz, where xyz is the package you are trying to
+      install.
+
+      If you wish to install a non-Debian-packaged Python package,
+      create a virtual environment using python3 -m venv path/to/venv.
+      Then use path/to/venv/bin/python and path/to/venv/bin/pip. Make
+      sure you have python3-full installed.
+
+      If you wish to install a non-Debian packaged Python application,
+      it may be easiest to use pipx install xyz, which will manage a
+      virtual environment for you. Make sure you have pipx installed.
+
+      See /usr/share/doc/python3.11/README.venv for more information.
+
+    note: If you believe this is a mistake, please contact your Python installation or OS distribution provider. You can override this, at the risk of breaking your Python installation or OS, by passing --break-system-packages.
+    hint: See PEP 668 for the detailed specification.
+    ```
+
+    Use these commands instead when experiencing this on newer distros.
+
+    ```bash
+    apt install unzip python3 python3-pip ffmpeg
+    apt install python3-ruamel.yaml python3-requests python3-dateutil python3-pydub
+    ```
+
+   1. **Arch (HAMVOIP)**
 
    It is a good idea to first update your HAMVOIP system using **Option 1** in the HAMVOIP menu before installing the dependencies.
 
@@ -125,7 +205,7 @@ Follow the steps below to install:
    pip install ruamel.yaml==0.15.100
    ```
 
-2. **Download SkywarnPlus**
+1. **Download SkywarnPlus**
 
    Download the latest release of SkywarnPlus from GitHub
 
@@ -136,7 +216,7 @@ Follow the steps below to install:
    rm SkywarnPlus.zip
    ```
 
-3. **Configure Permissions**
+2. **Configure Permissions**
 
    The scripts must be made executable. Use the chmod command to change the file permissions:
 
@@ -145,7 +225,9 @@ Follow the steps below to install:
    chmod +x *.py
    ```
 
-4. **Edit Configuration**
+3. **Edit Configuration**
+
+   SkywarnPlus was designed with customization in mind, making it possible to fit nearly any usage scenario you can throw at it. However, this can make the configuration seem a bit daunting. Be patient, and when in doubt, read the documentation.
 
    Edit the [config.yaml](config.yaml) file according to your needs. This is where you will enter your NWS codes, enable/disable specific functions, etc.
 
@@ -155,7 +237,7 @@ Follow the steps below to install:
 
     You can find your county codes in the [CountyCodes.md](CountyCodes.md) file included in this repository. Navigate to the file and look for your state and then your specific county to find the associated County Code you'll use in SkywarnPlus to poll for alerts.
 
-   ## **IMPORTANT**: YOU WILL MISS ALERTS IF YOU USE A **ZONE** CODE. DO NOT USE **ZONE** CODES UNLESS YOU KNOW WHAT YOU ARE DOING.
+   **IMPORTANT**: YOU WILL MISS ALERTS IF YOU USE A **ZONE** CODE. DO NOT USE **ZONE** CODES UNLESS YOU KNOW WHAT YOU ARE DOING.
 
    According to the official [NWS API documentation](https://www.weather.gov/documentation/services-web-api):
 
@@ -185,7 +267,7 @@ Follow the steps below to install:
 
    This means that if you use a County code, you will receive all alerts for both your County **AND** your Zone - but if you use a Zone code, you will **ONLY** receive alerts that cover the entire Zone, and none of the alerts specific to your County.
 
-5. **Crontab Entry**
+4. **Crontab Entry**
 
    Add a crontab entry to call SkywarnPlus on an interval. Open your crontab file using the `crontab -e` command, and add the following line:
 
@@ -193,17 +275,37 @@ Follow the steps below to install:
    * * * * * /usr/local/bin/SkywarnPlus/SkywarnPlus.py
    ```
 
-   This command will execute SkywarnPlus (poll NWS API for data) every minute.
+   This command will execute SkywarnPlus (poll NWS API for data) every 60 seconds. For slower systems, or systems with several counties and/or advanced configurations, this may need to be increased.
 
-# **NOTE:**
+**NOTE:**
 
 When SkywarnPlus runs for the first time after installation (and for the first time at each boot), **YOU WILL NOT HEAR ANY MESSAGES** until alerts are detected. This is by design. SkywarnPlus announces when alerts change from `none` to `some`, and it announces when alerts change from `some` to `none`. It will announce nothing if the status of alerts does not change (`none` to `none`).
 
 If you want to test SkywarnPlus' operation after installation, please see the **Testing** section of this README.
 
-# Tail Message
+# TimeType Configuration
+This setting in SkywarnPlus determines the timing for issuing weather alerts. Users have the option to select between "onset" and "effective" time types, which influence the alerting strategy as follows:
 
-SkywarnPlus can automatically create, manage, and remove a tail message whenever certain weather alerts are active to keep listeners informed throught the duration of active alerts. The configuration for this is based on your `rpt.conf` file setup. Here's an example:
+- **ONSET**
+  - With the ONSET setting, alerts are issued based on the anticipated start time of the weather event. This ensures that alerts are timely and relevant, focusing on imminent events. For instance, consider an Air Quality Alert issued due to a distant wildfire's smoke predicted to affect the area in three days time. While the alert might be issued early by the NWS, SkywarnPlus will only process the alert at the actual onset of the deteriorating air quality, avoiding premature notifications about conditions that are not yet affecting the area. Additionally, if Tailmessages are enabled, then using the ONSET setting prevents unnecessary repeated notifications of an event over an extended period of time.
+
+- **EFFECTIVE**
+  - In contrast, the EFFECTIVE setting triggers SkywarnPlus to process alerts immediately upon their issuance from the NWS, regardless of the time until the subject matter is considered to be onset. This can result in alerts being announced well in advance of the actual event. Using the same Air Quality Alert scenario, the alert would be processed and announced as soon as it is issued, regardless of the smoke's actual arrival time, potentially leading to early warnings about conditions that are days away from materializing. Additionally, if Tailmessages are enabled, then the Air Quality Alert notifications would be continuously repeated for 3 days prior to the event actually occuring.
+
+The default ONSET setting is recommended for ensuring that alerts are pertinent and actionable. It helps in maintaining the alert system's credibility by avoiding unnecessary alarms about conditions that are forecasted but not yet imminent, thereby aiding in better preparedness and response when the event actually occurs.
+
+When in doubt, you can verity the exact data being provided by the NWS API, and whether an alert is currently EFFECTIVE or ONSET, by visiting the API endpoing in the following format:
+```
+https://api.weather.gov/alerts/active?zone=YOUR_COUNTY_CODE_HERE
+```
+
+**NOTE:**
+
+Most weather websites and applications, including the NWS's own website, use the EFFECTIVE time when displaying "active" alerts. This often leads SkywarnPlus users to believe that their SkywarnPlus-enabled system is not functioning correctly when an alert is visible on the NWS website, but SkywarnPlus has not processed it yet. This discrepancy is due to the different alert processing times based on the chosen TimeType setting in SkywarnPlus. While other services might show alerts as soon as they become effective, SkywarnPlus, when set to ONSET, waits until the conditions are imminent. It's important for users to understand this distinction to accurately assess the functionality of their SkywarnPlus system.
+
+# Tail Messages
+
+SkywarnPlus can automatically create, manage, and remove a tail message whenever certain weather alerts are active to keep listeners informed throught the duration of active alerts. The configuration for this will be based on your `rpt.conf` file setup. Here's an example:
 
 ```ini
 tailmessagetime = 600000
@@ -286,6 +388,8 @@ When enabled, SkywarnPlus will automatically switch between "normal" and "wx" mo
 ### Consistent Filenames
 
 Ensure that filenames and case sensitivity are consistent across `config.yaml` and `rpt.conf` to ensure seamless operation.
+
+After initially setting up automatic courtesy tones, the audio files will not refresh until the next time the alert status changes. To refresh immediately, run `/usr/local/bin/SkywarnPlys/SkyControl.py changect normal` to force the CTs to "normal" mode.
 
 # CW / Voice IDs
 
@@ -384,7 +488,7 @@ And to toggle it, you would use:
 /usr/local/bin/SkywarnPlus/SkyControl.py enable toggle
 ```
 
-## **NOTE:**
+**NOTE:**
 
 Running the `Enable` command after installing SkywarnPlus is not necessary. The enable flag is already set to `true` in the `config.yaml` file by default, and all you need to do for SkywarnPlus to operate is add it to the `crontab`.
 
@@ -606,7 +710,7 @@ For added flexibility, `SkyDescribe.py` can also be linked to DTMF commands, all
 849 = cmd,/usr/local/bin/SkywarnPlus/SkyDescribe.py 9 ; SkyDescribe the 9th alert
 ```
 
-## **NOTE:**
+**NOTE:**
 
 If you have SkywarnPlus set up to monitor multiple counties, it will, by design, only store **ONE** instance of each alert type in order to prevent announcing duplicate messages. Because of this, if SkywarnPlus checks 3 different counties and finds a `"Tornado Warning"` in each one, only the first description will be saved. Thus, executing `SkyControl.py "Tornado Warning"` will broadcast the description of the `"Tornado Warning"` for the first county **ONLY**.
 
@@ -676,13 +780,24 @@ SkywarnPlus provides the ability to inject predefined alerts, bypassing the call
 To enable this option, modify the following settings in the `[DEV]` section of your `config.yaml` file:
 
 ```yaml
-# Enable test alert injection instead of calling the NWS API by setting 'INJECT' to 'True'.
-INJECT: false
-# List the test alerts to inject. Use a case-sensitive list. One alert per line for better readability.
-INJECTALERTS:
-  - Tornado Warning
-  - Tornado Watch
-  - Severe Thunderstorm Warning
+  # Enable test alert injection instead of calling the NWS API by setting 'INJECT' to 'True'.
+  INJECT: false
+
+  # List the test alerts to inject. Alert titles are case sensitive.
+  # Optionally specify the CountyCodes and/or EndTime for each alert.
+  # CountyCodes used here must be defined at the top of this configuration file.
+  # Example:
+  # INJECTALERTS:
+  #   - Title: "Tornado Warning"
+  #     CountyCodes: ["ARC119", "ARC120"]
+  #   - Title: "Tornado Watch"
+  #     CountyCodes: ["ARC125"]
+  #     EndTime: "2023-08-01T12:00:00Z"
+  #   - Title: "Severe Thunderstorm Warning"
+  INJECTALERTS:
+  - Title: "Tornado Warning"
+  - Title: "Tornado Watch"
+  - Title: "Severe Thunderstorm Warning"
 ```
 
 # Debugging
@@ -733,6 +848,38 @@ SkywarnPlus is open-source and welcomes contributions. If you'd like to contribu
 If the spare time I put into the development of SkywarnPlus has helped you, please consider supporting!
 
 <p align="center"><a href="https://www.paypal.com/donate/?business=93AJFB9BAVSJL&no_recurring=0&item_name=Thank+you+so+much+for+your+support%21+I+put+a+lot+of+my+spare+time+into+this%2C+and+I+sincerely+appreciate+YOU%21&currency_code=USD"><img src="https://raw.githubusercontent.com/stefan-niedermann/paypal-donate-button/master/paypal-donate-button.png" width=300px alt="Donate with PayPal"/></a></p>
+
+# Frequently Asked Questions
+
+### I just installed SkywarnPlus on my HAMVOIP node, why is it giving me errors?
+HAMVOIP uses a very outdated version of Python which can cause some issues that ASL users do not experience. Carefully follow the installation inctructions line-by-line (do not copy/paste all commands at once) and try again.
+
+### Why do I see depreciation warnings when installing SWP on my HAMVOIP node?
+HAMVOIP uses a very outdated version of Python, and Python will display warnings asking you to update it. Unfortunately, Python cannot be upgraded on HAMVOIP and these warnings must be ignored.
+
+### Can I change the crontab interval to something other than 60 seconds?
+Yes! You can run SkywarnPlus as frequently or infrequently as you wish. Be aware, whatever you set the interval to (X), there will be a delay of "up to" X minutes between the time an alert is issued by the NWS, and the time that SWP announces it.
+
+### What does "with multiples" mean?
+The "multiples" flag informs the listener that there is more than one unique instance of the given alert type in the county/counties you defined in the configuration. For example, a config file with 2x counties defined, and a unique Tornado Warning in each county.
+
+### Why is SkywarnPlus saying the same thing every 60 seconds?
+You probably have the `CLEANSLATE` developer option enabled in the `config.yaml` file by accident.
+
+### I just installed SkywarnPlus, why don't I hear anything?
+Assuming you installed it correctly, SkywarnPlus will not do anything until it detects alerts provided by the NWS.
+
+### There is an active alert in my area, but SkywarnPlus isn't doing anything. What gives?
+It is very likely that the alert is not technically active yet in your area, and SkywarnPlus is holding off on announcing that alert until it is imminent. Please see the [TimeType Configuration](#timetype-configuration) section for more information. When in doubt, you can verity the exact data being provided by the NWS API, and whether an alert is currently EFFECTIVE or ONSET, by visiting the API endpoing in the following format:
+```
+https://api.weather.gov/alerts/active?zone=YOUR_COUNTY_CODE_HERE
+```
+
+### Why aren't my test alerts working?
+Make sure you're injecting alerts with the correct format, shown in the [Testing](#testing) section.
+
+### Can SkywarnPlus automatically read the full alert description?
+Yes! You can use [AlertScript](#alertscript) to automcatially trigger [SkyDescribe](#skydescribe) whenever specific alerts are detected.
 
 # License
 
