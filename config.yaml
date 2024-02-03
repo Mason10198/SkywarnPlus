@@ -153,32 +153,41 @@ Tailmessage:
 
 CourtesyTones:
   # Configuration for automatic CT changing. Requires initial setup in RPT.CONF.
-
   # Enable/disable automatic courtesy tones.
-  Enable: false
+  Enable: true
 
-  # Specify an alternative directory where tone files are located.
-  # Default is SkywarnPlus/SOUNDS/TONES.
+  # Directory where tone files will be read from & stored to. Modify this path to match your setup.
+  # Default location is within the SkywarnPlus installation directory.
   ToneDir: /usr/local/bin/SkywarnPlus/SOUNDS/TONES
 
-  # Define the sound files for courtesy tones.
+  # Define custom courtesy tones for use in different modes. This allows for dynamic response to weather alerts.
   Tones:
-    # Audio file to feed Asterisk as ct1 in "normal" mode
-    CT1: Boop.ulaw
+    # Define each courtesy tone, and which files to use for that tone in Normal and WX mode.
+    ct1:
+      Normal: Boop.ulaw
+      WX: Stardust.ulaw
 
-    # Audio file to feed Asterisk as ct2 in "normal" mode
-    CT2: Beep.ulaw
+    ct2:
+      Normal: Beep.ulaw
+      WX: Stardust.ulaw
+      
+    # ct3:
+    #   Normal: NBC.ulaw
+    #   WX: SatPass.ulaw
 
-    # Audio file to feed Asterisk as ct1 AND ct2 in "wx" mode
-    WXCT: Stardust.ulaw
+    # ct4:
+    #   Normal: BlastOff.ulaw
+    #   WX: Target.ulaw
+    
+    # ct5:
+    #   Normal: BumbleBee.ulaw
+    #   WX: XPError.ulaw
+    
+    # ct6:
+    #   Normal: Comet.ulaw
+    #   WX: Waterdrop.ulaw
 
-    # The file rpt.conf is looking for as ct1
-    RptCT1: CT1.ulaw
-
-    # The file rpt.conf is looking for as ct2
-    RptCT2: CT2.ulaw
-
-  # Define the alerts that trigger the "wx" courtesy tone.
+  # Define the alerts that trigger the "WX" courtesy tone.
   # Use a case-sensitive list. One alert per line.
   CTAlerts:
     - Ashfall Warning

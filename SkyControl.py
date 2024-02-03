@@ -33,41 +33,61 @@ from ruamel.yaml import YAML
 yaml = YAML()
 
 
-# Define a function to change the CT
-def changeCT(ct):
-    tone_dir = config["CourtesyTones"].get(
-        "ToneDir", os.path.join(str(SCRIPT_DIR), "SOUNDS/TONES")
-    )
-    ct1 = config["CourtesyTones"]["Tones"]["CT1"]
-    ct2 = config["CourtesyTones"]["Tones"]["CT2"]
-    wx_ct = config["CourtesyTones"]["Tones"]["WXCT"]
-    rpt_ct1 = config["CourtesyTones"]["Tones"]["RptCT1"]
-    rpt_ct2 = config["CourtesyTones"]["Tones"]["RptCT2"]
+def changeCT(ct_mode):
+    """
+    Changes all courtesy tones to the specified mode ('normal' or 'wx').
+    This function ensures that the case of the keys in the config.yaml is correctly handled,
+    dynamically selecting and applying tone configurations based on the mode.
 
-    if ct == "normal":
-        src_file = os.path.join(tone_dir, ct1)
-        dest_file = os.path.join(tone_dir, rpt_ct1)
-        shutil.copyfile(src_file, dest_file)
-
-        src_file = os.path.join(tone_dir, ct2)
-        dest_file = os.path.join(tone_dir, rpt_ct2)
-        shutil.copyfile(src_file, dest_file)
-        return True  # Indicate that CT was changed to normal
-    elif ct == "wx":
-        src_file = os.path.join(tone_dir, wx_ct)
-        dest_file = os.path.join(tone_dir, rpt_ct1)
-        shutil.copyfile(src_file, dest_file)
-
-        src_file = os.path.join(tone_dir, wx_ct)
-        dest_file = os.path.join(tone_dir, rpt_ct2)
-        shutil.copyfile(src_file, dest_file)
-        return False  # Indicate that CT was changed to wx
-    else:
-        print("Invalid CT value. Please provide either 'wx' or 'normal'.")
+    :param ct_mode: The operational mode to switch to ('normal' or 'wx').
+    """
+    ct_mode_lower = ct_mode.lower()  # Convert the mode to lowercase for comparison
+    if ct_mode_lower not in ["normal", "wx"]:
+        print("Invalid CT mode. Please provide either 'wx' or 'normal'.")
         sys.exit(1)
 
+    mode_key = (
+        "Normal" if ct_mode_lower == "normal" else "WX"
+    )  # Convert to the case used in config.yaml
 
-# Define a function to change the ID
+    tone_dir = config["CourtesyTones"].get(
+        "ToneDir", "/usr/local/bin/SkywarnPlus/SOUNDS/TONES"
+    )
+    tones_config = config["CourtesyTones"]["Tones"]
+    changes_made = False
+
+    for ct_key, settings in tones_config.items():
+        # Normalize the ct_key to lowercase to ensure consistent access
+        target_tone = settings.get(
+            mode_key
+        )  # Access settings using the corrected mode key
+        if not target_tone:
+            print("No tone configured for {} mode in {}".format(ct_mode_lower, ct_key))
+            continue
+
+        src_file = os.path.join(tone_dir, target_tone)
+        dest_file = os.path.join(tone_dir, "{}.ulaw".format(ct_key))
+
+        # Check if the source file exists and perform the file copy operation
+        if os.path.exists(src_file):
+            shutil.copyfile(src_file, dest_file)
+            print(
+                "Updated {} to {} mode with tone {}".format(
+                    ct_key, ct_mode, target_tone
+                )
+            )
+            changes_made = True
+        else:
+            print("Source tone file does not exist: {}".format(src_file))
+
+    if changes_made:
+        print("All courtesy tones updated to {} mode.".format(ct_mode_lower))
+    else:
+        print("No changes made to courtesy tones.")
+
+    return changes_made
+
+
 def changeID(id):
     id_dir = config["IDChange"].get("IDDir", os.path.join(str(SCRIPT_DIR), "ID"))
     normal_id = config["IDChange"]["IDs"]["NormalID"]

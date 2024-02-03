@@ -41,6 +41,7 @@ import contextlib
 import math
 import sys
 import itertools
+import argparse
 from datetime import datetime, timezone, timedelta
 from dateutil import parser
 from pydub import AudioSegment
@@ -54,6 +55,13 @@ yaml = YAML()
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 CONFIG_PATH = os.path.join(BASE_DIR, "config.yaml")
 COUNTY_CODES_PATH = os.path.join(BASE_DIR, "CountyCodes.md")
+
+# Setup argparser
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "--inject", action="store_true", help="Enable inject directly via flag"
+)
+args = parser.parse_args()
 
 # Open and read configuration file
 with open(CONFIG_PATH, "r") as config_file:
@@ -404,7 +412,7 @@ def get_alerts(countyCodes):
     LOGGER.debug("getAlerts: Current time: %s", current_time)
 
     # Handle alert injection for development/testing purposes
-    if config.get("DEV", {}).get("INJECT", False):
+    if config.get("DEV", {}).get("INJECT", False) or args.inject:
         LOGGER.debug("getAlerts: DEV Alert Injection Enabled")
         injected_alerts = config["DEV"].get("INJECTALERTS", [])
         LOGGER.debug("getAlerts: Injecting alerts: %s", injected_alerts)
@@ -462,9 +470,9 @@ def get_alerts(countyCodes):
                     }
                 )
 
-            alerts[
-                alert_title
-            ] = county_data  # Add the list of dictionaries to the alert
+            alerts[alert_title] = (
+                county_data  # Add the list of dictionaries to the alert
+            )
 
         # If injected alerts are used, we return them here and don't proceed with the function.
         return sort_alerts(alerts)
@@ -1109,121 +1117,6 @@ def build_tailmessage(alerts):
     converted_combined_sound.export(TAILMESSAGE_FILE, format="wav")
 
 
-def change_ct(ct):
-    """
-    Change the current Courtesy Tone (CT) to the one specified.
-    This function first checks if the specified CT is already in use. If so, it does not make any changes.
-    If the CT needs to be changed, it replaces the current CT files with the new ones and updates the state file.
-    """
-    state = load_state()
-    current_ct = state["ct"]
-    ct1 = config["CourtesyTones"]["Tones"]["CT1"]
-    ct2 = config["CourtesyTones"]["Tones"]["CT2"]
-    wx_ct = config["CourtesyTones"]["Tones"]["WXCT"]
-    rpt_ct1 = config["CourtesyTones"]["Tones"]["RptCT1"]
-    rpt_ct2 = config["CourtesyTones"]["Tones"]["RptCT2"]
-
-    LOGGER.debug("changeCT: Tone directory: %s", TONE_DIR)
-    LOGGER.debug("changeCT: Local CT: %s", ct1)
-    LOGGER.debug("changeCT: Link CT: %s", ct2)
-    LOGGER.debug("changeCT: WX CT: %s", wx_ct)
-    LOGGER.debug("changeCT: Rpt Local CT: %s", rpt_ct1)
-    LOGGER.debug("changeCT: Rpt Link CT: %s", rpt_ct2)
-    LOGGER.debug("changeCT: CT argument: %s", ct)
-
-    if not ct:
-        LOGGER.error("changeCT: called with no CT specified")
-        return
-
-    current_ct = None
-    if state:
-        current_ct = state["ct"]
-
-    LOGGER.debug("changeCT: Current CT - %s", current_ct)
-
-    if ct == current_ct:
-        LOGGER.debug("changeCT: Courtesy tones are already %s, no changes made.", ct)
-        return False
-
-    if ct == "NORMAL":
-        LOGGER.info("Changing to NORMAL courtesy tones")
-        src_file = os.path.join(TONE_DIR, ct1)
-        dest_file = os.path.join(TONE_DIR, rpt_ct1)
-        LOGGER.debug("changeCT: Copying %s to %s", src_file, dest_file)
-        shutil.copyfile(src_file, dest_file)
-
-        src_file = os.path.join(TONE_DIR, ct2)
-        dest_file = os.path.join(TONE_DIR, rpt_ct2)
-        LOGGER.debug("changeCT: Copying %s to %s", src_file, dest_file)
-        shutil.copyfile(src_file, dest_file)
-    else:
-        LOGGER.info("Changing to %s courtesy tone", ct)
-        src_file = os.path.join(TONE_DIR, wx_ct)
-        dest_file = os.path.join(TONE_DIR, rpt_ct1)
-        LOGGER.debug("changeCT: Copying %s to %s", src_file, dest_file)
-        shutil.copyfile(src_file, dest_file)
-
-        src_file = os.path.join(TONE_DIR, wx_ct)
-        dest_file = os.path.join(TONE_DIR, rpt_ct2)
-        LOGGER.debug("changeCT: Copying %s to %s", src_file, dest_file)
-        shutil.copyfile(src_file, dest_file)
-
-    state["ct"] = ct
-    save_state(state)
-
-    return True
-
-
-def change_id(id):
-    """
-    Change the current Identifier (ID) to the one specified.
-    This function first checks if the specified ID is already in use. If so, it does not make any changes.
-    If the ID needs to be changed, it replaces the current ID files with the new ones and updates the state file.
-    """
-    state = load_state()
-    current_id = state["id"]
-    id_dir = config["IDChange"].get("IDDir", os.path.join(SOUNDS_PATH, "ID"))
-    normal_id = config["IDChange"]["IDs"]["NormalID"]
-    wx_id = config["IDChange"]["IDs"]["WXID"]
-    rpt_id = config["IDChange"]["IDs"]["RptID"]
-
-    LOGGER.debug("changeID: ID directory: %s", id_dir)
-    LOGGER.debug("changeID: ID argument: %s", id)
-
-    if not id:
-        LOGGER.error("changeID: called with no ID specified")
-        return
-
-    current_id = None
-    if state:
-        current_id = state["id"]
-
-    LOGGER.debug("changeID: Current ID - %s", current_id)
-
-    if id == current_id:
-        LOGGER.debug("changeID: ID is already %s, no changes made.", id)
-        return False
-
-    if id == "NORMAL":
-        LOGGER.info("Changing to NORMAL ID")
-        src_file = os.path.join(id_dir, normal_id)
-        dest_file = os.path.join(id_dir, rpt_id)
-        LOGGER.debug("changeID: Copying %s to %s", src_file, dest_file)
-        shutil.copyfile(src_file, dest_file)
-
-    else:
-        LOGGER.info("Changing to %s ID", id)
-        src_file = os.path.join(id_dir, wx_id)
-        dest_file = os.path.join(id_dir, rpt_id)
-        LOGGER.debug("changeID: Copying %s to %s", src_file, dest_file)
-        shutil.copyfile(src_file, dest_file)
-
-    state["id"] = id
-    save_state(state)
-
-    return True
-
-
 def alert_script(alerts):
     """
     This function reads a list of alerts, then performs actions based
@@ -1417,20 +1310,164 @@ def change_ct_id_helper(
         LOGGER.debug("%s auto change is not enabled", alert_type)
 
 
+def change_ct(mode):
+    """
+    Dynamically changes courtesy tones based on the specified operational mode ('NORMAL' or 'WX') and the detailed configuration provided.
+    This function extends flexibility by supporting multiple courtesy tones, each with configurations for normal and wx modes.
+
+    :param mode: The operational mode, either 'NORMAL' or 'WX'.
+    :return: True if any changes were made, False otherwise.
+    """
+    mode = mode.lower()  # Normalize the mode to lowercase
+    state = load_state()  # Load the current state
+    tone_dir = config["CourtesyTones"]["ToneDir"]
+    tones_config = config["CourtesyTones"]["Tones"]
+
+    LOGGER.debug("change_ct: Starting courtesy tone change to mode: %s", mode)
+    LOGGER.debug("change_ct: Courtesy tone directory: %s", tone_dir)
+
+    changed = False
+    for ct_key, tone_settings in tones_config.items():
+        # Normalize keys in tone_settings to lowercase for case-insensitive comparison
+        tone_settings_lower = {k.lower(): v for k, v in tone_settings.items()}
+        target_tone = tone_settings_lower.get(mode)  # Access using normalized mode
+
+        if not target_tone:
+            LOGGER.error(
+                "change_ct: No target tone specified for %s in %s mode", ct_key, mode
+            )
+            continue
+
+        src_file = os.path.join(tone_dir, target_tone)
+        dest_file = os.path.join(tone_dir, "{}.ulaw".format(ct_key))
+
+        if not os.path.exists(src_file):
+            LOGGER.error("change_ct: Source tone file does not exist: %s", src_file)
+            continue
+
+        try:
+            shutil.copyfile(src_file, dest_file)
+            LOGGER.info(
+                "ChangeCT: Updated %s to %s mode with tone %s",
+                ct_key,
+                mode,
+                target_tone,
+            )
+            changed = True
+        except Exception as e:
+            LOGGER.error("ChangeCT: Failed to update %s: %s", ct_key, str(e))
+
+    if changed:
+        LOGGER.debug("ChangeCT: Changes made, updating state to %s mode", mode)
+        state["ct"] = mode  # Update the state with the new mode
+        save_state(state)
+    else:
+        LOGGER.debug(
+            "ChangeCT: No changes made, courtesy tones already set for %s mode", mode
+        )
+
+    return changed
+
+
+def change_id(id):
+    """
+    Change the current Identifier (ID) to the one specified.
+    This function first checks if the specified ID is already in use. If so, it does not make any changes.
+    If the ID needs to be changed, it replaces the current ID files with the new ones and updates the state file.
+    """
+    try:
+        state = load_state()
+    except Exception as e:
+        LOGGER.error("changeID: Failed to load state: %s", e)
+        return False
+
+    if not state or "id" not in state:
+        LOGGER.error("changeID: State is invalid or missing 'id'")
+        return False
+
+    current_id = state["id"]
+    id_dir = config["IDChange"].get("IDDir", os.path.join(SOUNDS_PATH, "ID"))
+    normal_id = config["IDChange"]["IDs"]["NormalID"]
+    wx_id = config["IDChange"]["IDs"]["WXID"]
+    rpt_id = config["IDChange"]["IDs"]["RptID"]
+
+    LOGGER.debug("changeID: ID directory: %s", id_dir)
+    LOGGER.debug("changeID: ID argument: %s", id)
+
+    if not id:
+        LOGGER.error("changeID: called with no ID specified")
+        return False
+
+    LOGGER.debug("changeID: Current ID - %s", current_id)
+
+    if id == current_id:
+        LOGGER.debug("changeID: ID is already %s, no changes made.", id)
+        return False
+
+    src_file = ""
+    if id == "NORMAL":
+        src_file = os.path.join(id_dir, normal_id)
+    else:
+        src_file = os.path.join(id_dir, wx_id)
+
+    dest_file = os.path.join(id_dir, rpt_id)
+
+    if not os.path.exists(src_file):
+        LOGGER.error("changeID: Source file does not exist: %s", src_file)
+        return False
+
+    try:
+        LOGGER.info("Changing to %s ID", id)
+        LOGGER.debug("changeID: Copying %s to %s", src_file, dest_file)
+        shutil.copyfile(src_file, dest_file)
+    except Exception as e:
+        LOGGER.error(
+            "changeID: Failed to copy file from %s to %s: %s", src_file, dest_file, e
+        )
+        return False
+
+    try:
+        state["id"] = id
+        save_state(state)
+    except Exception as e:
+        LOGGER.error("changeID: Failed to save state: %s", e)
+        return False
+
+    return True
+
+
 def supermon_back_compat(alerts):
     """
     Write alerts to a file for backward compatibility with supermon.
     """
+    try:
+        # Ensure the target directory exists for /tmp/AUTOSKY
+        os.makedirs("/tmp/AUTOSKY", exist_ok=True)
 
-    # Ensure the target directory exists
-    os.makedirs("/tmp/AUTOSKY", exist_ok=True)
+        # Get alert titles (without severity levels)
+        alert_titles = list(alerts.keys())
 
-    # Get alert titles (without severity levels)
-    alert_titles = list(alerts.keys())
+        # Write alert titles to a file, with each title on a new line
+        with open("/tmp/AUTOSKY/warnings.txt", "w") as file:
+            file.write("<br>".join(alert_titles))
 
-    # Write alert titles to a file, with each title on a new line
-    with open("/tmp/AUTOSKY/warnings.txt", "w") as file:
-        file.write("<br>".join(alert_titles))
+    except Exception as e:
+        print("An error occurred while writing to /tmp/AUTOSKY: {}".format(str(e)))
+
+    try:
+        # Ensure the target directory exists for /var/www/html/AUTOSKY
+        os.makedirs("/var/www/html/AUTOSKY", exist_ok=True)
+
+        # Also write to other path sometimes used by Supermon
+        with open("/var/www/html/AUTOSKY/warnings.txt", "w") as file:
+            file.write("<br>".join(alert_titles))
+
+    except Exception as e:
+        print(
+            "An error occurred while writing to /var/www/html/AUTOSKY: {}".format(
+                str(e)
+            )
+        )
 
 
 def detect_county_changes(old_alerts, new_alerts):
