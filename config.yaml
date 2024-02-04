@@ -154,7 +154,7 @@ Tailmessage:
 CourtesyTones:
   # Configuration for automatic CT changing. Requires initial setup in RPT.CONF.
   # Enable/disable automatic courtesy tones.
-  Enable: true
+  Enable: false
 
   # Directory where tone files will be read from & stored to. Modify this path to match your setup.
   # Default location is within the SkywarnPlus installation directory.
