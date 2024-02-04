@@ -375,8 +375,10 @@ linkunkeyct = ct2
 [telemetry]
 ct1 = /usr/local/bin/SkywarnPlus/SOUNDS/TONES/ct1
 ct2 = /usr/local/bin/SkywarnPlus/SOUNDS/TONES/ct2
-ct1 = /usr/local/bin/SkywarnPlus/SOUNDS/TONES/ct3
-ct2 = /usr/local/bin/SkywarnPlus/SOUNDS/TONES/ct4
+ct3 = /usr/local/bin/SkywarnPlus/SOUNDS/TONES/ct3
+ct4 = /usr/local/bin/SkywarnPlus/SOUNDS/TONES/ct4
+ct5 = /usr/local/bin/SkywarnPlus/SOUNDS/TONES/ct5
+ct6 = /usr/local/bin/SkywarnPlus/SOUNDS/TONES/ct6
 remotetx = /usr/local/bin/SkywarnPlus/SOUNDS/TONES/ct1
 remotemon = /usr/local/bin/SkywarnPlus/SOUNDS/TONES/ct1
 ```
@@ -389,7 +391,7 @@ When enabled, SkywarnPlus will automatically switch between "normal" and "wx" mo
 
 Ensure that filenames and case sensitivity are consistent across `config.yaml` and `rpt.conf` to ensure seamless operation.
 
-After initially setting up automatic courtesy tones, the audio files will not refresh until the next time the alert status changes. To refresh immediately, run `/usr/local/bin/SkywarnPlys/SkyControl.py changect normal` to force the CTs to "normal" mode.
+After initially setting up automatic courtesy tones, the audio files will not refresh until the next time the alert status changes. To refresh immediately, run `/usr/local/bin/SkywarnPlus/SkyControl.py changect normal` to force the CTs to "normal" mode.
 
 # CW / Voice IDs
 
@@ -777,7 +779,7 @@ Alerting:
 
 SkywarnPlus provides the ability to inject predefined alerts, bypassing the call to the NWS API. This feature is extremely useful for testing SkywarnPlus.
 
-To enable this option, modify the following settings in the `[DEV]` section of your `config.yaml` file:
+To enable injection, modify the following settings in the `[DEV]` section of your `config.yaml` file:
 
 ```yaml
   # Enable test alert injection instead of calling the NWS API by setting 'INJECT' to 'True'.
@@ -798,6 +800,11 @@ To enable this option, modify the following settings in the `[DEV]` section of y
   - Title: "Tornado Warning"
   - Title: "Tornado Watch"
   - Title: "Severe Thunderstorm Warning"
+```
+
+To inject alerts ONLY 1 time, simply call SkywarnPlus with the `--inject` option.
+```bash
+./SkywarnPlus.py --inject
 ```
 
 # Debugging
