@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-SkywarnPlus.py v0.6.0 by Mason Nelson
+SkywarnPlus.py v0.6.1 by Mason Nelson
 ===============================================================================
 SkywarnPlus is a utility that retrieves severe weather alerts from the National 
 Weather Service and integrates these alerts with an Asterisk/app_rpt based 
@@ -41,7 +41,6 @@ import contextlib
 import math
 import sys
 import itertools
-import argparse
 from datetime import datetime, timezone, timedelta
 from dateutil import parser
 from pydub import AudioSegment
@@ -55,13 +54,6 @@ yaml = YAML()
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 CONFIG_PATH = os.path.join(BASE_DIR, "config.yaml")
 COUNTY_CODES_PATH = os.path.join(BASE_DIR, "CountyCodes.md")
-
-# Setup argparser
-parser = argparse.ArgumentParser()
-parser.add_argument(
-    "--inject", action="store_true", help="Enable inject directly via flag"
-)
-args = parser.parse_args()
 
 # Open and read configuration file
 with open(CONFIG_PATH, "r") as config_file:
@@ -412,7 +404,7 @@ def get_alerts(countyCodes):
     LOGGER.debug("getAlerts: Current time: %s", current_time)
 
     # Handle alert injection for development/testing purposes
-    if config.get("DEV", {}).get("INJECT", False) or args.inject:
+    if config.get("DEV", {}).get("INJECT", False):
         LOGGER.debug("getAlerts: DEV Alert Injection Enabled")
         injected_alerts = config["DEV"].get("INJECTALERTS", [])
         LOGGER.debug("getAlerts: Injecting alerts: %s", injected_alerts)
