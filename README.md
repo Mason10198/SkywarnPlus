@@ -802,11 +802,6 @@ To enable injection, modify the following settings in the `[DEV]` section of you
   - Title: "Severe Thunderstorm Warning"
 ```
 
-To inject alerts ONLY 1 time, simply call SkywarnPlus with the `--inject` option.
-```bash
-./SkywarnPlus.py --inject
-```
-
 # Debugging
 
 Debugging is an essential part of diagnosing issues with SkywarnPlus. To facilitate this, SkywarnPlus provides a built-in debugging feature. Here's how to use it:
