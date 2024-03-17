@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-SkywarnPlus.py v0.6.1 by Mason Nelson
+SkywarnPlus.py v0.6.2 by Mason Nelson
 ===============================================================================
 SkywarnPlus is a utility that retrieves severe weather alerts from the National 
 Weather Service and integrates these alerts with an Asterisk/app_rpt based 
@@ -927,29 +927,35 @@ def say_allclear():
     # Generate silence for spacing between sounds
     silence = AudioSegment.silent(duration=600)  # 600 ms of silence
 
-    # Combine the sound clips
+    # Combine the "all clear" sound and SWP_147 sound with the configured silence between them
     combined_sound = all_clear_sound + silence + swp_147_sound
 
     # Add a delay before the sound if configured
     if AUDIO_DELAY > 0:
         LOGGER.debug("sayAllClear: Prepending audio with %sms of silence", AUDIO_DELAY)
-        silence = AudioSegment.silent(duration=AUDIO_DELAY)
-        combined_sound = silence + combined_sound
-
-    # Export the combined sound to a file
-    all_clear_file = os.path.join(TMP_DIR, "allclear.wav")
-    converted_combined_sound = convert_audio(combined_sound)
-    converted_combined_sound.export(all_clear_file, format="wav")
+        delay_silence = AudioSegment.silent(duration=AUDIO_DELAY)
+        combined_sound = delay_silence + combined_sound
 
     # Append a suffix to the sound if configured
     if config.get("Alerting", {}).get("SayAllClearSuffix", None) is not None:
+        suffix_silence = AudioSegment.silent(
+            duration=600
+        )  # 600ms silence before the suffix
         suffix_file = os.path.join(
             SOUNDS_PATH, config.get("Alerting", {}).get("SayAllClearSuffix")
         )
         LOGGER.debug("sayAllClear: Adding all clear suffix %s", suffix_file)
         suffix_sound = AudioSegment.from_wav(suffix_file)
-        converted_suffix_sound = convert_audio(suffix_sound)
-        converted_suffix_sound.export(all_clear_file, format="wav")
+        combined_sound += (
+            suffix_silence + suffix_sound
+        )  # Append the silence and then the suffix to the combined sound
+
+    # Now, convert the final combined sound
+    converted_combined_sound = convert_audio(combined_sound)
+
+    # Export the final converted sound to a file
+    all_clear_file = os.path.join(TMP_DIR, "allclear.wav")
+    converted_combined_sound.export(all_clear_file, format="wav")
 
     # Play the "all clear" sound on the configured Asterisk nodes
     node_numbers = config.get("Asterisk", {}).get("Nodes", [])
@@ -1095,13 +1101,13 @@ def build_tailmessage(alerts):
         suffix_file = os.path.join(SOUNDS_PATH, tailmessage_suffix)
         suffix_sound = AudioSegment.from_wav(suffix_file)
         combined_sound += suffix_silence + suffix_sound
-    else:
-        if AUDIO_DELAY > 0:
-            LOGGER.debug(
-                "buildTailMessage: Prepending audio with %sms of silence", AUDIO_DELAY
-            )
-            silence = AudioSegment.silent(duration=AUDIO_DELAY)
-            combined_sound = silence + combined_sound
+
+    if AUDIO_DELAY > 0:
+        LOGGER.debug(
+            "buildTailMessage: Prepending audio with %sms of silence", AUDIO_DELAY
+        )
+        silence = AudioSegment.silent(duration=AUDIO_DELAY)
+        combined_sound = silence + combined_sound
 
     converted_combined_sound = convert_audio(combined_sound)
     LOGGER.info("Built new tailmessage")

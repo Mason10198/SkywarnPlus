@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-SkyControl.py v0.6.1 by Mason Nelson
+SkyControl.py v0.6.2 by Mason Nelson
 ==================================
 A Control Script for SkywarnPlus
 
