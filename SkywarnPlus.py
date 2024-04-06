@@ -1000,11 +1000,11 @@ def build_tailmessage(alerts):
         )
     )
 
-    added_counties = set()
     for (
         alert,
         counties,
     ) in alerts.items():  # Now we loop over both alert name and its associated counties
+        added_counties = set()
         if any(
             fnmatch.fnmatch(alert, blocked_event)
             for blocked_event in TAILMESSAGE_BLOCKED_EVENTS
