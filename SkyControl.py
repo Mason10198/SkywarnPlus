@@ -27,6 +27,7 @@ import shutil
 import sys
 import subprocess
 from pathlib import Path
+from pydub import AudioSegment
 from ruamel.yaml import YAML
 
 # Use ruamel.yaml instead of PyYAML to preserve comments in the config file
@@ -107,6 +108,18 @@ def changeID(id):
     else:
         print("Invalid ID value. Please provide either 'wx' or 'normal'.")
         sys.exit(1)
+
+
+def silent_tailmessage():
+    """
+    Generates a 100ms silent audio file and replaces the existing tailmessage file,
+    ensuring the audio is compatible with Asterisk (8000Hz, mono).
+    """
+    tailmessage_path = config["Tailmessage"].get("TailmessagePath", "/tmp/SkywarnPlus/wx-tail.wav")
+    silence = AudioSegment.silent(duration=100)
+    converted_silence = silence.set_frame_rate(8000).set_channels(1)
+    converted_silence.export(tailmessage_path, format="wav")
+    print("Replaced tailmessage with 100ms of silence.")
 
 
 # Define valid keys and corresponding audio files
@@ -213,6 +226,8 @@ else:
 with open(str(CONFIG_FILE), "r") as f:
     config = yaml.load(f)
 
+tailmessage_previously_enabled = config["Tailmessage"]["Enable"]
+
 if key == "changect":
     value = changeCT(value)
 elif key == "changeid":
@@ -226,6 +241,10 @@ else:
     if value == "toggle":
         current_value = config[VALID_KEYS[key]["section"]][VALID_KEYS[key]["key"]]
         value = not current_value
+
+    # Special handling for disabling SKYWARNPLUS or Tailmessage
+    if key in ["enable", "tailmessage"] and value is False and tailmessage_previously_enabled:
+        silent_tailmessage()
 
     # Update the key in the config
     config[VALID_KEYS[key]["section"]][VALID_KEYS[key]["key"]] = value
