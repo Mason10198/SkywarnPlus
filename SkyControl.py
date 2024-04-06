@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-SkyControl.py v0.6.2 by Mason Nelson
+SkyControl.py v0.7.0 by Mason Nelson
 ==================================
 A Control Script for SkywarnPlus
 
@@ -115,7 +115,9 @@ def silent_tailmessage():
     Generates a 100ms silent audio file and replaces the existing tailmessage file,
     ensuring the audio is compatible with Asterisk (8000Hz, mono).
     """
-    tailmessage_path = config["Tailmessage"].get("TailmessagePath", "/tmp/SkywarnPlus/wx-tail.wav")
+    tailmessage_path = config["Tailmessage"].get(
+        "TailmessagePath", "/tmp/SkywarnPlus/wx-tail.wav"
+    )
     silence = AudioSegment.silent(duration=100)
     converted_silence = silence.set_frame_rate(8000).set_channels(1)
     converted_silence.export(tailmessage_path, format="wav")
@@ -243,7 +245,11 @@ else:
         value = not current_value
 
     # Special handling for disabling SKYWARNPLUS or Tailmessage
-    if key in ["enable", "tailmessage"] and value is False and tailmessage_previously_enabled:
+    if (
+        key in ["enable", "tailmessage"]
+        and value is False
+        and tailmessage_previously_enabled
+    ):
         silent_tailmessage()
 
     # Update the key in the config

@@ -1,4 +1,4 @@
-# SkywarnPlus v0.6.2 Configuration File
+# SkywarnPlus v0.7.0 Configuration File
 # Author: Mason Nelson (N5LSN/WRKF394)
 # Please edit this file according to your specific requirements.
 
@@ -309,6 +309,20 @@ AlertScript:
 
   # Completely enable/disable AlertScript
   Enable: false
+
+  # These are BASH or DTMF commands that are executed ONLY when the number of active alerts changes from ZERO to NON-ZERO.
+  # Use the same format as other AlertScript mappings (see below).
+  ActiveCommands:
+    - Type: BASH
+      Commands:
+        - 'echo "THE NUMBER OF ACTIVE ALERTS JUST CHANGED FROM ZERO TO NON-ZERO"'
+
+  # These are BASH or DTMF commands that are executed ONLY when the number of active alerts changes from NON-ZERO to ZERO.
+  # Use the same format as other AlertScript mappings (see below).
+  InactiveCommands:
+    - Type: BASH
+      Commands:
+        - 'echo "THE NUMBER OF ACTIVE ALERTS JUST CHANGED FROM NON-ZERO TO ZERO"'
 
   Mappings:
     # Define the mapping of alerts to either DTMF commands or bash scripts here.

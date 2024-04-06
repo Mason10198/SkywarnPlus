@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-SkywarnPlus.py v0.6.2 by Mason Nelson
+SkywarnPlus.py v0.7.0 by Mason Nelson
 ===============================================================================
 SkywarnPlus is a utility that retrieves severe weather alerts from the National 
 Weather Service and integrates these alerts with an Asterisk/app_rpt based 
@@ -1133,8 +1133,12 @@ def alert_script(alerts):
     previous_active_count = len(state.get("active_alerts", []))
     LOGGER.debug("Previous active alerts count: %s", previous_active_count)
 
-    processed_alerts = set(state["alertscript_alerts"])  # Convert to a set for easier processing
-    active_alerts = set(state.get("active_alerts", []))  # Load active alerts from state, also as a set
+    processed_alerts = set(
+        state["alertscript_alerts"]
+    )  # Convert to a set for easier processing
+    active_alerts = set(
+        state.get("active_alerts", [])
+    )  # Load active alerts from state, also as a set
 
     LOGGER.debug("Processed alerts from state: %s", processed_alerts)
     LOGGER.debug("Active alerts from state: %s", active_alerts)
@@ -1151,7 +1155,9 @@ def alert_script(alerts):
     LOGGER.debug("Cleared alerts: %s", cleared_alerts)
 
     # Update the active alerts in the state
-    state["active_alerts"] = list(alert_names)  # Convert back to list for JSON serialization
+    state["active_alerts"] = list(
+        alert_names
+    )  # Convert back to list for JSON serialization
     LOGGER.debug("Updated active alerts in state: %s", state["active_alerts"])
 
     # Fetch AlertScript configuration from global_config
@@ -1203,7 +1209,9 @@ def alert_script(alerts):
     # Process each mapping for new alerts and issue a warning for wildcard clear commands
     for mapping in mappings:
         if "*" in mapping.get("Triggers", []) and mapping.get("ClearCommands"):
-            LOGGER.warning("Using ClearCommands with wildcard-based mappings ('*') might not behave as expected for all alert clearances.")
+            LOGGER.warning(
+                "Using ClearCommands with wildcard-based mappings ('*') might not behave as expected for all alert clearances."
+            )
 
         LOGGER.debug("Processing mapping: %s", mapping)
         triggers = mapping.get("Triggers", [])
@@ -1211,25 +1219,35 @@ def alert_script(alerts):
         nodes = mapping.get("Nodes", [])
         match_type = mapping.get("Match", "ANY").upper()
 
-        matched_alerts = [alert for alert in new_alerts if any(fnmatch.fnmatch(alert, trigger) for trigger in triggers)]
+        matched_alerts = [
+            alert
+            for alert in new_alerts
+            if any(fnmatch.fnmatch(alert, trigger) for trigger in triggers)
+        ]
         LOGGER.debug("Matched alerts for mapping: %s", matched_alerts)
 
         # Check if new alerts matched the triggers as per the match type
-        if (match_type == "ANY" and matched_alerts) or (match_type == "ALL" and len(matched_alerts) == len(triggers)):
+        if (match_type == "ANY" and matched_alerts) or (
+            match_type == "ALL" and len(matched_alerts) == len(triggers)
+        ):
             for alert in matched_alerts:
                 processed_alerts.add(alert)
                 LOGGER.debug("Processing alert: %s", alert)
 
                 if mapping.get("Type") == "BASH":
                     for cmd in commands:
-                        cmd = cmd.format(alert_title=alert)  # Replace placeholder with alert title
+                        cmd = cmd.format(
+                            alert_title=alert
+                        )  # Replace placeholder with alert title
                         LOGGER.info("AlertScript: Executing BASH command: %s", cmd)
                         subprocess.run(cmd, shell=True)
                 elif mapping.get("Type") == "DTMF":
                     for node in nodes:
                         for cmd in commands:
                             dtmf_cmd = 'asterisk -rx "rpt fun {} {}"'.format(node, cmd)
-                            LOGGER.info("AlertScript: Executing DTMF command: %s", dtmf_cmd)
+                            LOGGER.info(
+                                "AlertScript: Executing DTMF command: %s", dtmf_cmd
+                            )
                             subprocess.run(dtmf_cmd, shell=True)
 
     # Process each mapping for cleared alerts
@@ -1239,11 +1257,17 @@ def alert_script(alerts):
         triggers = mapping.get("Triggers", [])
         match_type = mapping.get("Match", "ANY").upper()
 
-        matched_cleared_alerts = [alert for alert in cleared_alerts if any(fnmatch.fnmatch(alert, trigger) for trigger in triggers)]
+        matched_cleared_alerts = [
+            alert
+            for alert in cleared_alerts
+            if any(fnmatch.fnmatch(alert, trigger) for trigger in triggers)
+        ]
         LOGGER.debug("Matched cleared alerts for mapping: %s", matched_cleared_alerts)
 
         # Check if cleared alerts matched the triggers as per the match type
-        if (match_type == "ANY" and matched_cleared_alerts) or (match_type == "ALL" and len(matched_cleared_alerts) == len(triggers)):
+        if (match_type == "ANY" and matched_cleared_alerts) or (
+            match_type == "ALL" and len(matched_cleared_alerts) == len(triggers)
+        ):
             for cmd in clear_commands:
                 LOGGER.debug("Executing clear command: %s", cmd)
                 if mapping.get("Type") == "BASH":
@@ -1252,11 +1276,15 @@ def alert_script(alerts):
                 elif mapping.get("Type") == "DTMF":
                     for node in mapping.get("Nodes", []):
                         dtmf_cmd = 'asterisk -rx "rpt fun {} {}"'.format(node, cmd)
-                        LOGGER.info("AlertScript: Executing DTMF ClearCommand: %s", dtmf_cmd)
+                        LOGGER.info(
+                            "AlertScript: Executing DTMF ClearCommand: %s", dtmf_cmd
+                        )
                         subprocess.run(dtmf_cmd, shell=True)
 
     # Update the state with the alerts processed in this run
-    state["alertscript_alerts"] = list(processed_alerts)  # Convert back to list for JSON serialization
+    state["alertscript_alerts"] = list(
+        processed_alerts
+    )  # Convert back to list for JSON serialization
     LOGGER.debug("Saving state with processed alerts: %s", state["alertscript_alerts"])
     save_state(state)
     LOGGER.debug("Alert script execution completed.")
