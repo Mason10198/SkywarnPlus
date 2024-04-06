@@ -30,6 +30,15 @@
   - [Understanding AlertScript](#understanding-alertscript)
   - [Matching](#matching)
   - [ClearCommands: Responding to Alert Clearance](#clearcommands-responding-to-alert-clearance)
+    - [Usage Note:](#usage-note)
+    - [Why Caution with Wildcards?](#why-caution-with-wildcards)
+    - [Best Practice:](#best-practice)
+  - [Transition-Based Commands](#transition-based-commands)
+    - [ActiveCommands](#activecommands)
+      - [Configuration Example for ActiveCommands:](#configuration-example-for-activecommands)
+    - [InactiveCommands](#inactivecommands)
+      - [Configuration Example for InactiveCommands:](#configuration-example-for-inactivecommands)
+    - [Implementing Transition-Based Commands](#implementing-transition-based-commands)
   - [The Power of YOU](#the-power-of-you)
 - [SkyDescribe](#skydescribe)
   - [Usage](#usage-1)
@@ -640,6 +649,59 @@ For example:
 ```
 
 In the above configuration, when the alerts "Tornado Warning" AND "Tornado Watch" are detected, the DTMF macro `*123*456*789` will be executed. However, when there are no longer ANY alerts matching "Tornado Warning" OR "Tornado Watch", the DTMF macro `*987*654*321` will be executed.
+
+### Usage Note:
+
+While `ClearCommands` enhances `AlertScript`'s functionality, it's important to exercise caution when using them with wildcard-based mappings (`*`). This is because such mappings may not behave as expected with `ClearCommands`, especially in complex alert scenarios where multiple alerts might be active simultaneously.
+
+### Why Caution with Wildcards?
+
+Wildcards offer broad matching capabilities, activating `Commands` for a wide range of alerts. However, when it comes to alert clearance (`ClearCommands`), the broad nature of wildcards can lead to unintended behaviors:
+
+- **Non-Specific Clearance**: Wildcards do not specify a single alert clearance that should trigger `ClearCommands`, potentially causing them to execute in unintended scenarios.
+- **Overlap and Confusion**: In situations with multiple active alerts covered by a single wildcard trigger, identifying the precise moment for `ClearCommands` execution can become ambiguous and may not function as intended.
+
+### Best Practice:
+
+It's recommended to use specific mappings for `ClearCommands` to ensure precise and predictable behavior upon alert clearance. If using wildcards, be prepared for `ClearCommands` to potentially execute in broader circumstances than anticipated, and consider the overall context of your alert management strategy.
+
+## Transition-Based Commands
+
+`AlertScript` includes the capability to execute specific BASH or DTMF commands based on transitions in overall state of alert activity.
+
+### ActiveCommands
+
+`ActiveCommands` are designed to be executed when the system transitions from a state of having zero active weather alerts to a state where one or more alerts become active. This feature is particularly useful for signaling the onset of weather-related activities or conditions that warrant immediate attention or action.
+
+#### Configuration Example for ActiveCommands:
+
+```yaml
+ActiveCommands:
+  - Type: BASH
+    Commands:
+      - 'echo "THE NUMBER OF ACTIVE ALERTS JUST CHANGED FROM ZERO TO NON-ZERO"'
+```
+
+In this example, a message is echoed whenever the system detects the first active weather alert after a period of no alerts. This could be adapted to activate lights, sounds, or other notification systems to alert of changing conditions.
+
+### InactiveCommands
+
+Conversely, `InactiveCommands` are triggered when the number of active weather alerts changes from one or more to zero. This transition indicates a return to a state of no immediate weather threats, and commands under this category can be used to deactivate alerts, reset systems, or notify personnel of the all-clear status.
+
+#### Configuration Example for InactiveCommands:
+
+```yaml
+InactiveCommands:
+  - Type: BASH
+    Commands:
+      - 'echo "THE NUMBER OF ACTIVE ALERTS JUST CHANGED FROM NON-ZERO TO ZERO"'
+```
+
+This example would output a message signaling that all active weather alerts have been cleared. Similar to `ActiveCommands`, `InactiveCommands` can be customized to perform a wide range of actions, such as turning off alerting systems or sending an all-clear message through your communication channels.
+
+### Implementing Transition-Based Commands
+
+To utilize these new command types, simply add `ActiveCommands` and/or `InactiveCommands` to your `AlertScript` configuration in the `config.yaml` file, following the same format as other AlertScript mappings. This allows for both BASH and DTMF commands to be executed in response to changes in the alert status landscape, providing a dynamic and responsive alert management system.
 
 ## The Power of YOU
 

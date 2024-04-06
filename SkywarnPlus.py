@@ -1119,32 +1119,80 @@ def alert_script(alerts):
     """
     This function reads a list of alerts, then performs actions based
     on the alert triggers defined in the global configuration file.
+    It supports wildcard matching for triggers and includes functionality
+    to execute commands specifically when transitioning between zero and non-zero
+    active alerts.
     """
+    LOGGER.debug("Starting alert_script with alerts: %s", alerts)
 
     # Load the saved state
     state = load_state()
-    processed_alerts = set(
-        state["alertscript_alerts"]
-    )  # Convert to a set for easier processing
-    active_alerts = set(
-        state.get("active_alerts", [])
-    )  # Load active alerts from state, also as a set
+    LOGGER.debug("Loaded state: %s", state)
+
+    # Determine the previous and current count of active alerts
+    previous_active_count = len(state.get("active_alerts", []))
+    LOGGER.debug("Previous active alerts count: %s", previous_active_count)
+
+    processed_alerts = set(state["alertscript_alerts"])  # Convert to a set for easier processing
+    active_alerts = set(state.get("active_alerts", []))  # Load active alerts from state, also as a set
+
+    LOGGER.debug("Processed alerts from state: %s", processed_alerts)
+    LOGGER.debug("Active alerts from state: %s", active_alerts)
 
     # Extract only the alert names from the OrderedDict keys
     alert_names = set([alert for alert in alerts.keys()])
+    LOGGER.debug("Extracted alert names: %s", alert_names)
 
     # Identify new alerts and cleared alerts
     new_alerts = alert_names - active_alerts
     cleared_alerts = active_alerts - alert_names
 
+    LOGGER.debug("New alerts: %s", new_alerts)
+    LOGGER.debug("Cleared alerts: %s", cleared_alerts)
+
     # Update the active alerts in the state
-    state["active_alerts"] = list(
-        alert_names
-    )  # Convert back to list for JSON serialization
+    state["active_alerts"] = list(alert_names)  # Convert back to list for JSON serialization
+    LOGGER.debug("Updated active alerts in state: %s", state["active_alerts"])
 
     # Fetch AlertScript configuration from global_config
     alertScript_config = config.get("AlertScript", {})
     LOGGER.debug("AlertScript configuration: %s", alertScript_config)
+
+    # Determine the current count of active alerts after update
+    current_active_count = len(state["active_alerts"])
+    LOGGER.debug("Current active alerts count: %s", current_active_count)
+
+    # Check for transition from zero to non-zero active alerts and execute ActiveCommands
+    if previous_active_count == 0 and current_active_count > 0:
+        active_commands = alertScript_config.get("ActiveCommands", [])
+        if active_commands:
+            for command in active_commands:
+                if command["Type"].upper() == "BASH":
+                    for cmd in command["Commands"]:
+                        LOGGER.info("Executing Active BASH Command: %s", cmd)
+                        subprocess.run(cmd, shell=True)
+                elif command["Type"].upper() == "DTMF":
+                    for node in command["Nodes"]:
+                        for cmd in command["Commands"]:
+                            dtmf_cmd = 'asterisk -rx "rpt fun {} {}"'.format(node, cmd)
+                            LOGGER.info("Executing Active DTMF Command: %s", dtmf_cmd)
+                            subprocess.run(dtmf_cmd, shell=True)
+
+    # Check for transition from non-zero to zero active alerts and execute InactiveCommands
+    if previous_active_count > 0 and current_active_count == 0:
+        inactive_commands = alertScript_config.get("InactiveCommands", [])
+        if inactive_commands:
+            for command in inactive_commands:
+                if command["Type"].upper() == "BASH":
+                    for cmd in command["Commands"]:
+                        LOGGER.info("Executing Inactive BASH Command: %s", cmd)
+                        subprocess.run(cmd, shell=True)
+                elif command["Type"].upper() == "DTMF":
+                    for node in command["Nodes"]:
+                        for cmd in command["Commands"]:
+                            dtmf_cmd = 'asterisk -rx "rpt fun {} {}"'.format(node, cmd)
+                            LOGGER.info("Executing Inactive DTMF Command: %s", dtmf_cmd)
+                            subprocess.run(dtmf_cmd, shell=True)
 
     # Fetch Mappings from AlertScript configuration
     mappings = alertScript_config.get("Mappings", [])
@@ -1152,75 +1200,66 @@ def alert_script(alerts):
         mappings = []
     LOGGER.debug("Mappings: %s", mappings)
 
-    # Process each mapping for new alerts
+    # Process each mapping for new alerts and issue a warning for wildcard clear commands
     for mapping in mappings:
+        if "*" in mapping.get("Triggers", []) and mapping.get("ClearCommands"):
+            LOGGER.warning("Using ClearCommands with wildcard-based mappings ('*') might not behave as expected for all alert clearances.")
+
+        LOGGER.debug("Processing mapping: %s", mapping)
         triggers = mapping.get("Triggers", [])
         commands = mapping.get("Commands", [])
         nodes = mapping.get("Nodes", [])
         match_type = mapping.get("Match", "ANY").upper()
 
-        matched_alerts = [alert for alert in new_alerts if alert in triggers]
+        matched_alerts = [alert for alert in new_alerts if any(fnmatch.fnmatch(alert, trigger) for trigger in triggers)]
+        LOGGER.debug("Matched alerts for mapping: %s", matched_alerts)
 
         # Check if new alerts matched the triggers as per the match type
-        if (
-            match_type == "ANY"
-            and matched_alerts
-            or match_type == "ALL"
-            and len(matched_alerts) == len(triggers)
-        ):
+        if (match_type == "ANY" and matched_alerts) or (match_type == "ALL" and len(matched_alerts) == len(triggers)):
             for alert in matched_alerts:
                 processed_alerts.add(alert)
+                LOGGER.debug("Processing alert: %s", alert)
 
                 if mapping.get("Type") == "BASH":
                     for cmd in commands:
-                        cmd = cmd.format(
-                            alert_title=alert
-                        )  # Replace placeholder with alert title
+                        cmd = cmd.format(alert_title=alert)  # Replace placeholder with alert title
                         LOGGER.info("AlertScript: Executing BASH command: %s", cmd)
                         subprocess.run(cmd, shell=True)
                 elif mapping.get("Type") == "DTMF":
                     for node in nodes:
                         for cmd in commands:
                             dtmf_cmd = 'asterisk -rx "rpt fun {} {}"'.format(node, cmd)
-                            LOGGER.info(
-                                "AlertScript: Executing DTMF command: %s", dtmf_cmd
-                            )
+                            LOGGER.info("AlertScript: Executing DTMF command: %s", dtmf_cmd)
                             subprocess.run(dtmf_cmd, shell=True)
 
     # Process each mapping for cleared alerts
     for mapping in mappings:
+        LOGGER.debug("Processing clear commands for mapping: %s", mapping)
         clear_commands = mapping.get("ClearCommands", [])
         triggers = mapping.get("Triggers", [])
         match_type = mapping.get("Match", "ANY").upper()
 
-        matched_cleared_alerts = [
-            alert for alert in cleared_alerts if alert in triggers
-        ]
+        matched_cleared_alerts = [alert for alert in cleared_alerts if any(fnmatch.fnmatch(alert, trigger) for trigger in triggers)]
+        LOGGER.debug("Matched cleared alerts for mapping: %s", matched_cleared_alerts)
 
         # Check if cleared alerts matched the triggers as per the match type
-        if (
-            match_type == "ANY"
-            and matched_cleared_alerts
-            or match_type == "ALL"
-            and len(matched_cleared_alerts) == len(triggers)
-        ):
+        if (match_type == "ANY" and matched_cleared_alerts) or (match_type == "ALL" and len(matched_cleared_alerts) == len(triggers)):
             for cmd in clear_commands:
+                LOGGER.debug("Executing clear command: %s", cmd)
                 if mapping.get("Type") == "BASH":
                     LOGGER.info("AlertScript: Executing BASH ClearCommand: %s", cmd)
                     subprocess.run(cmd, shell=True)
                 elif mapping.get("Type") == "DTMF":
                     for node in mapping.get("Nodes", []):
                         dtmf_cmd = 'asterisk -rx "rpt fun {} {}"'.format(node, cmd)
-                        LOGGER.info(
-                            "AlertScript: Executing DTMF ClearCommand: %s", dtmf_cmd
-                        )
+                        LOGGER.info("AlertScript: Executing DTMF ClearCommand: %s", dtmf_cmd)
                         subprocess.run(dtmf_cmd, shell=True)
 
     # Update the state with the alerts processed in this run
-    state["alertscript_alerts"] = list(
-        processed_alerts
-    )  # Convert back to list for JSON serialization
+    state["alertscript_alerts"] = list(processed_alerts)  # Convert back to list for JSON serialization
+    LOGGER.debug("Saving state with processed alerts: %s", state["alertscript_alerts"])
     save_state(state)
+    LOGGER.debug("Alert script execution completed.")
 
 
 def send_pushover(message, title=None, priority=0):
