@@ -7,6 +7,9 @@ assignees: ''
 
 ---
 
+ISSUE TEMPLATE
+This template is designed to help you report a bug with information required for you to actually be able to receive help. If you choose to ignore this template, do not provide proper files/information with your report, etc., then your issue will be ignored/closed.
+
 **Describe the bug**
 A clear and concise description of what the bug is.
 
@@ -21,9 +24,14 @@ Steps to reproduce the behavior:
 A clear and concise description of what you expected to happen.
 
 **Files**
-Please paste or attach the following:
-- `config.yaml`
-- `SkywarnPlus.log`
+Please, at *minimum*, paste or attach the following:
+- SkywarnPlus Files:
+  - `/usr/local/bin/SkywarnPlus/config.yaml`
+  - `/tmp/SkywarnPlus/SkywarnPlus.log`
+  - `/tmp/SkywarnPlus/data.json`
+- Asterisk Files:
+  - `/etc/asterisk/rpt.conf`
+  - `/var/log/asterisk/messages`
 
 **Screenshots**
 If applicable, add screenshots to help explain your problem.
