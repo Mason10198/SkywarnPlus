@@ -153,7 +153,7 @@ SkywarnPlus supports all 128 alert types included in the [NWS v1.2 API](https://
 [![Instructional Video](https://img.youtube.com/vi/QyccjEZj20E/maxresdefault.jpg)](https://youtu.be/QyccjEZj20E)
 
 ## Written Instructions
-SkywarnPlus is recommended to be installed at the `/usr/local/bin/SkywarnPlus` location on both Debian and Arch (HAMVOIP) systems.
+SkywarnPlus is recommended to be installed at the `/usr/local/bin/SkywarnPlus` location on both Debian and Arch systems.
 
 Follow the steps below to install:
 
@@ -211,6 +211,13 @@ Follow the steps below to install:
    cd SkywarnPlus
    chmod +x *.py
    ```
+   
+   **NOTE: ONLY if you are using ASL3 or newer**, then you must additionally execute the following commands to allow the `asterisk` user access to SkywarnPlus files.
+
+   ```bash
+   chown -R asterisk:asterisk /usr/local/bin/SkywarnPlus/
+   chmod -R u+rwx /usr/local/bin/SkywarnPlus/
+   ```
 
 4. **Edit Configuration**
 
@@ -256,13 +263,23 @@ Follow the steps below to install:
 
 5. **Crontab Entry**
 
-   Add a crontab entry to call SkywarnPlus on an interval. Open your crontab file using the `crontab -e` command, and add the following line:
+      1. **ASL1, ASL2, and HamVoIP**
 
-   ```bash
-   * * * * * /usr/local/bin/SkywarnPlus/SkywarnPlus.py
-   ```
+          Add a crontab entry to call SkywarnPlus on an interval **as the `root` user**.
 
-   This command will execute SkywarnPlus (poll NWS API for data) every 60 seconds. For slower systems, or systems with several counties and/or advanced configurations, this may need to be increased.
+          ```bash
+          echo '* * * * * root /usr/local/bin/SkywarnPlus/SkywarnPlus.py' > /etc/cron.d/SkywarnPlus
+          ```
+    
+    1. **ASL3**
+
+        Add a crontab entry to call SkywarnPlus on an interval **as the `asterisk` user**
+
+        ```bash
+        echo '* * * * * asterisk /usr/local/bin/SkywarnPlus/SkywarnPlus.py' > /etc/cron.d/SkywarnPlus
+        ```
+
+   This command will execute SkywarnPlus (poll NWS API for data) every 60 seconds. For slower systems, or systems with several counties and/or advanced configurations, the interval may need to be increased.
 
 **NOTE:**
 
