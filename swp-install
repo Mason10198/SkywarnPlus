@@ -172,12 +172,13 @@ download_swp() {
 configure_perms() {
     print_divider
     echo "Configuring permissions..."
-    chmod +x /usr/local/bin/SkywarnPlus/*.py
 
     if [ "$SYSTEM_TYPE" = "ASL3" ]; then
         chown -R asterisk:asterisk /usr/local/bin/SkywarnPlus/
-        chmod -R u+rwx /usr/local/bin/SkywarnPlus/
+        chmod -R u+rw /usr/local/bin/SkywarnPlus/
     fi
+
+    chmod +x /usr/local/bin/SkywarnPlus/*.py
 }
 
 setup_crontab() {
