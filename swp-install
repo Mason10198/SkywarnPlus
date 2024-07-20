@@ -1,0 +1,249 @@
+#!/bin/bash
+
+# swp-install by Mason Nelson
+# ===============================================================================
+# Script to install SkywarnPlus. This script will determine the system type (ASL1/2, ASL3, or HamVoIP),
+# install the required dependencies, download the latest version of SkywarnPlus from GitHub,
+# configure the necessary permissions, and set up a crontab entry to run SkywarnPlus at a specified interval.
+# This script also checks if the SkywarnPlus directory already exists and asks for user confirmation to remove it before continuing.
+# Please note that this script should be run as root.
+
+# This file is part of SkywarnPlus.
+# SkywarnPlus is free software: you can redistribute it and/or modify it under the terms of
+# the GNU General Public License as published by the Free Software Foundation, either version 3
+# of the License, or (at your option) any later version. SkywarnPlus is distributed in the hope
+# that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+# You should have received a copy of the GNU General Public License along with SkywarnPlus. If not, see <https://www.gnu.org/licenses/>.
+
+clear
+
+print_divider() {
+    echo "========================================"
+}
+
+print_notice() {
+    print_divider
+    echo "This script is designed to automate the installation of SkywarnPlus."
+    echo "Author: Mason Nelson"
+    echo ""
+    echo "This script will:"
+    echo "  - Determine your system type (ASL1/2, ASL3, or HamVoIP)"
+    echo "  - Install necessary dependencies"
+    echo "  - Download the latest version of SkywarnPlus from GitHub"
+    echo "  - Configure permissions"
+    echo "  - Set up a crontab entry to run SkywarnPlus at specified intervals"
+    echo
+    echo "NOTE: This script is an installer only and will NOT automate configuration."
+    echo "Please edit the config.yaml file manually after installation."
+    print_divider
+    echo "Would you like to continue? (y/n) [y]:"
+    read -r CONTINUE
+    CONTINUE=${CONTINUE:-y}
+    if [ "$CONTINUE" != "y" ]; then
+        print_divider
+        echo "Installation aborted. Exiting."
+        print_divider
+        exit 1
+    fi
+}
+
+check_root() {
+    if [ "$EUID" -ne 0 ]; then
+        print_divider
+        echo "This script must be run as root. Exiting."
+        print_divider
+        exit 1
+    fi
+}
+
+determine_system_type() {
+    echo "Determining system type..."
+    if [ -f /etc/debian_version ]; then
+        . /etc/os-release
+        OS=$ID
+        VER=$VERSION_ID
+        ASTERISK_VERSION=$(asterisk -V)
+        if [[ "$ASTERISK_VERSION" =~ "Asterisk "([2-9][0-9]|[1-9][0-9]{2,}) ]]; then
+            SYSTEM_TYPE="ASL3"
+        else
+            SYSTEM_TYPE="ASL1/2"
+        fi
+    elif [ -f /etc/arch-release ]; then
+        OS=arch
+        VER=$(uname -r)
+        SYSTEM_TYPE="HamVoIP"
+    else
+        print_divider
+        echo "Unsupported OS. This script supports only Debian and Arch."
+        print_divider
+        exit 1
+    fi
+}
+
+confirm_system_type() {
+    print_divider
+    echo "Detected system type: $SYSTEM_TYPE."
+    print_divider
+    echo "Is this correct? Enter 'y' for yes or 'n' for no to override. [y]:"
+    read -r CONFIRMATION
+    CONFIRMATION=${CONFIRMATION:-y}
+    if [ "$CONFIRMATION" != "y" ]; then
+        print_divider
+        echo "Please enter the correct system type:"
+        echo "1 = ASL1/2"
+        echo "3 = ASL3"
+        echo "5 = HamVoIP"
+        print_divider
+        read -r SYSTEM_TYPE_INPUT
+        SYSTEM_TYPE_INPUT=${SYSTEM_TYPE_INPUT:-3}
+        case $SYSTEM_TYPE_INPUT in
+            1)
+                SYSTEM_TYPE="ASL1/2"
+                ;;
+            3)
+                SYSTEM_TYPE="ASL3"
+                ;;
+            5)
+                SYSTEM_TYPE="HamVoIP"
+                ;;
+            *)
+                print_divider
+                echo "Invalid input. Exiting."
+                print_divider
+                exit 1
+                ;;
+        esac
+    fi
+}
+
+install_dependencies() {
+    print_divider
+    echo "Installing dependencies..."
+    if [ "$OS" = "debian" ]; then
+        apt update
+        if [ "$SYSTEM_TYPE" = "ASL1/2" ]; then
+            apt install -y unzip python3 python3-pip ffmpeg
+            pip3 install ruamel.yaml requests python-dateutil pydub
+        else
+            apt install -y unzip python3 python3-pip ffmpeg python3-ruamel.yaml python3-requests python3-dateutil python3-pydub
+        fi
+    elif [ "$OS" = "arch" ]; then
+        pacman -Syu --noconfirm
+        pacman -S --noconfirm ffmpeg
+        wget -q https://bootstrap.pypa.io/pip/3.5/get-pip.py
+        python get-pip.py
+        pip install requests python-dateutil pydub ruamel.yaml==0.15.100
+    else
+        print_divider
+        echo "Unsupported OS version. Exiting."
+        print_divider
+        exit 1
+    fi
+}
+
+check_existing() {
+    if [ -d "/usr/local/bin/SkywarnPlus" ]; then
+        print_divider
+        echo "SkywarnPlus directory already exists. It must be removed to continue the installation."
+        echo "Do you want to remove it? Enter 'y' for yes or 'n' for no. [y]:"
+        print_divider
+        read -r REMOVE_CONFIRMATION
+        REMOVE_CONFIRMATION=${REMOVE_CONFIRMATION:-y}
+        if [ "$REMOVE_CONFIRMATION" != "y" ]; then
+            print_divider
+            echo "Installation aborted. Exiting."
+            print_divider
+            exit 1
+        else
+            rm -rf /usr/local/bin/SkywarnPlus
+        fi
+    fi
+}
+
+download_swp() {
+    print_divider
+    echo "Downloading SkywarnPlus..."
+    wget -q -P /usr/local/bin https://github.com/Mason10198/SkywarnPlus/releases/latest/download/SkywarnPlus.zip
+    unzip /usr/local/bin/SkywarnPlus.zip -d /usr/local/bin
+    rm /usr/local/bin/SkywarnPlus.zip
+}
+
+configure_perms() {
+    print_divider
+    echo "Configuring permissions..."
+    chmod +x /usr/local/bin/SkywarnPlus/*.py
+
+    if [ "$SYSTEM_TYPE" = "ASL3" ]; then
+        chown -R asterisk:asterisk /usr/local/bin/SkywarnPlus/
+        chmod -R u+rwx /usr/local/bin/SkywarnPlus/
+    fi
+}
+
+setup_crontab() {
+    print_divider
+    echo "By default, a crontab entry will be added to trigger SkywarnPlus (check for alerts) every 1 minute."
+    echo
+    echo "If you would like to increase this interval, enter a different number of minutes."
+    echo "To disable the crontab entry and require manual execution, enter '0'."
+    echo "To keep the default 1 minute interval, press enter. [1]:"
+    print_divider
+    read -r CRONTAB_INTERVAL
+    CRONTAB_INTERVAL=${CRONTAB_INTERVAL:-1}
+
+    if [ "$CRONTAB_INTERVAL" -eq 0 ]; then
+        if [ -f "/etc/cron.d/SkywarnPlus" ]; then
+            rm /etc/cron.d/SkywarnPlus
+            echo "Crontab entry removed. You will need to run SkywarnPlus manually."
+        else
+            echo "No existing crontab entry to remove. You will need to run SkywarnPlus manually."
+        fi
+    else
+        if [ "$SYSTEM_TYPE" = "ASL3" ]; then
+            CRONTAB_ENTRY="*/$CRONTAB_INTERVAL * * * * asterisk pgrep -f /usr/local/bin/SkywarnPlus/SkywarnPlus.py > /dev/null || /usr/local/bin/SkywarnPlus/SkywarnPlus.py"
+        else
+            CRONTAB_ENTRY="*/$CRONTAB_INTERVAL * * * * root pgrep -f /usr/local/bin/SkywarnPlus/SkywarnPlus.py > /dev/null || /usr/local/bin/SkywarnPlus/SkywarnPlus.py"
+        fi
+
+        CRON_FILE="/etc/cron.d/SkywarnPlus"
+        if grep -Fxq "$CRONTAB_ENTRY" "$CRON_FILE" 2>/dev/null; then
+            echo "Crontab entry already exists. Skipping."
+        else
+            echo "$CRONTAB_ENTRY" > "$CRON_FILE" || {
+                print_divider
+                echo "Failed to create crontab entry. Exiting."
+                print_divider
+                exit 1
+            }
+        fi
+    fi
+}
+
+edit_config() {
+    print_divider
+    echo "Installation and configuration complete. Please edit the config.yaml file as per your needs."
+    print_divider
+    echo "Would you like to edit the config.yaml file now? (y/n) [y]:"
+    read -r EDIT_CONFIG
+    EDIT_CONFIG=${EDIT_CONFIG:-y}
+    if [ "$EDIT_CONFIG" = "y" ]; then
+        nano /usr/local/bin/SkywarnPlus/config.yaml
+    else
+        echo "You can edit the config.yaml file later using your preferred text editor."
+    fi
+}
+
+main() {
+    check_root
+    print_notice
+    determine_system_type
+    confirm_system_type
+    install_dependencies
+    check_existing
+    download_swp
+    configure_perms
+    setup_crontab
+    edit_config
+}
+
+main

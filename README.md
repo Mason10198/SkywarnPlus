@@ -9,8 +9,8 @@
 **SkywarnPlus** is an advanced software solution tailored for Asterisk/app_rpt nodes. It is designed to provide important information about local government-issued alerts in the United States, thereby broadening the scope and functionality of your node. By intelligently integrating local alert data, SkywarnPlus brings a new layer of relevance and utility to your existing system. **SkywarnPlus** works with all major distributions, including AllstarLink, HAMVOIP, myGMRS, GMRS Live, and more.
 
 - [Installation](#installation)
-  - [**Instructional Video**](#instructional-video)
-  - [Written Instructions](#written-instructions)
+  - [Automated Installation](#automated-installation)
+  - [Configuration](#configuration)
 - [TimeType Configuration](#timetype-configuration)
 - [Tail Messages](#tail-messages)
 - [Courtesy Tones](#courtesy-tones)
@@ -20,7 +20,7 @@
     - [Dynamic Tone Switching](#dynamic-tone-switching)
     - [Consistent Filenames](#consistent-filenames)
 - [CW / Voice IDs](#cw--voice-ids)
-  - [Configuration](#configuration)
+  - [Configuration](#configuration-1)
 - [Pushover Integration](#pushover-integration)
 - [SkyControl](#skycontrol)
   - [Usage](#usage)
@@ -48,13 +48,14 @@
   - [County Identifiers](#county-identifiers)
     - [Automated Setup using `CountyIDGen.py`](#automated-setup-using-countyidgenpy)
     - [Manual Setup](#manual-setup)
+- [Manual Installation](#manual-installation)
 - [Testing](#testing)
 - [Debugging](#debugging)
 - [Maintenance and Bug Reporting](#maintenance-and-bug-reporting)
 - [Contributing](#contributing)
 - [Frequently Asked Questions](#frequently-asked-questions)
-    - [I just installed SkywarnPlus on my HAMVOIP node, why is it giving me errors?](#i-just-installed-skywarnplus-on-my-hamvoip-node-why-is-it-giving-me-errors)
-    - [Why do I see depreciation warnings when installing SWP on my HAMVOIP node?](#why-do-i-see-depreciation-warnings-when-installing-swp-on-my-hamvoip-node)
+    - [I just installed SkywarnPlus on my HamVoIP node, why is it giving me errors?](#i-just-installed-skywarnplus-on-my-hamvoip-node-why-is-it-giving-me-errors)
+    - [Why do I see depreciation warnings when installing SkywarnPlus on my HamVoIP node?](#why-do-i-see-depreciation-warnings-when-installing-skywarnplus-on-my-hamvoip-node)
     - [Can I change the crontab interval to something other than 60 seconds?](#can-i-change-the-crontab-interval-to-something-other-than-60-seconds)
     - [What does "with multiples" mean?](#what-does-with-multiples-mean)
     - [Why is SkywarnPlus saying the same thing every 60 seconds?](#why-is-skywarnplus-saying-the-same-thing-every-60-seconds)
@@ -148,138 +149,56 @@ SkywarnPlus supports all 128 alert types included in the [NWS v1.2 API](https://
 
 # Installation
 
-## **[Instructional Video](https://youtu.be/QyccjEZj20E)**
-
-[![Instructional Video](https://img.youtube.com/vi/QyccjEZj20E/maxresdefault.jpg)](https://youtu.be/QyccjEZj20E)
-
-## Written Instructions
-SkywarnPlus is recommended to be installed at the `/usr/local/bin/SkywarnPlus` location on both Debian and Arch systems.
-
-Follow the steps below to install:
-
-1. **Dependencies**
-
-   Install the required dependencies using the following commands:
-
-   1. **Debian 11 and Older (ASL 1 & ASL 2)**
-
+## Automated Installation
+1. Access the terminal of your node and execute the following command as `root`:
    ```bash
-   # EXECUTE ONE LINE AT A TIME
-   apt install unzip python3 python3-pip ffmpeg
-   pip3 install ruamel.yaml requests python-dateutil pydub
+   bash -c "$(curl -fsSL https://raw.githubusercontent.com/Mason10198/SkywarnPlus/main/swp-install)"
    ```
+2. Continue with [Configuration](#configuration).
 
-   2. **Debian 12 and Newer (ASL 3+)**
-   
-   Beginning around Debian 12 "Bookworm", installing Python packages via `pip` will have Debian throw a fit about package managers and externally managed virtual environments. Use these commands instead on newer distros.
+To install manually, see [Manual Installation](#manual-installation).
 
-    ```bash
-    # EXECUTE ONE LINE AT A TIME
-    apt install unzip python3 python3-pip ffmpeg
-    apt install python3-ruamel.yaml python3-requests python3-dateutil python3-pydub
-    ```
+## Configuration
 
-   3. **Arch (HAMVOIP)**
+SkywarnPlus was designed with customization in mind, making it possible to fit nearly any usage scenario you can throw at it. However, this can make the configuration seem a bit daunting. Be patient, and when in doubt, read the documentation.
 
-   It is a good idea to first update your HAMVOIP system using **Option 1** in the HAMVOIP menu before installing the dependencies.
+Edit the [config.yaml](config.yaml) file according to your needs. This is where you will enter your NWS codes, enable/disable specific functions, etc.
 
-   ```bash
-   # EXECUTE ONE LINE AT A TIME
-   pacman -S ffmpeg
-   wget https://bootstrap.pypa.io/pip/3.5/get-pip.py
-   python get-pip.py
-   pip install requests python-dateutil pydub
-   pip install ruamel.yaml==0.15.100
-   ```
+```bash
+nano config.yaml
+```
 
-2. **Download SkywarnPlus**
+ You can find your county codes in the [CountyCodes.md](CountyCodes.md) file included in this repository. Navigate to the file and look for your state and then your specific county to find the associated County Code you'll use in SkywarnPlus to poll for alerts.
 
-   Download the latest release of SkywarnPlus from GitHub
+**IMPORTANT**: YOU WILL MISS ALERTS IF YOU USE A **ZONE** CODE. DO NOT USE **ZONE** CODES UNLESS YOU KNOW WHAT YOU ARE DOING.
 
-   ```bash
-   cd /usr/local/bin
-   wget https://github.com/Mason10198/SkywarnPlus/releases/latest/download/SkywarnPlus.zip
-   unzip SkywarnPlus.zip
-   rm SkywarnPlus.zip
-   ```
+According to the official [NWS API documentation](https://www.weather.gov/documentation/services-web-api):
 
-3. **Configure Permissions**
+> "For large scale or longer lasting events, such as snow storms, fire threat, or heat events, alerts are issued
+> by NWS public forecast zones or fire weather zones. These zones differ in size and can cross county
+> boundaries."
 
-   The scripts must be made executable. Use the chmod command to change the file permissions:
+> "...county based alerts are not mapped to zones but zone based alerts are mapped to counties. The effect this has is for requests such as:
+>
+> https://api.weather.gov/alerts/active?zone=MDZ013
+>
+> or
+>
+> https://api.weather.gov/alerts?zone=MDZ013
+>
+> Will not contain county based products. However requests such as:
+>
+> https://api.weather.gov/alerts?zone=MDC033
+>
+> or
+>
+> https://api.weather.gov/alerts/active?zone=MDC033
+>
+> Will contain all county based alerts and all zone based alerts that are associated to the county or counties requested. If there are multiple zones associated with that county, the response from API will include all alerts for those zones."
 
-   ```bash
-   cd SkywarnPlus
-   chmod +x *.py
-   ```
-   
-   **NOTE: ONLY if you are using ASL3 or newer**, then you must additionally execute the following commands to allow the `asterisk` user access to SkywarnPlus files.
+[This information was obtained from this document.](https://www.weather.gov/media/documentation/docs/NWS_Geolocation.pdf)
 
-   ```bash
-   chown -R asterisk:asterisk /usr/local/bin/SkywarnPlus/
-   chmod -R u+rwx /usr/local/bin/SkywarnPlus/
-   ```
-
-4. **Edit Configuration**
-
-   SkywarnPlus was designed with customization in mind, making it possible to fit nearly any usage scenario you can throw at it. However, this can make the configuration seem a bit daunting. Be patient, and when in doubt, read the documentation.
-
-   Edit the [config.yaml](config.yaml) file according to your needs. This is where you will enter your NWS codes, enable/disable specific functions, etc.
-
-   ```bash
-   nano config.yaml
-   ```
-
-    You can find your county codes in the [CountyCodes.md](CountyCodes.md) file included in this repository. Navigate to the file and look for your state and then your specific county to find the associated County Code you'll use in SkywarnPlus to poll for alerts.
-
-   **IMPORTANT**: YOU WILL MISS ALERTS IF YOU USE A **ZONE** CODE. DO NOT USE **ZONE** CODES UNLESS YOU KNOW WHAT YOU ARE DOING.
-
-   According to the official [NWS API documentation](https://www.weather.gov/documentation/services-web-api):
-
-   > "For large scale or longer lasting events, such as snow storms, fire threat, or heat events, alerts are issued
-   > by NWS public forecast zones or fire weather zones. These zones differ in size and can cross county
-   > boundaries."
-
-   > "...county based alerts are not mapped to zones but zone based alerts are mapped to counties. The effect this has is for requests such as:
-   >
-   > https://api.weather.gov/alerts/active?zone=MDZ013
-   >
-   > or
-   >
-   > https://api.weather.gov/alerts?zone=MDZ013
-   >
-   > Will not contain county based products. However requests such as:
-   >
-   > https://api.weather.gov/alerts?zone=MDC033
-   >
-   > or
-   >
-   > https://api.weather.gov/alerts/active?zone=MDC033
-   >
-   > Will contain all county based alerts and all zone based alerts that are associated to the county or counties requested. If there are multiple zones associated with that county, the response from API will include all alerts for those zones."
-
-   [This information was obtained from this document.](https://www.weather.gov/media/documentation/docs/NWS_Geolocation.pdf)
-
-   This means that if you use a County code, you will receive all alerts for both your County **AND** your Zone - but if you use a Zone code, you will **ONLY** receive alerts that cover the entire Zone, and none of the alerts specific to your County.
-
-5. **Crontab Entry**
-
-      1. **ASL1, ASL2, and HamVoIP**
-
-          Add a crontab entry to call SkywarnPlus on an interval **as the `root` user**.
-
-          ```bash
-          echo '* * * * * root /usr/local/bin/SkywarnPlus/SkywarnPlus.py' > /etc/cron.d/SkywarnPlus
-          ```
-    
-    1. **ASL3**
-
-        Add a crontab entry to call SkywarnPlus on an interval **as the `asterisk` user**
-
-        ```bash
-        echo '* * * * * asterisk /usr/local/bin/SkywarnPlus/SkywarnPlus.py' > /etc/cron.d/SkywarnPlus
-        ```
-
-   This command will execute SkywarnPlus (poll NWS API for data) every 60 seconds. For slower systems, or systems with several counties and/or advanced configurations, the interval may need to be increased.
+This means that if you use a County code, you will receive all alerts for both your County **AND** your Zone - but if you use a Zone code, you will **ONLY** receive alerts that cover the entire Zone, and none of the alerts specific to your County.
 
 **NOTE:**
 
@@ -832,6 +751,93 @@ Alerting:
     - VAC683: "County10.wav"
 ```
 
+# Manual Installation
+SkywarnPlus is recommended to be installed at the `/usr/local/bin/SkywarnPlus` location on both Debian and Arch systems.
+
+Follow the steps below to install:
+
+1. **Dependencies**
+
+   Install the required dependencies using the following commands:
+
+   1. **Debian 11 and Older (ASL 1 & ASL 2)**
+
+   ```bash
+   # EXECUTE ONE LINE AT A TIME
+   apt install unzip python3 python3-pip ffmpeg
+   pip3 install ruamel.yaml requests python-dateutil pydub
+   ```
+
+   2. **Debian 12 and Newer (ASL 3+)**
+   
+   Beginning around Debian 12 "Bookworm", installing Python packages via `pip` will have Debian throw a fit about package managers and externally managed virtual environments. Use these commands instead on newer distros.
+
+    ```bash
+    # EXECUTE ONE LINE AT A TIME
+    apt install unzip python3 python3-pip ffmpeg
+    apt install python3-ruamel.yaml python3-requests python3-dateutil python3-pydub
+    ```
+
+   3. **Arch (HAMVOIP)**
+
+   It is a good idea to first update your HAMVOIP system using **Option 1** in the HAMVOIP menu before installing the dependencies.
+
+   ```bash
+   # EXECUTE ONE LINE AT A TIME
+   pacman -S ffmpeg
+   wget https://bootstrap.pypa.io/pip/3.5/get-pip.py
+   python get-pip.py
+   pip install requests python-dateutil pydub
+   pip install ruamel.yaml==0.15.100
+   ```
+
+2. **Download SkywarnPlus**
+
+   Download the latest release of SkywarnPlus from GitHub
+
+   ```bash
+   cd /usr/local/bin
+   wget https://github.com/Mason10198/SkywarnPlus/releases/latest/download/SkywarnPlus.zip
+   unzip SkywarnPlus.zip
+   rm SkywarnPlus.zip
+   ```
+
+3. **Configure Permissions**
+
+   The scripts must be made executable. Use the chmod command to change the file permissions:
+
+   ```bash
+   cd SkywarnPlus
+   chmod +x *.py
+   ```
+   
+   **NOTE: ONLY if you are using ASL3 or newer**, then you must additionally execute the following commands to allow the `asterisk` user access to SkywarnPlus files.
+
+   ```bash
+   chown -R asterisk:asterisk /usr/local/bin/SkywarnPlus/
+   chmod -R u+rwx /usr/local/bin/SkywarnPlus/
+   ```
+
+4. **Crontab Entry**
+
+      1. **ASL1, ASL2, and HamVoIP**
+
+          Add a crontab entry to call SkywarnPlus on an interval **as the `root` user**.
+
+          ```bash
+          echo '* * * * * root /usr/local/bin/SkywarnPlus/SkywarnPlus.py' > /etc/cron.d/SkywarnPlus
+          ```
+    
+    1. **ASL3**
+
+        Add a crontab entry to call SkywarnPlus on an interval **as the `asterisk` user**
+
+        ```bash
+        echo '* * * * * asterisk /usr/local/bin/SkywarnPlus/SkywarnPlus.py' > /etc/cron.d/SkywarnPlus
+        ```
+
+   This command will execute SkywarnPlus (poll NWS API for data) every 60 seconds. For slower systems, or systems with several counties and/or advanced configurations, the interval may need to be increased.
+
 # Testing
 
 SkywarnPlus provides the ability to inject predefined alerts, bypassing the call to the NWS API. This feature is extremely useful for testing SkywarnPlus.
@@ -910,11 +916,11 @@ If the spare time I put into the development of SkywarnPlus has helped you, plea
 
 # Frequently Asked Questions
 
-### I just installed SkywarnPlus on my HAMVOIP node, why is it giving me errors?
-HAMVOIP uses a very outdated version of Python which can cause some issues that ASL users do not experience. Carefully follow the installation inctructions line-by-line (do not copy/paste all commands at once) and try again.
+### I just installed SkywarnPlus on my HamVoIP node, why is it giving me errors?
+HamVoIP uses a very outdated version of Python which can cause some issues that ASL users do not experience. Carefully follow the installation inctructions line-by-line (do not copy/paste all commands at once) and try again.
 
-### Why do I see depreciation warnings when installing SWP on my HAMVOIP node?
-HAMVOIP uses a very outdated version of Python, and Python will display warnings asking you to update it. Unfortunately, Python cannot be upgraded on HAMVOIP and these warnings must be ignored.
+### Why do I see depreciation warnings when installing SkywarnPlus on my HamVoIP node?
+HamVoIP uses a very outdated version of Python, and Python will display warnings asking you to update it. Unfortunately, Python cannot be upgraded on HamVoIP and these warnings must be ignored.
 
 ### Can I change the crontab interval to something other than 60 seconds?
 Yes! You can run SkywarnPlus as frequently or infrequently as you wish. Be aware, whatever you set the interval to (X), there will be a delay of "up to" X minutes between the time an alert is issued by the NWS, and the time that SWP announces it.
