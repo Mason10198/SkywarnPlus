@@ -1,4 +1,4 @@
-# SkywarnPlus v0.7.0 Configuration File
+# SkywarnPlus v0.8.0 Configuration File
 # Author: Mason Nelson (N5LSN/WRKF394)
 # Please edit this file according to your specific requirements.
 
@@ -438,7 +438,16 @@ DEV:
   # Specify the TMP directory.
   TmpDir: /tmp/SkywarnPlus
 
-  # Write alert titles to /tmp/AUTOSKY/warnings.txt for Supermon backwards compatibility.
+  # ATTEMPT to write alerts to the old AUTOSKY files so that Supermon can display them.
+  # This might not work due to there being several different versions of Supermon,
+  # file permissions issues, etc at no fault to SkywarnPlus. This is a best-effort feature.
+  #
+  # If you are using Supermon2 on HamVoIP, please add your location and ZIP
+  # to the file /usr/local/sbin/supermon/node_info.ini
+  #
+  # DO NOT ADD ast_var_update.sh TO CRON IF YOU ARE USING THIS FEATURE.
+  #
+  # Please encourage Supermon developers to add support for SkywarnPlus so this hack can be removed.
   SupermonCompat: true
 
   # Enable test alert injection instead of calling the NWS API by setting 'INJECT' to 'True'.

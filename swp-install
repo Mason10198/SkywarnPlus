@@ -201,9 +201,9 @@ setup_crontab() {
         fi
     else
         if [ "$SYSTEM_TYPE" = "ASL3" ]; then
-            CRONTAB_ENTRY="*/$CRONTAB_INTERVAL * * * * asterisk pgrep -f /usr/local/bin/SkywarnPlus/SkywarnPlus.py > /dev/null || /usr/local/bin/SkywarnPlus/SkywarnPlus.py"
+            CRONTAB_ENTRY="*/$CRONTAB_INTERVAL * * * * asterisk /usr/local/bin/SkywarnPlus/SkywarnPlus.py"
         else
-            CRONTAB_ENTRY="*/$CRONTAB_INTERVAL * * * * root pgrep -f /usr/local/bin/SkywarnPlus/SkywarnPlus.py > /dev/null || /usr/local/bin/SkywarnPlus/SkywarnPlus.py"
+            CRONTAB_ENTRY="*/$CRONTAB_INTERVAL * * * * root /usr/local/bin/SkywarnPlus/SkywarnPlus.py"
         fi
 
         CRON_FILE="/etc/cron.d/SkywarnPlus"

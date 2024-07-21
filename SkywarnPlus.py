@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 """
-SkywarnPlus.py v0.7.0 by Mason Nelson
+SkywarnPlus.py v0.8.0 by Mason Nelson
 ===============================================================================
 SkywarnPlus is a utility that retrieves severe weather alerts from the National 
 Weather Service and integrates these alerts with an Asterisk/app_rpt based 
@@ -60,11 +60,8 @@ with open(CONFIG_PATH, "r") as config_file:
     config = yaml.load(config_file)
     config = json.loads(json.dumps(config))  # Convert config to a normal dictionary
 
-# Check if SkywarnPlus is enabled
+# Define whether SkywarnPlus is enabled in config.yaml
 MASTER_ENABLE = config.get("SKYWARNPLUS", {}).get("Enable", False)
-if not MASTER_ENABLE:
-    print("SkywarnPlus is disabled in config.yaml, exiting...")
-    exit()
 
 # Define tmp_dir and sounds_path
 TMP_DIR = config.get("DEV", {}).get("TmpDir", "/tmp/SkywarnPlus")
@@ -1501,38 +1498,306 @@ def change_id(id):
     return True
 
 
-def supermon_back_compat(alerts):
+def supermon_back_compat(alerts, county_data):
     """
-    Write alerts to a file for backward compatibility with supermon.
+    Write alerts to a file for backwards compatibility with Supermon.
+    Will NOT work on newer Debian systems (ASL3) where SkywarnPlus is not run as the root user.
     """
+
+    # Exit with a debug statement if we are not the root user
+    if os.getuid() != 0:
+        LOGGER.debug("supermon_back_compat: Not running as root, exiting function")
+        return
+
     try:
         # Ensure the target directory exists for /tmp/AUTOSKY
         os.makedirs("/tmp/AUTOSKY", exist_ok=True)
 
-        # Get alert titles (without severity levels)
-        alert_titles = list(alerts.keys())
+        # Construct alert titles with county names
+        alert_titles_with_counties = [
+            "{} [{}]".format(
+                alert,
+                ", ".join(
+                    replace_with_county_name(x["county_code"], county_data)
+                    for x in alerts[alert]
+                ),
+            )
+            for alert in alerts
+        ]
 
-        # Write alert titles to a file, with each title on a new line
-        with open("/tmp/AUTOSKY/warnings.txt", "w") as file:
-            file.write("<br>".join(alert_titles))
+        # Check write permissions before writing to the file
+        if os.access("/tmp/AUTOSKY", os.W_OK):
+            with open("/tmp/AUTOSKY/warnings.txt", "w") as file:
+                file.write("<br>".join(alert_titles_with_counties))
+            LOGGER.debug("Successfully wrote alerts to /tmp/AUTOSKY/warnings.txt")
+        else:
+            LOGGER.error("No write permission for /tmp/AUTOSKY")
 
     except Exception as e:
-        print("An error occurred while writing to /tmp/AUTOSKY: {}".format(str(e)))
+        LOGGER.error("An error occurred while writing to /tmp/AUTOSKY: %s", str(e))
 
     try:
         # Ensure the target directory exists for /var/www/html/AUTOSKY
         os.makedirs("/var/www/html/AUTOSKY", exist_ok=True)
 
-        # Also write to other path sometimes used by Supermon
-        with open("/var/www/html/AUTOSKY/warnings.txt", "w") as file:
-            file.write("<br>".join(alert_titles))
+        # Check write permissions before writing to the file
+        if os.access("/var/www/html/AUTOSKY", os.W_OK):
+            with open("/var/www/html/AUTOSKY/warnings.txt", "w") as file:
+                file.write("<br>".join(alert_titles_with_counties))
+            LOGGER.debug(
+                "Successfully wrote alerts to /var/www/html/AUTOSKY/warnings.txt"
+            )
+        else:
+            LOGGER.error("No write permission for /var/www/html/AUTOSKY")
 
     except Exception as e:
-        print(
-            "An error occurred while writing to /var/www/html/AUTOSKY: {}".format(
-                str(e)
-            )
+        LOGGER.error(
+            "An error occurred while writing to /var/www/html/AUTOSKY: %s", str(e)
         )
+
+
+def ast_var_update():
+    """
+    Function to mimic the behavior of the ast_var_update.sh script from Supermon2 in HamVoIP.
+    Updated Asterisk channel variables for nodes defined in node_info.ini, including CPU load, temperature, and more.
+    Supermon2 will display these variables in the Node Information section.
+    """
+    LOGGER.debug("ast_var_update: Starting function")
+
+    # Exit if Supermon2 directory does not exist
+    if not os.path.exists("/srv/http/supermon2"):
+        LOGGER.debug(
+            "ast_var_update: Supermon2 directory does not exist, exiting function"
+        )
+        return
+
+    node_info_path = "/usr/local/sbin/supermon/node_info.ini"
+    allstar_env_path = "/usr/local/etc/allstar.env"
+
+    WX_CODE = ""
+    WX_LOCATION = ""
+    NODE = ""
+
+    # Read allstar.env file and extract environment variables
+    env_vars = {}
+    try:
+        LOGGER.debug(
+            "ast_var_update: Reading environment variables from %s", allstar_env_path
+        )
+        with open(allstar_env_path, "r") as file:
+            for line in file:
+                if line.startswith("export "):
+                    key, value = line.split("=", 1)
+                    key = key.split()[1].strip()
+                    value = value.strip().strip('"')
+                    env_vars[key] = value
+                    LOGGER.debug(
+                        "ast_var_update: Found environment variable %s = %s", key, value
+                    )
+    except Exception as e:
+        LOGGER.error("ast_var_update: Error reading %s: %s", allstar_env_path, e)
+        return
+
+    # Read node_info.ini file and process lines
+    try:
+        LOGGER.debug("ast_var_update: Reading node information from %s", node_info_path)
+        with open(node_info_path, "r") as file:
+            for line in file:
+                if line.startswith("NODE="):
+                    node_value = line.split("=", 1)[1].strip().strip('"')
+                    if node_value.startswith("$"):
+                        env_var_name = node_value[1:]
+                        NODE = env_vars.get(env_var_name, "")
+                    else:
+                        NODE = node_value
+                    LOGGER.debug("ast_var_update: NODE set to %s", NODE)
+                elif line.startswith("WX_CODE="):
+                    WX_CODE = line.split("=", 1)[1].strip().strip('"')
+                    LOGGER.debug("ast_var_update: WX_CODE set to %s", WX_CODE)
+                elif line.startswith("WX_LOCATION="):
+                    WX_LOCATION = line.split("=", 1)[1].strip().strip('"')
+                    LOGGER.debug("ast_var_update: WX_LOCATION set to %s", WX_LOCATION)
+    except Exception as e:
+        LOGGER.error("ast_var_update: Error reading %s: %s", node_info_path, e)
+        return
+
+    if not NODE:
+        LOGGER.debug("ast_var_update: No NODE defined, exiting function")
+        return
+
+    try:
+        LOGGER.debug("ast_var_update: Retrieving Asterisk registrations")
+        registrations = (
+            subprocess.check_output(["/bin/asterisk", "-rx", "iax2 show registry"])
+            .decode("utf-8")
+            .splitlines()[1:]
+        )
+    except subprocess.CalledProcessError as e:
+        LOGGER.error("ast_var_update: Error getting Asterisk registrations: %s", e)
+        registrations = "No Registrations on this server"
+
+    if registrations == "No Registrations on this server" or not registrations:
+        LOGGER.debug("ast_var_update: No registrations found")
+        registrations = "No Registrations on this server"
+    else:
+        nodes = {}
+        for reg in registrations:
+            parts = reg.split()
+            node_number = parts[2].split("#")[0]
+            server_ip = parts[0].split(":")[0]
+            try:
+                server_domain = (
+                    subprocess.check_output(["dig", "+short", "-x", server_ip])
+                    .decode("utf-8")
+                    .strip()
+                )
+                LOGGER.debug(
+                    "ast_var_update: Resolved %s to %s", server_ip, server_domain
+                )
+            except subprocess.CalledProcessError as e:
+                LOGGER.error(
+                    "ast_var_update: Error resolving domain for IP %s: %s", server_ip, e
+                )
+                server_domain = "Unknown"
+
+            node_value = "Node - {} is {}".format(parts[2], parts[5])
+            if "Registered" in node_value:
+                if "hamvoip" in server_domain:
+                    nodes[node_number] = nodes.get(node_number, "") + "Hamvoip "
+                else:
+                    nodes[node_number] = nodes.get(node_number, "") + "Allstar "
+
+        registered = ""
+        for key in nodes:
+            nodes[key] = nodes[key].replace(" ", ",")
+            registered += "{} Registered {} ".format(key, nodes[key])
+
+        registered = registered.strip().rstrip(",")
+        registrations = registered
+        LOGGER.debug("ast_var_update: Processed registrations: %s", registrations)
+
+    try:
+        LOGGER.debug("ast_var_update: Retrieving system uptime")
+        cpu_up = "Up since {}".format(
+            subprocess.check_output(["uptime", "-s"]).decode("utf-8").strip()
+        )
+
+        LOGGER.debug("ast_var_update: Retrieving CPU load")
+        cpu_load = (
+            subprocess.check_output(["uptime"])
+            .decode("utf-8")
+            .strip()
+            .split("load ")[1]
+        )
+
+        LOGGER.debug("ast_var_update: Retrieving CPU temperature")
+        cpu_temp = (
+            subprocess.check_output(["/opt/vc/bin/vcgencmd", "measure_temp"])
+            .decode("utf-8")
+            .strip()
+            .split("=")[1][:-2]
+        )
+        cpu_temp = float(cpu_temp)
+    except subprocess.CalledProcessError as e:
+        LOGGER.error("ast_var_update: Error retrieving system info: %s", e)
+        return
+
+    cputemp_disp = "<span style='background-color:{};'><b>{}C</b></span>".format(
+        "lightgreen" if cpu_temp <= 50 else "yellow" if cpu_temp <= 60 else "#fa4c2d",
+        int(cpu_temp),
+    )
+    LOGGER.debug("ast_var_update: CPU temperature display: %s", cputemp_disp)
+
+    try:
+        LOGGER.debug("ast_var_update: Retrieving log size info")
+        logsz = (
+            subprocess.check_output(["df", "-h", "/var/log"])
+            .decode("utf-8")
+            .splitlines()[1]
+            .split()
+        )
+        logs = "Logs - {} {} used, {} remains".format(logsz[2], logsz[4], logsz[3])
+    except subprocess.CalledProcessError as e:
+        LOGGER.error("ast_var_update: Error retrieving log size info: %s", e)
+        return
+
+    wx = ""
+    if WX_CODE and WX_LOCATION:
+        try:
+            LOGGER.debug("ast_var_update: Retrieving weather info")
+            wx_info = (
+                subprocess.check_output(["/usr/local/sbin/weather.sh", WX_CODE, "v"])
+                .decode("utf-8")
+                .strip()
+            )
+            wx = "<b>{} &nbsp; ({})</b>".format(WX_LOCATION, wx_info)
+        except subprocess.CalledProcessError as e:
+            LOGGER.error("ast_var_update: Error retrieving weather info: %s", e)
+            wx = "<b>{} &nbsp; (Weather info not available)</b>".format(WX_LOCATION)
+
+    # Filter out the \xb0 character from the string
+    wx = wx.replace("\xb0", "")
+
+    LOGGER.debug("ast_var_update: Weather info display: %s", wx)
+
+    try:
+        LOGGER.debug("ast_var_update: Reading alert content from warnings.txt")
+        with open("/tmp/AUTOSKY/warnings.txt") as f:
+            alert_content = f.read().strip()
+    except Exception as e:
+        LOGGER.error("ast_var_update: Error reading warnings.txt: %s", e)
+        alert_content = ""
+
+    if not MASTER_ENABLE:
+        alert = "<span style='color: darkorange;'><b><u><a href='https://github.com/mason10198/SkywarnPlus' style='color: inherit; text-decoration: none;'>SkywarnPlus Disabled</a></u></b></span>"
+    elif not alert_content:
+        alert = "<span style='color: green;'><b><u><a href='https://github.com/mason10198/SkywarnPlus' style='color: inherit; text-decoration: none;'>SkywarnPlus Enabled</a></u><br>No Alerts</b></span>"
+    else:
+        # Adjusted to remove both '[' and ']' correctly
+        alert_content_cleaned = alert_content.replace("[", "").replace("]", "")
+        alert = "<span style='color: green;'><b><u><a href='https://github.com/mason10198/SkywarnPlus' style='color: inherit; text-decoration: none;'>SkywarnPlus Enabled</a></u><br><span style='color: red;'>{}</span></b></span>".format(
+            alert_content
+        )
+
+    LOGGER.debug("ast_var_update: Alert display: %s", alert)
+
+    for ni in NODE.split():
+        if ni:
+            grep_cmd = "grep -q '[[:blank:]]*\\[{}\\]' /etc/asterisk/rpt.conf".format(
+                ni
+            )
+            if subprocess.call(grep_cmd, shell=True) == 0:
+                main_cmd = (
+                    'asterisk -rx "rpt setvar {} cpu_up=\\"{}\\" cpu_load=\\"{}\\" cpu_temp=\\"{}\\" WX=\\"{}\\" LOGS=\\"{}\\" REGISTRATIONS=\\"{}\\""'
+                ).format(ni, cpu_up, cpu_load, cputemp_disp, wx, logs, registrations)
+                alert_cmd = ('asterisk -rx "rpt setvar {} ALERT=\\"{}\\""').format(
+                    ni, alert
+                )
+
+                main_cmd = main_cmd.encode("ascii", "ignore").decode("ascii")
+                alert_cmd = alert_cmd.encode("ascii", "ignore").decode("ascii")
+
+                LOGGER.debug("ast_var_update: Running main command: %s", main_cmd)
+                try:
+                    subprocess.call(main_cmd, shell=True)
+                except subprocess.CalledProcessError as e:
+                    LOGGER.error(
+                        "ast_var_update: Error running main command for node %s: %s",
+                        ni,
+                        e,
+                    )
+
+                LOGGER.debug("ast_var_update: Running alert command: %s", alert_cmd)
+                try:
+                    subprocess.call(alert_cmd, shell=True)
+                except subprocess.CalledProcessError as e:
+                    LOGGER.error(
+                        "ast_var_update: Error running alert command for node %s: %s",
+                        ni,
+                        e,
+                    )
+
+    LOGGER.debug("ast_var_update: Function completed")
 
 
 def detect_county_changes(old_alerts, new_alerts):
@@ -1608,6 +1873,7 @@ def main():
     processing severe weather alerts, then integrating these alerts into
     an Asterisk/app_rpt based radio repeater system.
     """
+
     # Fetch configurations
     say_alert_enabled = config["Alerting"].get("SayAlert", False)
     say_alert_all = config["Alerting"].get("SayAlertAll", False)
@@ -1622,9 +1888,19 @@ def main():
     supermon_compat_enabled = config["DEV"].get("SupermonCompat", True)
     say_alerts_changed = config["Alerting"].get("SayAlertsChanged", True)
 
+    # Check if SkywarnPlus is enabled
+    if not MASTER_ENABLE:
+        print("SkywarnPlus is disabled in config.yaml, exiting...")
+        if supermon_compat_enabled:
+            ast_var_update()
+        exit()
+
     # Load previous alert data to compare changes
     state = load_state()
     last_alerts = state["last_alerts"]
+
+    # Load county names from YAML file so that county codes can be replaced with county names in messages
+    county_data = load_county_names(COUNTY_CODES_PATH)
 
     # If data file does not exist, assume this is the first run and initialize data file and CT/ID/Tailmessage files if enabled
     if not os.path.isfile(DATA_FILE):
@@ -1641,15 +1917,19 @@ def main():
             LOGGER.info("Initializing Tailmessage file")
             empty_alerts = OrderedDict()
             build_tailmessage(empty_alerts)
+        if supermon_compat_enabled:
+            supermon_back_compat(last_alerts, county_data)
 
     # Fetch new alert data
     alerts = get_alerts(COUNTY_CODES)
 
-    # Load county names from YAML file so that county codes can be replaced with county names in messages
-    county_data = load_county_names(COUNTY_CODES_PATH)
-
     # Placeholder for constructing a pushover message
     pushover_message = ""
+
+    # Update HamVoIP Asterisk channel variables
+    if supermon_compat_enabled:
+        supermon_back_compat(alerts, county_data)
+        ast_var_update()
 
     # Determine which alerts have been added since the last check
     added_alerts = [alert for alert in alerts if alert not in last_alerts]
@@ -1764,8 +2044,8 @@ def main():
         # If alerts have been added, removed
         if added_alerts or removed_alerts:
             # Push alert titles to Supermon if enabled
-            if supermon_compat_enabled:
-                supermon_back_compat(alerts)
+            # if supermon_compat_enabled:
+            #     supermon_back_compat(alerts)
 
             # Change CT/ID if necessary and enabled
             change_ct_id_helper(
