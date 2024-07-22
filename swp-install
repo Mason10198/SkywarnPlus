@@ -258,6 +258,7 @@ main() {
     check_existing
     download_swp
     configure_perms
+    remove_old_cron
     setup_crontab
     edit_config
 }
