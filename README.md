@@ -30,7 +30,6 @@
   - [Understanding AlertScript](#understanding-alertscript)
   - [Matching](#matching)
   - [ClearCommands: Responding to Alert Clearance](#clearcommands-responding-to-alert-clearance)
-    - [Usage Note:](#usage-note)
     - [Why Caution with Wildcards?](#why-caution-with-wildcards)
     - [Best Practice:](#best-practice)
   - [Transition-Based Commands](#transition-based-commands)
@@ -49,7 +48,6 @@
     - [Automated Setup using `CountyIDGen.py`](#automated-setup-using-countyidgenpy)
     - [Manual Setup](#manual-setup)
 - [Supermon Integration](#supermon-integration)
-  - [Important Note About ASL3](#important-note-about-asl3)
   - [AutoSkywarn vs. AUTOSKY](#autoskywarn-vs-autosky)
   - [Supermon 6.1 - 7.4](#supermon-61---74)
   - [Supermon 2](#supermon-2)
@@ -163,7 +161,8 @@ SkywarnPlus supports all 128 alert types included in the [NWS v1.2 API](https://
    ```
 2. Continue with [Configuration](#configuration).
 
-To install manually, see [Manual Installation](#manual-installation).
+> [!NOTE]
+> To install manually, see [Manual Installation](#manual-installation).
 
 ## Configuration
 
@@ -177,7 +176,8 @@ nano config.yaml
 
  You can find your county codes in the [CountyCodes.md](CountyCodes.md) file included in this repository. Navigate to the file and look for your state and then your specific county to find the associated County Code you'll use in SkywarnPlus to poll for alerts.
 
-**IMPORTANT**: YOU WILL MISS ALERTS IF YOU USE A **ZONE** CODE. DO NOT USE **ZONE** CODES UNLESS YOU KNOW WHAT YOU ARE DOING.
+> [!WARNING]
+> YOU WILL MISS ALERTS IF YOU USE A **ZONE** CODE. DO NOT USE **ZONE** CODES UNLESS YOU KNOW WHAT YOU ARE DOING.
 
 According to the official [NWS API documentation](https://www.weather.gov/documentation/services-web-api):
 
@@ -207,10 +207,10 @@ According to the official [NWS API documentation](https://www.weather.gov/docume
 
 This means that if you use a County code, you will receive all alerts for both your County **AND** your Zone - but if you use a Zone code, you will **ONLY** receive alerts that cover the entire Zone, and none of the alerts specific to your County.
 
-**NOTE:**
+> [!IMPORTANT]
+> When SkywarnPlus runs for the first time after installation (and for the first time at each boot), **YOU WILL NOT HEAR ANY MESSAGES** until alerts are detected. This is by design. SkywarnPlus announces when alerts change from `none` to `some`, and it announces when alerts change from `some` to `none`. It will announce nothing if the status of alerts does not change (`none` to `none`).
 
-When SkywarnPlus runs for the first time after installation (and for the first time at each boot), **YOU WILL NOT HEAR ANY MESSAGES** until alerts are detected. This is by design. SkywarnPlus announces when alerts change from `none` to `some`, and it announces when alerts change from `some` to `none`. It will announce nothing if the status of alerts does not change (`none` to `none`).
-
+> [!TIP]
 If you want to test SkywarnPlus' operation after installation, please see the **Testing** section of this README.
 
 # TimeType Configuration
@@ -229,9 +229,8 @@ When in doubt, you can verity the exact data being provided by the NWS API, and 
 https://api.weather.gov/alerts/active?zone=YOUR_COUNTY_CODE_HERE
 ```
 
-**NOTE:**
-
-Most weather websites and applications, including the NWS's own website, use the EFFECTIVE time when displaying "active" alerts. This often leads SkywarnPlus users to believe that their SkywarnPlus-enabled system is not functioning correctly when an alert is visible on the NWS website, but SkywarnPlus has not processed it yet. This discrepancy is due to the different alert processing times based on the chosen TimeType setting in SkywarnPlus. While other services might show alerts as soon as they become effective, SkywarnPlus, when set to ONSET, waits until the conditions are imminent. It's important for users to understand this distinction to accurately assess the functionality of their SkywarnPlus system.
+> [!NOTE]
+> Most weather websites and applications, including the NWS's own website, use the EFFECTIVE time when displaying "active" alerts. This often leads SkywarnPlus users to believe that their SkywarnPlus-enabled system is not functioning correctly when an alert is visible on the NWS website, but SkywarnPlus has not processed it yet. This discrepancy is due to the different alert processing times based on the chosen TimeType setting in SkywarnPlus. While other services might show alerts as soon as they become effective, SkywarnPlus, when set to ONSET, waits until the conditions are imminent. It's important for users to understand this distinction to accurately assess the functionality of their SkywarnPlus system.
 
 # Tail Messages
 
@@ -420,9 +419,8 @@ And to toggle it, you would use:
 /usr/local/bin/SkywarnPlus/SkyControl.py enable toggle
 ```
 
-**NOTE:**
-
-Running the `Enable` command after installing SkywarnPlus is not necessary. The enable flag is already set to `true` in the `config.yaml` file by default, and all you need to do for SkywarnPlus to operate is add it to the `crontab`.
+> [!TIP]
+> Running the `Enable` command after installing SkywarnPlus is not necessary. The enable flag is already set to `true` in the `config.yaml` file by default, and all you need to do for SkywarnPlus to operate is execute it (or allow it to be executed automatically).
 
 You can also use `SkyControl.py` to manually force the state of Courtesy Tones or IDs:
 
@@ -571,9 +569,8 @@ For example:
 
 In the above configuration, when the alerts "Tornado Warning" AND "Tornado Watch" are detected, the DTMF macro `*123*456*789` will be executed. However, when there are no longer ANY alerts matching "Tornado Warning" OR "Tornado Watch", the DTMF macro `*987*654*321` will be executed.
 
-### Usage Note:
-
-While `ClearCommands` enhances `AlertScript`'s functionality, it's important to exercise caution when using them with wildcard-based mappings (`*`). This is because such mappings may not behave as expected with `ClearCommands`, especially in complex alert scenarios where multiple alerts might be active simultaneously.
+> [!WARNING]
+> While `ClearCommands` enhances `AlertScript`'s functionality, it's important to exercise caution when using them with wildcard-based mappings (`*`). This is because such mappings may not behave as expected with `ClearCommands`, especially in complex alert scenarios where multiple alerts might be active simultaneously.
 
 ### Why Caution with Wildcards?
 
@@ -695,11 +692,10 @@ For added flexibility, `SkyDescribe.py` can also be linked to DTMF commands, all
 849 = cmd,/usr/local/bin/SkywarnPlus/SkyDescribe.py 9 ; SkyDescribe the 9th alert
 ```
 
-**NOTE:**
-
-If you have SkywarnPlus set up to monitor multiple counties, it will, by design, only store **ONE** instance of each alert type in order to prevent announcing duplicate messages. Because of this, if SkywarnPlus checks 3 different counties and finds a `"Tornado Warning"` in each one, only the first description will be saved. Thus, executing `SkyControl.py "Tornado Warning"` will broadcast the description of the `"Tornado Warning"` for the first county **ONLY**.
-
-In _most_ cases, any multiple counties that SkywarnPlus is set up to monitor will be adjacent to one another, and any duplicate alerts would actually be the **_same_** alert with the **_same_** description, so this wouldn't matter.
+> [!IMPORTANT]
+> If you have SkywarnPlus set up to monitor multiple counties, it will, by design, only store **ONE** instance of each alert type in order to prevent announcing duplicate messages. Because of this, if SkywarnPlus checks 3 different counties and finds a `"Tornado Warning"` in each one, only the first description will be saved. Thus, executing `SkyControl.py "Tornado Warning"` will broadcast the description of the `"Tornado Warning"` for the first county **ONLY**.
+> 
+> In _most_ cases, any multiple counties that SkywarnPlus is set up to monitor will be adjacent to one another, and any duplicate alerts would actually be the **_same_** alert with the **_same_** description, so this wouldn't matter.
 
 # Customizing the Audio Files
 
@@ -707,7 +703,8 @@ SkywarnPlus comes with a library of audio files that can be replaced with any 8k
 
 If you'd like to use IDChange, you must create your own audio files. Follow **[this guide](https://wiki.allstarlink.org/images/d/dd/RecordingSoundFiles.pdf)** on how to record/convert audio files for use with Asterisk/app_rpt.
 
->**For users wishing to maintain vocal continuity in their SkywarnPlus installation, the original creator of SkywarnPlus (N5LSN) and the woman behind the voice of it's included library of audio recordings (N5LSN XYL) will, for a small fee, record custom audio files for your SkywarnPlus installation. Contact information is readily available via QRZ.**
+> [!TIP]
+> For users wishing to maintain vocal continuity in their SkywarnPlus installation, the original creator of SkywarnPlus (N5LSN) and the woman behind the voice of it's included library of audio recordings (N5LSN XYL) will, for a small fee, record custom audio files for your SkywarnPlus installation. Contact information is readily available via QRZ.
 
 ## County Identifiers
 
@@ -763,8 +760,9 @@ The compatibility between various versions of Supermon and SkywarnPlus, as well 
 
 All of the integration functionality implemented by SkywarnPlus described below are workarounds. They need to be replaced by proper integration from Supermon/Supermon2 developers. Please encourage developers to check the `/tmp/SkywarnPlus/data.json` for alerts to display so that these 'hacks' can be removed.
 
-## Important Note About ASL3
-Starting with AllStarLink 3 (ASL3), Asterisk has been upgraded to version 20 and no longer runs as the `root` user. Consequently, SkywarnPlus also runs without root privileges on ASL3 systems. As a result, SkywarnPlus does not have the necessary permissions to create or modify the `/tmp/AUTOSKY/warnings.txt` file. Therefore, the integrations described below will not function on ASL3.
+> [!IMPORTANT]
+> ## Important Note About ASL3
+> Starting with AllStarLink 3 (ASL3), Asterisk has been upgraded to version 20 and no longer runs as the `root` user. Consequently, SkywarnPlus also runs without root privileges on ASL3 systems. As a result, SkywarnPlus does not have the necessary permissions to create or modify the `/tmp/AUTOSKY/warnings.txt` file. Therefore, the integrations described below will not function on ASL3.
 
 ## AutoSkywarn vs. AUTOSKY
 The original AutoSkywarn (KF5VH) was forked and modified to create the very similar AUTOSKY (HamVoIP). For the purposes of this document, they are considered the same.
@@ -795,6 +793,10 @@ Tornado Watch
 A workaround called `SupermonCompat` was added to SkywarnPlus so that the alert titles would still be displayed in Supermon. This feature simply adds alert titles to `/tmp/AUTOSKY/warnings.txt` so that Supermon versions 6.1 - 7.4 can display them.
 
 ## Supermon 2
+
+> [!IMPORTANT]
+> You will still need to add your location info to `/usr/local/sbin/node_info.ini` for Supermon2 to display the correct weather information.
+
 A completely separate version of Supermon, called Supermon 2, was also written with the intention of ingesting alert titles from AUTOSKY. Supermon 2 operates differently from its predecessors. It reads the Asterisk channel variables for each node and places those variables into the Node Information section. These variables are always empty when Asterisk first starts up. To address this, Supermon 2 includes a script called `ast_var_update.sh`.
 
 ### ast_var_update.sh
@@ -944,12 +946,12 @@ Follow the steps below to install:
    chmod +x *.py
    ```
    
-   **NOTE: ONLY if you are using ASL3 or newer**, then you must additionally execute the following commands to allow the `asterisk` user access to SkywarnPlus files.
-
-   ```bash
-   chown -R asterisk:asterisk /usr/local/bin/SkywarnPlus/
-   chmod -R u+rwx /usr/local/bin/SkywarnPlus/
-   ```
+   > [!IMPORTANT]
+   > **ONLY if you are using AllStarLink (ASL) version 3 or newer**, then you must additionally execute the following commands to allow the `asterisk` user access to SkywarnPlus files.
+   > ```bash
+   > chown -R asterisk:asterisk /usr/local/bin/SkywarnPlus/
+   > chmod -R u+rwx /usr/local/bin/SkywarnPlus/
+   > ```
 
 4. **Crontab Entry**
 
