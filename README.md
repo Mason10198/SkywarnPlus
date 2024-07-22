@@ -49,6 +49,7 @@
     - [Automated Setup using `CountyIDGen.py`](#automated-setup-using-countyidgenpy)
     - [Manual Setup](#manual-setup)
 - [Supermon Integration](#supermon-integration)
+  - [Important Note About ASL3](#important-note-about-asl3)
   - [AutoSkywarn vs. AUTOSKY](#autoskywarn-vs-autosky)
   - [Supermon 6.1 - 7.4](#supermon-61---74)
   - [Supermon 2](#supermon-2)
@@ -762,7 +763,8 @@ The compatibility between various versions of Supermon and SkywarnPlus, as well 
 
 All of the integration functionality implemented by SkywarnPlus described below are workarounds. They need to be replaced by proper integration from Supermon/Supermon2 developers. Please encourage developers to check the `/tmp/SkywarnPlus/data.json` for alerts to display so that these 'hacks' can be removed.
 
-**Note:** Starting with AllStarLink 3 (ASL3), Asterisk has been upgraded to version 20 and no longer runs as the `root` user. Consequently, SkywarnPlus also runs without root privileges on ASL3 systems. As a result, SkywarnPlus does not have the necessary permissions to create or modify the `/tmp/AUTOSKY/warnings.txt` file. Therefore, the integrations described below will not function on ASL3.
+## Important Note About ASL3
+Starting with AllStarLink 3 (ASL3), Asterisk has been upgraded to version 20 and no longer runs as the `root` user. Consequently, SkywarnPlus also runs without root privileges on ASL3 systems. As a result, SkywarnPlus does not have the necessary permissions to create or modify the `/tmp/AUTOSKY/warnings.txt` file. Therefore, the integrations described below will not function on ASL3.
 
 ## AutoSkywarn vs. AUTOSKY
 The original AutoSkywarn (KF5VH) was forked and modified to create the very similar AUTOSKY (HamVoIP). For the purposes of this document, they are considered the same.
