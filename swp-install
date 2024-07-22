@@ -37,10 +37,9 @@ print_notice() {
     echo "NOTE: This script is an installer only and will NOT automate configuration."
     echo "Please edit the config.yaml file manually after installation."
     print_divider
-    echo "Would you like to continue? (y/n) [y]:"
-    read -r CONTINUE
+    read -r -p "Would you like to continue? (y/n) [y]: " CONTINUE
     CONTINUE=${CONTINUE:-y}
-    if [ "$CONTINUE" != "y" ]; then
+    if [[ "$CONTINUE" != [Yy] ]]; then
         print_divider
         echo "Installation aborted. Exiting."
         print_divider
@@ -85,17 +84,16 @@ confirm_system_type() {
     print_divider
     echo "Detected system type: $SYSTEM_TYPE."
     print_divider
-    echo "Is this correct? Enter 'y' for yes or 'n' for no to override. [y]:"
-    read -r CONFIRMATION
+    read -r -p "Is this correct? Enter 'y' for yes or 'n' for no to override. [y]: " CONFIRMATION
     CONFIRMATION=${CONFIRMATION:-y}
-    if [ "$CONFIRMATION" != "y" ]; then
+    if [[ "$CONFIRMATION" != [Yy] ]]; then
         print_divider
         echo "Please enter the correct system type:"
         echo "1 = ASL1/2"
         echo "3 = ASL3"
         echo "5 = HamVoIP"
         print_divider
-        read -r SYSTEM_TYPE_INPUT
+        read -r -p "Enter the system type number: " SYSTEM_TYPE_INPUT
         SYSTEM_TYPE_INPUT=${SYSTEM_TYPE_INPUT:-3}
         case $SYSTEM_TYPE_INPUT in
             1)
@@ -146,11 +144,9 @@ check_existing() {
     if [ -d "/usr/local/bin/SkywarnPlus" ]; then
         print_divider
         echo "SkywarnPlus directory already exists. It must be removed to continue the installation."
-        echo "Do you want to remove it? Enter 'y' for yes or 'n' for no. [y]:"
-        print_divider
-        read -r REMOVE_CONFIRMATION
+        read -r -p "Do you want to remove it? Enter 'y' for yes or 'n' for no. [y]: " REMOVE_CONFIRMATION
         REMOVE_CONFIRMATION=${REMOVE_CONFIRMATION:-y}
-        if [ "$REMOVE_CONFIRMATION" != "y" ]; then
+        if [[ "$REMOVE_CONFIRMATION" != [Yy] ]]; then
             print_divider
             echo "Installation aborted. Exiting."
             print_divider
@@ -194,6 +190,23 @@ remove_old_cron() {
     else
         echo "No existing crontab entry found for SkywarnPlus.py."
     fi
+
+    echo "Checking for existing crontab entry for ast_var_update.sh..."
+    CRONTAB_AST=$(crontab -l | grep 'ast_var_update.sh')
+    if [ -n "$CRONTAB_AST" ]; then
+        echo "It looks like you have a crontab entry for ast_var_update.sh - this functionality will now be handled by SkywarnPlus, and this crontab entry should be removed to avoid conflicts."
+        read -r -p "Would you like to remove the crontab entry for now? (y/n) [y]: " choice
+        choice=${choice:-y}
+        if [[ "$choice" =~ ^[Yy]$ ]]; then
+            echo "Removing old crontab entry for ast_var_update.sh..."
+            (crontab -l | grep -v 'ast_var_update.sh') | crontab -
+            echo "Old crontab entry for ast_var_update.sh removed."
+        else
+            echo "Crontab entry for ast_var_update.sh not removed."
+        fi
+    else
+        echo "No existing crontab entry found for ast_var_update.sh."
+    fi
 }
 
 setup_crontab() {
@@ -202,9 +215,8 @@ setup_crontab() {
     echo
     echo "If you would like to increase this interval, enter a different number of minutes."
     echo "To disable the crontab entry and require manual execution, enter '0'."
-    echo "To keep the default 1 minute interval, press enter. [1]:"
+    read -r -p "To keep the default 1 minute interval, press enter. [1]: " CRONTAB_INTERVAL
     print_divider
-    read -r CRONTAB_INTERVAL
     CRONTAB_INTERVAL=${CRONTAB_INTERVAL:-1}
 
     if [ "$CRONTAB_INTERVAL" -eq 0 ]; then
@@ -239,10 +251,9 @@ edit_config() {
     print_divider
     echo "Installation and configuration complete. Please edit the config.yaml file as per your needs."
     print_divider
-    echo "Would you like to edit the config.yaml file now? (y/n) [y]:"
-    read -r EDIT_CONFIG
+    read -r -p "Would you like to edit the config.yaml file now? (y/n) [y]: " EDIT_CONFIG
     EDIT_CONFIG=${EDIT_CONFIG:-y}
-    if [ "$EDIT_CONFIG" = "y" ]; then
+    if [[ "$EDIT_CONFIG" =~ ^[Yy]$ ]]; then
         nano /usr/local/bin/SkywarnPlus/config.yaml
     else
         echo "You can edit the config.yaml file later using your preferred text editor."
