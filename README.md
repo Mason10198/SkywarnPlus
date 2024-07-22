@@ -882,7 +882,7 @@ fi
 ```
 
 ### SkywarnPlus Integration with Supermon 2 Upgraded
-Beginning with SkywarnPlus release v0.8.0, a function was added to emulate the functionality of `ast_var_update.sh` in an enhanced way. This allows proper display of alert information from SkywarnPlus in Supermon 2, without broken hyperlinks.
+Beginning with SkywarnPlus release [v0.8.0](https://github.com/Mason10198/SkywarnPlus/releases/tag/v0.8.0) (7/21/24), a function was added to emulate the functionality of `ast_var_update.sh` in an enhanced way. This allows proper display of alert information from SkywarnPlus in Supermon 2, without broken hyperlinks.
 
 # Manual Installation
 SkywarnPlus is recommended to be installed at the `/usr/local/bin/SkywarnPlus` location on both Debian and Arch systems.
