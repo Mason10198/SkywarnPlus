@@ -186,11 +186,11 @@ remove_old_cron() {
     echo "Checking for existing crontab entry for SkywarnPlus.py..."
     CRONTAB_OLD=$(crontab -l | grep 'SkywarnPlus.py')
     if [ -n "$CRONTAB_OLD" ]; then
-        echo "Found existing crontab entry for SkywarnPlus.py:"
+        echo "Found old crontab entry for SkywarnPlus.py:"
         echo "$CRONTAB_OLD"
         echo "Removing old crontab entry..."
         (crontab -l | grep -v 'SkywarnPlus.py') | crontab -
-        echo "Existing crontab entry removed."
+        echo "Old crontab entry removed."
     else
         echo "No existing crontab entry found for SkywarnPlus.py."
     fi
