@@ -191,6 +191,7 @@ remove_old_cron() {
         echo "No existing crontab entry found for SkywarnPlus.py."
     fi
 
+    print_divider
     echo "Checking for existing crontab entry for ast_var_update.sh..."
     CRONTAB_AST=$(crontab -l | grep 'ast_var_update.sh')
     if [ -n "$CRONTAB_AST" ]; then
