@@ -184,9 +184,10 @@ remove_old_cron() {
     if [ -n "$CRONTAB_OLD" ]; then
         echo "Found old crontab entry for SkywarnPlus.py:"
         echo "$CRONTAB_OLD"
-        echo "Removing old crontab entry..."
+        echo "This must be removed to avoid conflicts. A new crontab entry will reside in /etc/cron.d/SkywarnPlus."
+        echo "Removing old crontab entry for SkywarnPlus.py..."
         (crontab -l | grep -v 'SkywarnPlus.py') | crontab -
-        echo "Old crontab entry removed."
+        echo "Old crontab entry for SkywarnPlus.py removed."
     else
         echo "No existing crontab entry found for SkywarnPlus.py."
     fi
@@ -195,7 +196,7 @@ remove_old_cron() {
     echo "Checking for existing crontab entry for ast_var_update.sh..."
     CRONTAB_AST=$(crontab -l | grep 'ast_var_update.sh')
     if [ -n "$CRONTAB_AST" ]; then
-        echo "It looks like you have a crontab entry for ast_var_update.sh - this functionality will now be handled by SkywarnPlus, and this crontab entry should be removed to avoid conflicts."
+        echo "It looks like you have added a crontab entry for ast_var_update.sh - this functionality will now be handled by SkywarnPlus, and this crontab entry should be removed to avoid conflicts."
         read -r -p "Would you like to remove the crontab entry now? (y/n) [y]: " choice
         choice=${choice:-y}
         if [[ "$choice" =~ ^[Yy]$ ]]; then
