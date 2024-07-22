@@ -48,6 +48,12 @@
   - [County Identifiers](#county-identifiers)
     - [Automated Setup using `CountyIDGen.py`](#automated-setup-using-countyidgenpy)
     - [Manual Setup](#manual-setup)
+- [Supermon Integration](#supermon-integration)
+  - [AutoSkywarn vs. AUTOSKY](#autoskywarn-vs-autosky)
+  - [Supermon 6.1 - 7.4](#supermon-61---74)
+  - [Supermon 2](#supermon-2)
+    - [ast\_var\_update.sh](#ast_var_updatesh)
+    - [SkywarnPlus Integration with Supermon 2 Upgraded](#skywarnplus-integration-with-supermon-2-upgraded)
 - [Manual Installation](#manual-installation)
 - [Testing](#testing)
 - [Debugging](#debugging)
@@ -750,6 +756,131 @@ Alerting:
     - MDC510: "County9.wav"
     - VAC683: "County10.wav"
 ```
+
+# Supermon Integration
+The compatibility between various versions of Supermon and SkywarnPlus, as well as their interactions with the now outdated AutoSkywarn / AUTOSKY, requires clarification due to historical development constraints and system updates. Below is a detailed explanation of the intended functionalities and limitations.
+
+All of the integration functionality implemented by SkywarnPlus described below are workarounds. They need to be replaced by proper integration from Supermon/Supermon2 developers. Please encourage developers to check the `/tmp/SkywarnPlus/data.json` for alerts to display so that these 'hacks' can be removed.
+
+**Note:** Starting with AllStarLink 3 (ASL3), Asterisk has been upgraded to version 20 and no longer runs as the `root` user. Consequently, SkywarnPlus also runs without root privileges on ASL3 systems. As a result, SkywarnPlus does not have the necessary permissions to create or modify the `/tmp/AUTOSKY/warnings.txt` file. Therefore, the integrations described below will not function on ASL3.
+
+## AutoSkywarn vs. AUTOSKY
+The original AutoSkywarn (KF5VH) was forked and modified to create the very similar AUTOSKY (HamVoIP). For the purposes of this document, they are considered the same.
+
+## Supermon 6.1 - 7.4
+In Supermon versions 6.1 - 7.4, the following code segment was added to `link.php` to ingest plaintext alert titles from a file created by AUTOSKY:
+
+```php
+// ADDED WA3DSP Autosky warning messages
+// if they exist
+if (file_exists("/tmp/AUTOSKY/warnings.txt")) {
+    if (filesize("/tmp/AUTOSKY/warnings.txt")) {
+        $warnings = file_get_contents("/tmp/AUTOSKY/warnings.txt");
+        print "<span style=\"color: red;\"><br><b>$warnings</b></span>";
+    }
+}
+// END WA3DSP
+```
+
+This code segment in Supermon versions 6.1 - 7.4 simply adds the entire contents of the `/tmp/AUTOSKY/warnings.txt` text file to the webpage, colors them red, and makes them bold. The contents of `/tmp/AUTOSKY/warnings.txt` would look like this:
+
+```
+Tornado Warning
+Severe Thunderstorm Warning
+Tornado Watch
+```
+
+A workaround called `SupermonCompat` was added to SkywarnPlus so that the alert titles would still be displayed in Supermon. This feature simply adds alert titles to `/tmp/AUTOSKY/warnings.txt` so that Supermon versions 6.1 - 7.4 can display them.
+
+## Supermon 2
+A completely separate version of Supermon, called Supermon 2, was also written with the intention of ingesting alert titles from AUTOSKY. Supermon 2 operates differently from its predecessors. It reads the Asterisk channel variables for each node and places those variables into the Node Information section. These variables are always empty when Asterisk first starts up. To address this, Supermon 2 includes a script called `ast_var_update.sh`.
+
+### ast_var_update.sh
+The `ast_var_update.sh` script needs to be run periodically to update variables in Allstar, which are used to transfer data to Supermon 2 from local or remote servers. This script updates various pieces of information, including the CPU temperature, uptime, load average, weather, alerts, log file size, and registration status for the nodes displayed in Supermon 2.
+
+Please note that the `ast_var_update.sh` script included with Supermon 2 will process the `/tmp/AUTOSKY/warnings.txt` file in a way that mostly works with, but is not fully compatible with, SkywarnPlus. It will attempt to wrap the alert titles in `<a>` tags to create a hyperlink to that alert on the NWS website, but it does so by using the `AutoSky.ini` file, which does not exist unless AUTOSKY is installed. As a result, SkywarnPlus alerts in Supermon 2 have historically hyperlinked to nowhere, simply opening a new Supermon 2 tab. Since SkywarnPlus hinges on the ability to process alerts for several different locations at the same time, there is no good way to hyperlink to the NWS page from an alert title, thus this functionality could not be improved.
+
+Here is the relevant portion of the `ast_var_update.sh` script included with Supermon 2:
+
+```bash
+#!/bin/bash
+
+# ****************************************************
+# ast_var_update.sh   UPDATE 3                       *
+#                                                    *
+# This script needs to be run periodically to update *
+# variables in Allstar which are used to transfer    *
+# data to Supermon2 from local or remote servers     *
+# If a server is defined in Allstar this script      *
+# would need to be present and run on each server    *
+# in order to update the servers CPU temperature,    *
+# Uptime, load average, weather, alerts, log file    *
+# size and registration status information for the   *
+# node information window of each server displayed   *
+# in Supermon2. If this script is not running on a   *
+# particular server it will just display the data    *
+# as empty space but will otherwise work as normal.  *
+#                                                    *
+# NO SETUP in this script - User setup in file -     *
+#     /usr/local/sbin/supermon/node_info.ini         *
+#                                                    *
+# Recommend that this script be run at least every   *
+# 5 minutes with a cron job. Here is an example -    *
+#                                                    *
+# ****************************************************
+
+#  */5 * * * * /usr/local/sbin/supermon/ast_var_update.sh
+
+# ****************************************************
+#                                                    *
+#  (C) WA3DSP 12/15/2020                             *
+#  Original concept                                  *
+#                                                    *
+#  Updated 12/19/2020                                *
+#   Name changed to ast_var_update.sh                *
+#   Added Weather, Alerts, and Log file size         *
+#                                                    *   
+#  Update 1/2/2021                                   *
+#   Added Registrations to node info                 *
+#                                                    *
+#  Update 1/9/2021                                   *
+#     Name changed to ast_var_update.sh              *
+#     Added node_info.ini file                       *
+#                                                    *
+#  Update 1/16/2021                                  *
+#     Added check for Hamvoip updates                *
+#                                                    *
+#  Update 3 - 2/6/2021                               *
+#     Corrected log size wording                     *
+#     added clickable URL to WX Alert                *
+#     Fixed CPU temperature for later kernels        *
+# ****************************************************
+
+# Setup in /usr/local/sbin/supermon/node_info.ini
+# No user setable parameters in this script
+# DO NOT CHANGE LINES below 
+
+source "$script_dir/node_info.ini"
+Alert_ini="/usr/local/bin/AUTOSKY/AutoSky.ini"
+##############################################
+if [ -e /tmp/AUTOSKY/warnings.txt ]; then
+    ALERTURL=$(grep "^OFILE=" $Alert_ini | sed 's/OFILE=//' | sed "s/\&y=0/\&y=1/" | sed 's/"//g')
+    ALERTURL="<a target='WX ALERT' href=$ALERTURL>"
+    ALERT=$(cat /tmp/AUTOSKY/warnings.txt)
+    if [ "$ALERT" == "" ]; then
+        ALERT="$ALERTURL <span style='color: red;'><b>No Alerts</b></span></a>"
+    else
+        ALERT="<span style='color: red;'><b>$ALERT</b></span></a>"
+        ALERT="$ALERTURL $(echo $ALERT | tr -d "\n\r]" | sed 's/\[//' | sed 's/  \[/,/g')"
+    fi
+    ALERT="\"$ALERT\""
+else
+    ALERT="\" \""
+fi
+```
+
+### SkywarnPlus Integration with Supermon 2 Upgraded
+Beginning with SkywarnPlus release v0.8.0, a function was added to emulate the functionality of `ast_var_update.sh` in an enhanced way. This allows proper display of alert information from SkywarnPlus in Supermon 2, without broken hyperlinks.
 
 # Manual Installation
 SkywarnPlus is recommended to be installed at the `/usr/local/bin/SkywarnPlus` location on both Debian and Arch systems.
