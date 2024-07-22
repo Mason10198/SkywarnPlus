@@ -195,7 +195,7 @@ remove_old_cron() {
     CRONTAB_AST=$(crontab -l | grep 'ast_var_update.sh')
     if [ -n "$CRONTAB_AST" ]; then
         echo "It looks like you have a crontab entry for ast_var_update.sh - this functionality will now be handled by SkywarnPlus, and this crontab entry should be removed to avoid conflicts."
-        read -r -p "Would you like to remove the crontab entry for now? (y/n) [y]: " choice
+        read -r -p "Would you like to remove the crontab entry now? (y/n) [y]: " choice
         choice=${choice:-y}
         if [[ "$choice" =~ ^[Yy]$ ]]; then
             echo "Removing old crontab entry for ast_var_update.sh..."
