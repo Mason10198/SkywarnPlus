@@ -26,13 +26,7 @@ print_notice() {
     print_divider
     echo "This script is designed to automate the installation of SkywarnPlus."
     echo "Author: Mason Nelson"
-    echo ""
-    echo "This script will:"
-    echo "  - Determine your system type (ASL1/2, ASL3, or HamVoIP)"
-    echo "  - Install necessary dependencies"
-    echo "  - Download the latest version of SkywarnPlus from GitHub"
-    echo "  - Configure permissions"
-    echo "  - Set up a crontab entry to run SkywarnPlus at specified intervals"
+    echo
     echo
     echo "NOTE: This script is an installer only and will NOT automate configuration."
     echo "Please edit the config.yaml file manually after installation."
@@ -128,7 +122,7 @@ install_dependencies() {
         fi
     elif [ "$OS" = "arch" ]; then
         pacman -Syu --noconfirm
-        pacman -S --noconfirm ffmpeg
+        pacman -S --noconfirm --needed ffmpeg
         wget -q https://bootstrap.pypa.io/pip/3.5/get-pip.py
         python get-pip.py
         pip install requests python-dateutil pydub ruamel.yaml==0.15.100
@@ -192,17 +186,17 @@ configure_perms() {
 
 remove_old_cron() {
     print_divider
-    echo "Checking for existing crontab entry for SkywarnPlus.py..."
+    echo "Checking for "old style" crontab entry for SkywarnPlus.py..."
     CRONTAB_OLD=$(crontab -l | grep 'SkywarnPlus.py')
     if [ -n "$CRONTAB_OLD" ]; then
-        echo "Found old crontab entry for SkywarnPlus.py:"
+        echo "Found "old style" crontab entry for SkywarnPlus.py:"
         echo "$CRONTAB_OLD"
         echo "This must be removed to avoid conflicts. A new crontab entry will reside in /etc/cron.d/SkywarnPlus."
-        echo "Removing old crontab entry for SkywarnPlus.py..."
+        echo "Removing "old style" crontab entry for SkywarnPlus.py..."
         (crontab -l | grep -v 'SkywarnPlus.py') | crontab -
-        echo "Old crontab entry for SkywarnPlus.py removed."
+        echo ""Old style" crontab entry for SkywarnPlus.py removed."
     else
-        echo "No existing crontab entry found for SkywarnPlus.py."
+        echo "No "old style" crontab entry found for SkywarnPlus.py."
     fi
 
     print_divider
@@ -226,20 +220,38 @@ remove_old_cron() {
 
 setup_crontab() {
     print_divider
-    echo "By default, a crontab entry will be added to trigger SkywarnPlus (check for alerts) every 1 minute."
-    echo
-    echo "If you would like to increase this interval, enter a different number of minutes."
-    echo "To disable the crontab entry and require manual execution, enter '0'."
-    read -r -p "To keep the default 1 minute interval, press enter. [1]: " CRONTAB_INTERVAL
-    print_divider
-    CRONTAB_INTERVAL=${CRONTAB_INTERVAL:-1}
+    CRON_FILE="/etc/cron.d/SkywarnPlus"
+    
+    if [ -f "$CRON_FILE" ]; then
+        EXISTING_INTERVAL=$(grep -o '^\*/[0-9]*' "$CRON_FILE" | cut -d'/' -f2)
+        if [ -n "$EXISTING_INTERVAL" ]; then
+            echo "An existing crontab entry for SkywarnPlus was found with a $EXISTING_INTERVAL minute interval."
+            echo
+            echo "By default, the existing crontab entry will be kept."
+            echo
+            echo "To keep the existing interval, press enter."
+            echo "To change the interval, enter a different number of minutes."
+            echo "To disable the crontab entry and require manual execution, enter '0'."
+            read -r -p "Keep existing interval [$EXISTING_INTERVAL]: " CRONTAB_INTERVAL
+            print_divider
+            CRONTAB_INTERVAL=${CRONTAB_INTERVAL:-$EXISTING_INTERVAL}
+        fi
+    else
+        echo "By default, a new crontab entry will be added to trigger SkywarnPlus (check for alerts) every 1 minute."
+        echo
+        echo "If you would like to increase this interval, enter a different number of minutes."
+        echo "To disable the crontab entry and require manual execution, enter '0'."
+        read -r -p "To keep the default 1 minute interval, press enter. [1]: " CRONTAB_INTERVAL
+        print_divider
+        CRONTAB_INTERVAL=${CRONTAB_INTERVAL:-1}
+    fi
 
     if [ "$CRONTAB_INTERVAL" -eq 0 ]; then
-        if [ -f "/etc/cron.d/SkywarnPlus" ]; then
-            rm /etc/cron.d/SkywarnPlus
-            echo "Crontab entry removed. You will need to run SkywarnPlus manually."
+        if [ -f "$CRON_FILE" ]; then
+            rm "$CRON_FILE"
+            echo "Existing crontab entry removed. You will need to run SkywarnPlus manually."
         else
-            echo "No existing crontab entry to remove. You will need to run SkywarnPlus manually."
+            echo "No crontab entry created. You will need to run SkywarnPlus manually."
         fi
     else
         if [ "$SYSTEM_TYPE" = "ASL3" ]; then
@@ -248,7 +260,6 @@ setup_crontab() {
             CRONTAB_ENTRY="*/$CRONTAB_INTERVAL * * * * root /usr/local/bin/SkywarnPlus/SkywarnPlus.py"
         fi
 
-        CRON_FILE="/etc/cron.d/SkywarnPlus"
         if grep -Fxq "$CRONTAB_ENTRY" "$CRON_FILE" 2>/dev/null; then
             echo "Crontab entry already exists. Skipping."
         else
