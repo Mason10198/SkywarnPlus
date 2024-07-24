@@ -950,7 +950,7 @@ Follow the steps below to install:
 > **ONLY if you are using AllStarLink (ASL) version 3 or newer**, then you must additionally execute the following commands to allow the `asterisk` user access to SkywarnPlus files.
 > ```bash
 > chown -R asterisk:asterisk /usr/local/bin/SkywarnPlus/
-> chmod -R u+rwx /usr/local/bin/SkywarnPlus/
+> chmod -R u+rw /usr/local/bin/SkywarnPlus/
 > ```
 
 4. **Crontab Entry**
