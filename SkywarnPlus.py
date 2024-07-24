@@ -1498,6 +1498,27 @@ def change_id(id):
     return True
 
 
+def generate_title_string(alerts, county_data):
+    """
+    Generate a string of alert titles with county names for use in various displays and messages.
+    """
+    alert_titles_with_counties = [
+        "{} [{}]".format(
+            alert,
+            ", ".join(
+                sorted(
+                    set(
+                        replace_with_county_name(x["county_code"], county_data)
+                        for x in alerts[alert]
+                    )
+                )
+            ),
+        )
+        for alert in alerts
+    ]
+    return alert_titles_with_counties
+
+
 def supermon_back_compat(alerts, county_data):
     """
     Write alerts to a file for backwards compatibility with Supermon.
@@ -1513,17 +1534,8 @@ def supermon_back_compat(alerts, county_data):
         # Ensure the target directory exists for /tmp/AUTOSKY
         os.makedirs("/tmp/AUTOSKY", exist_ok=True)
 
-        # Construct alert titles with county names
-        alert_titles_with_counties = [
-            "{} [{}]".format(
-                alert,
-                ", ".join(
-                    replace_with_county_name(x["county_code"], county_data)
-                    for x in alerts[alert]
-                ),
-            )
-            for alert in alerts
-        ]
+        # Construct alert titles with county names using generate_title_string function
+        alert_titles_with_counties = generate_title_string(alerts, county_data)
 
         # Check write permissions before writing to the file
         if os.access("/tmp/AUTOSKY", os.W_OK):
@@ -1934,32 +1946,26 @@ def main():
     # Determine which alerts have been added since the last check
     added_alerts = [alert for alert in alerts if alert not in last_alerts]
     for alert in added_alerts:
-        counties_str = (
-            "["
-            + ", ".join(
-                [
-                    replace_with_county_name(x["county_code"], county_data)
-                    for x in alerts[alert]
-                ]
+        counties = sorted(
+            set(
+                replace_with_county_name(x["county_code"], county_data)
+                for x in alerts[alert]
             )
-            + "]"
         )
+        counties_str = "[" + ", ".join(counties) + "]"
         LOGGER.info("Added: {} for {}".format(alert, counties_str))
         pushover_message += "Added: {} for {}\n".format(alert, counties_str)
 
     # Determine which alerts have been removed since the last check
     removed_alerts = [alert for alert in last_alerts if alert not in alerts]
     for alert in removed_alerts:
-        counties_str = (
-            "["
-            + ", ".join(
-                [
-                    replace_with_county_name(x["county_code"], county_data)
-                    for x in last_alerts[alert]
-                ]
+        counties = sorted(
+            set(
+                replace_with_county_name(x["county_code"], county_data)
+                for x in last_alerts[alert]
             )
-            + "]"
         )
+        counties_str = "[" + ", ".join(counties) + "]"
         LOGGER.info("Removed: {} for {}".format(alert, counties_str))
         pushover_message += "Removed: {} for {}\n".format(alert, counties_str)
 
@@ -1972,43 +1978,34 @@ def main():
         changed_alerts, changes_details = detect_county_changes(last_alerts, alerts)
 
         for alert, details in changes_details.items():
-            old_counties_str = (
-                "["
-                + ", ".join(
-                    [
-                        replace_with_county_name(county, county_data)
-                        for county in details["old"]
-                    ]
+            old_counties = sorted(
+                set(
+                    replace_with_county_name(county, county_data)
+                    for county in details["old"]
                 )
-                + "]"
             )
+            old_counties_str = "[" + ", ".join(old_counties) + "]"
 
             added_msg = ""
             if details["added"]:
-                added_counties_str = (
-                    "["
-                    + ", ".join(
-                        [
-                            replace_with_county_name(county, county_data)
-                            for county in details["added"]
-                        ]
+                added_counties = sorted(
+                    set(
+                        replace_with_county_name(county, county_data)
+                        for county in details["added"]
                     )
-                    + "]"
                 )
+                added_counties_str = "[" + ", ".join(added_counties) + "]"
                 added_msg = "is now also affecting {}".format(added_counties_str)
 
             removed_msg = ""
             if details["removed"]:
-                removed_counties_str = (
-                    "["
-                    + ", ".join(
-                        [
-                            replace_with_county_name(county, county_data)
-                            for county in details["removed"]
-                        ]
+                removed_counties = sorted(
+                    set(
+                        replace_with_county_name(county, county_data)
+                        for county in details["removed"]
                     )
-                    + "]"
                 )
+                removed_counties_str = "[" + ", ".join(removed_counties) + "]"
                 removed_msg = "is no longer affecting {}".format(removed_counties_str)
 
             # Combining the log messages
@@ -2130,10 +2127,14 @@ def main():
                 alert_details = []
                 for alert, counties in alerts.items():
                     counties_str = ", ".join(
-                        [
-                            replace_with_county_name(county["county_code"], county_data)
-                            for county in counties
-                        ]
+                        sorted(
+                            set(
+                                replace_with_county_name(
+                                    county["county_code"], county_data
+                                )
+                                for county in counties
+                            )
+                        )
                     )
                     alert_details.append("{} ({})".format(alert, counties_str))
                 current_alerts = "; ".join(alert_details)
