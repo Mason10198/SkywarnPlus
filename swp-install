@@ -123,8 +123,10 @@ install_dependencies() {
     elif [ "$OS" = "arch" ]; then
         pacman -Syu --noconfirm
         pacman -S --noconfirm --needed ffmpeg
-        wget -q https://bootstrap.pypa.io/pip/3.5/get-pip.py
-        python get-pip.py
+        if ! command -v pip &> /dev/null; then
+            wget -q https://bootstrap.pypa.io/pip/3.5/get-pip.py
+            python get-pip.py
+        fi
         pip install requests python-dateutil pydub ruamel.yaml==0.15.100
     else
         print_divider
