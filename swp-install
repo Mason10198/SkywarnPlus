@@ -159,6 +159,9 @@ Please choose an option (y/n) [y]: " INSTALL_OPTION
             BACKUP_DIR="/usr/local/bin/SkywarnPlus_$(date +'%m-%d-%Y')"
             print_divider
             echo "Making a backup to $BACKUP_DIR..."
+            if [ -d "$BACKUP_DIR" ]; then
+                rm -rf "$BACKUP_DIR"
+            fi
             mv /usr/local/bin/SkywarnPlus "$BACKUP_DIR"
             print_divider
             echo "Backup complete. Continuing with fresh installation..."
