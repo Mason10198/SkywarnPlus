@@ -762,7 +762,7 @@ All of the integration functionality implemented by SkywarnPlus described below 
 
 > [!IMPORTANT]
 > ## Important Note About ASL3
-> Starting with AllStarLink 3 (ASL3), Asterisk has been upgraded to version 20 and no longer runs as the `root` user. Consequently, SkywarnPlus also runs without root privileges on ASL3 systems. As a result, SkywarnPlus does not have the necessary permissions to create or modify the `/tmp/AUTOSKY/warnings.txt` file. Therefore, the integrations described below will not function on ASL3.
+> Starting with AllStarLink 3 (ASL3), Asterisk has been upgraded to version 20 and no longer runs as the `root` user. Consequently, SkywarnPlus also runs without root privileges on ASL3 systems. As a result, SkywarnPlus needs a helper script with the necessary permissions (`ASL3_Supermon_Workaround.py`) to create or modify the `/tmp/AUTOSKY/warnings.txt` file.
 
 ## AutoSkywarn vs. AUTOSKY
 The original AutoSkywarn (KF5VH) was forked and modified to create the very similar AUTOSKY (HamVoIP). For the purposes of this document, they are considered the same.
