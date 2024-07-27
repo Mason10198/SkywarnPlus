@@ -27,7 +27,6 @@ print_notice() {
     echo "This script is designed to automate the installation of SkywarnPlus."
     echo "Author: Mason Nelson"
     echo
-    echo
     echo "NOTE: This script is an installer only and will NOT automate configuration."
     echo "Please edit the config.yaml file manually after installation."
     print_divider
@@ -62,7 +61,7 @@ determine_system_type() {
         else
             SYSTEM_TYPE="ASL1/2"
         fi
-        elif [ -f /etc/arch-release ]; then
+    elif [ -f /etc/arch-release ]; then
         OS=arch
         VER=$(uname -r)
         SYSTEM_TYPE="HamVoIP"
@@ -90,15 +89,9 @@ confirm_system_type() {
         read -r -p "Enter the system type number: " SYSTEM_TYPE_INPUT
         SYSTEM_TYPE_INPUT=${SYSTEM_TYPE_INPUT:-3}
         case $SYSTEM_TYPE_INPUT in
-            1)
-                SYSTEM_TYPE="ASL1/2"
-            ;;
-            3)
-                SYSTEM_TYPE="ASL3"
-            ;;
-            5)
-                SYSTEM_TYPE="HamVoIP"
-            ;;
+            1) SYSTEM_TYPE="ASL1/2" ;;
+            3) SYSTEM_TYPE="ASL3" ;;
+            5) SYSTEM_TYPE="HamVoIP" ;;
             *)
                 print_divider
                 echo "Invalid input. Exiting."
@@ -120,7 +113,7 @@ install_dependencies() {
         else
             apt install -y unzip python3 python3-pip ffmpeg python3-ruamel.yaml python3-requests python3-dateutil python3-pydub
         fi
-        elif [ "$OS" = "arch" ]; then
+    elif [ "$OS" = "arch" ]; then
         pacman -Syu --noconfirm
         pacman -S --noconfirm --needed ffmpeg
         if ! command -v pip &> /dev/null; then
@@ -191,17 +184,17 @@ configure_perms() {
 
 remove_old_cron() {
     print_divider
-    echo "Checking for "old style" crontab entry for SkywarnPlus.py..."
+    echo "Checking for \"old style\" crontab entry for SkywarnPlus.py..."
     CRONTAB_OLD=$(crontab -l | grep 'SkywarnPlus.py')
     if [ -n "$CRONTAB_OLD" ]; then
-        echo "Found "old style" crontab entry for SkywarnPlus.py:"
+        echo "Found \"old style\" crontab entry for SkywarnPlus.py:"
         echo "$CRONTAB_OLD"
         echo "This must be removed to avoid conflicts. A new crontab entry will reside in /etc/cron.d/SkywarnPlus."
-        echo "Removing "old style" crontab entry for SkywarnPlus.py..."
+        echo "Removing \"old style\" crontab entry for SkywarnPlus.py..."
         (crontab -l | grep -v 'SkywarnPlus.py') | crontab -
-        echo ""Old style" crontab entry for SkywarnPlus.py removed."
+        echo "\"Old style\" crontab entry for SkywarnPlus.py removed."
     else
-        echo "No "old style" crontab entry found for SkywarnPlus.py."
+        echo "No \"old style\" crontab entry found for SkywarnPlus.py."
     fi
     
     print_divider
@@ -289,7 +282,7 @@ setup_crontab() {
         read -r -p "Would you like to create the crontab entry for ASL3_Supermon_Workaround.py now? (Y/n): " CREATE_SUPERMON_CRON
         CREATE_SUPERMON_CRON=${CREATE_SUPERMON_CRON:-y}
 
-        if [ "$CREATE_SUPERMON_CRON" = "y" ] || [ "$CREATE_SUPERMON_CRON" = "Y" ]; then
+        if [[ "$CREATE_SUPERMON_CRON" =~ ^[Yy]$ ]]; then
             SUPERMON_CRON_FILE="/etc/cron.d/ASL3_Supermon_Workaround"
             SUPERMON_CRONTAB_ENTRY="*/$CRONTAB_INTERVAL * * * * root /usr/local/bin/SkywarnPlus/ASL3_Supermon_Workaround.py"
             
