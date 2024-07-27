@@ -31,7 +31,7 @@ print_notice() {
     echo "NOTE: This script is an installer only and will NOT automate configuration."
     echo "Please edit the config.yaml file manually after installation."
     print_divider
-    read -r -p "Would you like to continue? (y/n) [y]: " CONTINUE
+    read -r -p "Would you like to continue? (Y/n): " CONTINUE
     CONTINUE=${CONTINUE:-y}
     if [[ "$CONTINUE" != [Yy] ]]; then
         print_divider
@@ -62,7 +62,7 @@ determine_system_type() {
         else
             SYSTEM_TYPE="ASL1/2"
         fi
-    elif [ -f /etc/arch-release ]; then
+        elif [ -f /etc/arch-release ]; then
         OS=arch
         VER=$(uname -r)
         SYSTEM_TYPE="HamVoIP"
@@ -78,7 +78,7 @@ confirm_system_type() {
     print_divider
     echo "Detected system type: $SYSTEM_TYPE."
     print_divider
-    read -r -p "Is this correct? Enter 'y' for yes or 'n' for no to override. [y]: " CONFIRMATION
+    read -r -p "Is this correct? (Y/n): " CONFIRMATION
     CONFIRMATION=${CONFIRMATION:-y}
     if [[ "$CONFIRMATION" != [Yy] ]]; then
         print_divider
@@ -92,19 +92,19 @@ confirm_system_type() {
         case $SYSTEM_TYPE_INPUT in
             1)
                 SYSTEM_TYPE="ASL1/2"
-                ;;
+            ;;
             3)
                 SYSTEM_TYPE="ASL3"
-                ;;
+            ;;
             5)
                 SYSTEM_TYPE="HamVoIP"
-                ;;
+            ;;
             *)
                 print_divider
                 echo "Invalid input. Exiting."
                 print_divider
                 exit 1
-                ;;
+            ;;
         esac
     fi
 }
@@ -120,7 +120,7 @@ install_dependencies() {
         else
             apt install -y unzip python3 python3-pip ffmpeg python3-ruamel.yaml python3-requests python3-dateutil python3-pydub
         fi
-    elif [ "$OS" = "arch" ]; then
+        elif [ "$OS" = "arch" ]; then
         pacman -Syu --noconfirm
         pacman -S --noconfirm --needed ffmpeg
         if ! command -v pip &> /dev/null; then
@@ -146,7 +146,7 @@ check_existing() {
 [N] Continue with a fresh install after making a backup to SkywarnPlus_$(date +'%m-%d-%Y')/
     (you can grab your old config.yaml file from the backup)
 
-Please choose an option (y/n) [y]: " INSTALL_OPTION
+        Please choose an option (Y/n): " INSTALL_OPTION
         INSTALL_OPTION=${INSTALL_OPTION:-y}
         
         if [[ "$INSTALL_OPTION" =~ ^[Yy]$ ]]; then
@@ -180,12 +180,12 @@ download_swp() {
 configure_perms() {
     print_divider
     echo "Configuring permissions..."
-
+    
     if [ "$SYSTEM_TYPE" = "ASL3" ]; then
         chown -R asterisk:asterisk /usr/local/bin/SkywarnPlus/
         chmod -R u+rw /usr/local/bin/SkywarnPlus/
     fi
-
+    
     chmod +x /usr/local/bin/SkywarnPlus/*.py
 }
 
@@ -203,13 +203,13 @@ remove_old_cron() {
     else
         echo "No "old style" crontab entry found for SkywarnPlus.py."
     fi
-
+    
     print_divider
     echo "Checking for existing crontab entry for ast_var_update.sh..."
     CRONTAB_AST=$(crontab -l | grep 'ast_var_update.sh')
     if [ -n "$CRONTAB_AST" ]; then
         echo "It looks like you have added a crontab entry for ast_var_update.sh - this functionality will now be handled by SkywarnPlus, and this crontab entry should be removed to avoid conflicts."
-        read -r -p "Would you like to remove the crontab entry now? (y/n) [y]: " choice
+        read -r -p "Would you like to remove the crontab entry now? (Y/n): " choice
         choice=${choice:-y}
         if [[ "$choice" =~ ^[Yy]$ ]]; then
             echo "Removing old crontab entry for ast_var_update.sh..."
@@ -234,19 +234,20 @@ setup_crontab() {
             echo
             echo "By default, the existing crontab entry will be kept."
             echo
-            echo "To keep the existing interval, press enter."
+            echo "To keep the existing $EXISTING_INTERVAL minute interval, press enter."
             echo "To change the interval, enter a different number of minutes."
             echo "To disable the crontab entry and require manual execution, enter '0'."
-            read -r -p "Keep existing interval [$EXISTING_INTERVAL]: " CRONTAB_INTERVAL
+            read -r -p "Crontab interval ($EXISTING_INTERVAL): " CRONTAB_INTERVAL
             print_divider
             CRONTAB_INTERVAL=${CRONTAB_INTERVAL:-$EXISTING_INTERVAL}
         fi
     else
         echo "By default, a new crontab entry will be added to trigger SkywarnPlus (check for alerts) every 1 minute."
         echo
+        echo "To keep the default 1 minute interval, press enter."
         echo "If you would like to increase this interval, enter a different number of minutes."
         echo "To disable the crontab entry and require manual execution, enter '0'."
-        read -r -p "To keep the default 1 minute interval, press enter. [1]: " CRONTAB_INTERVAL
+        read -r -p "Crontab interval: (1): " CRONTAB_INTERVAL
         print_divider
         CRONTAB_INTERVAL=${CRONTAB_INTERVAL:-1}
     fi
@@ -276,13 +277,45 @@ setup_crontab() {
             }
         fi
     fi
+
+    if [ "$SYSTEM_TYPE" = "ASL3" ]; then
+        echo "This is an ASL3 system. In order for Supermon to display SkywarnPlus alerts on ASL3, a second crontab entry needs to be created to run ASL3_Supermon_Workaround.py as the root user."
+        
+        if [ -d "/var/www/html/supermon/" ]; then
+            echo "It looks like you have Supermon installed, so it is recommended to create this crontab entry."
+        else
+            echo "It looks like you do not have Supermon installed, but you can still safely create this crontab entry in case you decide to use Supermon later."
+        fi
+
+        read -r -p "Would you like to create the crontab entry for ASL3_Supermon_Workaround.py now? (Y/n): " CREATE_SUPERMON_CRON
+        CREATE_SUPERMON_CRON=${CREATE_SUPERMON_CRON:-y}
+
+        if [ "$CREATE_SUPERMON_CRON" = "y" ] || [ "$CREATE_SUPERMON_CRON" = "Y" ]; then
+            SUPERMON_CRON_FILE="/etc/cron.d/ASL3_Supermon_Workaround"
+            SUPERMON_CRONTAB_ENTRY="*/$CRONTAB_INTERVAL * * * * root /usr/local/bin/SkywarnPlus/ASL3_Supermon_Workaround.py"
+            
+            if grep -Fxq "$SUPERMON_CRONTAB_ENTRY" "$SUPERMON_CRON_FILE" 2>/dev/null; then
+                echo "Supermon crontab entry already exists. Skipping."
+            else
+                echo "$SUPERMON_CRONTAB_ENTRY" > "$SUPERMON_CRON_FILE" || {
+                    print_divider
+                    echo "Failed to create Supermon crontab entry. Exiting."
+                    print_divider
+                    exit 1
+                }
+                echo "Supermon crontab entry created successfully."
+            fi
+        else
+            echo "Supermon crontab entry not created."
+        fi
+    fi
 }
 
 edit_config() {
     print_divider
     echo "Installation and configuration complete. Please edit the config.yaml file as per your needs."
     print_divider
-    read -r -p "Would you like to edit the config.yaml file now? (y/n) [y]: " EDIT_CONFIG
+    read -r -p "Would you like to edit the config.yaml file now? (Y/n): " EDIT_CONFIG
     EDIT_CONFIG=${EDIT_CONFIG:-y}
     if [[ "$EDIT_CONFIG" =~ ^[Yy]$ ]]; then
         nano /usr/local/bin/SkywarnPlus/config.yaml
