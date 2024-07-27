@@ -146,7 +146,7 @@ check_existing() {
 [N] Continue with a fresh install after making a backup to SkywarnPlus_$(date +'%m-%d-%Y')/
     (you can grab your old config.yaml file from the backup)
 
-        Please choose an option (Y/n): " INSTALL_OPTION
+Please choose an option (Y/n): " INSTALL_OPTION
         INSTALL_OPTION=${INSTALL_OPTION:-y}
         
         if [[ "$INSTALL_OPTION" =~ ^[Yy]$ ]]; then
@@ -247,8 +247,7 @@ setup_crontab() {
         echo "To keep the default 1 minute interval, press enter."
         echo "If you would like to increase this interval, enter a different number of minutes."
         echo "To disable the crontab entry and require manual execution, enter '0'."
-        read -r -p "Crontab interval: (1): " CRONTAB_INTERVAL
-        print_divider
+        read -r -p "Crontab interval (1): " CRONTAB_INTERVAL
         CRONTAB_INTERVAL=${CRONTAB_INTERVAL:-1}
     fi
 
