@@ -271,6 +271,7 @@ setup_crontab() {
     fi
 
     if [ "$SYSTEM_TYPE" = "ASL3" ]; then
+        print_divider
         echo "This is an ASL3 system. In order for Supermon to display SkywarnPlus alerts on ASL3, a second crontab entry needs to be created to run ASL3_Supermon_Workaround.py as the root user."
         
         if [ -d "/var/www/html/supermon/" ]; then
