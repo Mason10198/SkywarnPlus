@@ -285,7 +285,7 @@ setup_crontab() {
 
         if [[ "$CREATE_SUPERMON_CRON" =~ ^[Yy]$ ]]; then
             SUPERMON_CRON_FILE="/etc/cron.d/ASL3_Supermon_Workaround"
-            SUPERMON_CRONTAB_ENTRY="*/$CRONTAB_INTERVAL * * * * root /usr/local/bin/SkywarnPlus/ASL3_Supermon_Workaround.py"
+            SUPERMON_CRONTAB_ENTRY="* * * * * root /usr/local/bin/SkywarnPlus/ASL3_Supermon_Workaround.py"
             
             if grep -Fxq "$SUPERMON_CRONTAB_ENTRY" "$SUPERMON_CRON_FILE" 2>/dev/null; then
                 echo "Supermon crontab entry already exists. Skipping."
