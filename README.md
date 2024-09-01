@@ -437,6 +437,9 @@ Upon the successful execution of a control command, the `SkyControl.py` script w
 
 ## Mapping to DTMF Commands
 
+> [!IMPORTANT]
+> In regards to ASL3, the Asterisk process no longer runs as the `root` user. Therefore, in order to call most SkyControl functions via DTMF, you will need to enable passwordless sudo access for the `asterisk` user and add `sudo` to the DTMF commands in `rpt.conf`.
+
 You can map the `SkyControl.py` script to DTMF commands in the `rpt.conf` file of your node. Here is an example of how to do this:
 
 ```ini
