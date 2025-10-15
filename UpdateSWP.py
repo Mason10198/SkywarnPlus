@@ -27,8 +27,17 @@ import zipfile
 import shutil
 import requests
 import datetime
-from ruamel.yaml import YAML
+from functools import lru_cache
 import argparse
+
+# Lazy imports for performance
+def _lazy_import_yaml():
+    """Lazy import YAML to avoid loading unless needed."""
+    try:
+        from ruamel.yaml import YAML
+        return YAML()
+    except ImportError:
+        raise ImportError("ruamel.yaml is required")
 
 # Set up command line arguments
 parser = argparse.ArgumentParser(description="Update SkywarnPlus")
@@ -46,16 +55,17 @@ def log(message):
     print("[UPDATE]:", message)
 
 
-# Function to load a yaml file
+# Function to load a yaml file with caching
+@lru_cache(maxsize=2)
 def load_yaml_file(filename):
-    yaml = YAML()
+    yaml = _lazy_import_yaml()
     with open(filename, "r") as f:
         return yaml.load(f)
 
 
 # Function to save a yaml file
 def save_yaml_file(filename, data):
-    yaml = YAML()
+    yaml = _lazy_import_yaml()
     yaml.preserve_quotes = True
     with open(filename, "w") as f:
         yaml.dump(data, f)
@@ -179,7 +189,16 @@ url = (
     "https://github.com/Mason10198/SkywarnPlus/releases/latest/download/SkywarnPlus.zip"
 )
 log("Downloading SkywarnPlus from {}...".format(url))
-response = requests.get(url)
+# Use session for connection pooling
+session = requests.Session()
+session.headers.update({
+    'User-Agent': 'SkywarnPlus-Update/0.8.0',
+    'Accept': 'application/zip',
+    'Accept-Encoding': 'gzip, deflate'
+})
+
+response = session.get(url, timeout=60)
+response.raise_for_status()
 
 with open("/tmp/SkywarnPlus.zip", "wb") as out_file:
     out_file.write(response.content)

@@ -19,6 +19,7 @@ You can create as many copies of this script as you want to execute different co
 import json
 import subprocess
 import fnmatch
+from functools import lru_cache
 
 # The trigger alerts and associated commands
 # Replace or add more trigger commands as required.
@@ -38,17 +39,27 @@ def match_trigger(alert_title):
             return command.format(alert_title=alert_title)
     return None
 
-def main():
-    # Load the data
+@lru_cache(maxsize=1)
+def _load_data():
+    """Load data with caching."""
     with open(DATA_FILE, 'r') as f:
-        data = json.load(f)
+        return json.load(f)
+
+def main():
+    # Load the data with caching
+    data = _load_data()
 
     # Check if the trigger alerts are in the last alerts
     for alert in data["last_alerts"]:
         command = match_trigger(alert[0])
         if command:
             print("Executing command for alert: {}".format(alert[0]))
-            subprocess.run(command, shell=True)
+            try:
+                subprocess.run(command, shell=True, timeout=30, check=False)
+            except subprocess.TimeoutExpired:
+                print(f"Subprocess timeout for command: {command}")
+            except Exception as e:
+                print(f"Subprocess error for command {command}: {e}")
 
 if __name__ == "__main__":
     main()

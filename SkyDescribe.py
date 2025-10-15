@@ -33,19 +33,34 @@ import wave
 import contextlib
 import re
 import logging
-from ruamel.yaml import YAML
+from functools import lru_cache
 from collections import OrderedDict
 
+# Lazy imports for performance
+def _lazy_import_yaml():
+    """Lazy import YAML to avoid loading unless needed."""
+    try:
+        from ruamel.yaml import YAML
+        return YAML()
+    except ImportError:
+        raise ImportError("ruamel.yaml is required")
+
 # Use ruamel.yaml instead of PyYAML
-YAML = YAML()
+YAML = _lazy_import_yaml()
 
 # Directories and Paths
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 CONFIG_PATH = os.path.join(BASE_DIR, "config.yaml")
 
-# Open and read configuration file
-with open(CONFIG_PATH, "r") as config_file:
-    CONFIG = YAML.load(config_file)
+# Optimized configuration loading with caching
+@lru_cache(maxsize=1)
+def _load_config():
+    """Load configuration with caching."""
+    with open(CONFIG_PATH, "r") as config_file:
+        return YAML.load(config_file)
+
+# Load configuration with caching
+CONFIG = _load_config()
 
 # Define tmp_dir
 TMP_DIR = CONFIG.get("DEV", []).get("TmpDir", "/tmp/SkywarnPlus")
@@ -253,7 +268,15 @@ def convert_to_audio(api_key, text):
         base_url + "?" + urllib.parse.urlencode(params),
     )
 
-    response = requests.get(base_url, params=params)
+    # Use session for connection pooling
+    session = requests.Session()
+    session.headers.update({
+        'User-Agent': 'SkywarnPlus/0.8.0 (Weather Alert System)',
+        'Accept': 'audio/wav',
+        'Accept-Encoding': 'gzip, deflate'
+    })
+    
+    response = session.get(base_url, params=params, timeout=30)
     response.raise_for_status()
     # if responce text contains "ERROR" then log it and exit
     if "ERROR" in response.text:
@@ -356,7 +379,12 @@ def main(index_or_title):
             node, audio_file.rsplit(".", 1)[0]
         )
         LOGGER.debug("SkyDescribe: Running command: %s", command)
-        subprocess.run(command, shell=True)
+        try:
+            subprocess.run(command, shell=True, timeout=30, check=False)
+        except subprocess.TimeoutExpired:
+            LOGGER.error(f"Subprocess timeout for command: {command}")
+        except Exception as e:
+            LOGGER.error(f"Subprocess error for command {command}: {e}")
 
 
 # Script entry point

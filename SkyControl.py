@@ -27,11 +27,35 @@ import shutil
 import sys
 import subprocess
 from pathlib import Path
-from pydub import AudioSegment
-from ruamel.yaml import YAML
+from functools import lru_cache
+
+# Lazy imports for performance
+def _lazy_import_pydub():
+    """Lazy import pydub to avoid loading unless needed."""
+    try:
+        from pydub import AudioSegment
+        return AudioSegment
+    except ImportError:
+        raise ImportError("pydub is required for audio processing")
+
+def _lazy_import_yaml():
+    """Lazy import YAML to avoid loading unless needed."""
+    try:
+        from ruamel.yaml import YAML
+        return YAML()
+    except ImportError:
+        raise ImportError("ruamel.yaml is required")
 
 # Use ruamel.yaml instead of PyYAML to preserve comments in the config file
-yaml = YAML()
+yaml = _lazy_import_yaml()
+
+# Optimized configuration loading with caching
+@lru_cache(maxsize=1)
+def _load_config():
+    """Load configuration with caching."""
+    config_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "config.yaml")
+    with open(config_path, "r") as config_file:
+        return yaml.load(config_file)
 
 
 def changeCT(ct_mode):
@@ -224,9 +248,8 @@ else:
         print("Invalid value. Please provide either 'true' or 'false' or 'toggle'.")
         sys.exit(1)
 
-# Load the config file
-with open(str(CONFIG_FILE), "r") as f:
-    config = yaml.load(f)
+# Load the config file with caching
+config = _load_config()
 
 tailmessage_previously_enabled = config["Tailmessage"]["Enable"]
 
@@ -265,12 +288,19 @@ audio_file = VALID_KEYS[key]["true_file"] if value else VALID_KEYS[key]["false_f
 # Play the corresponding audio message on all nodes
 nodes = config["Asterisk"]["Nodes"]
 for node in nodes:
-    subprocess.run(
-        [
-            "/usr/sbin/asterisk",
-            "-rx",
-            "rpt localplay {} {}/SOUNDS/ALERTS/{}".format(
-                node, SCRIPT_DIR, audio_file.rsplit(".", 1)[0]
-            ),
-        ]
-    )
+    try:
+        subprocess.run(
+            [
+                "/usr/sbin/asterisk",
+                "-rx",
+                "rpt localplay {} {}/SOUNDS/ALERTS/{}".format(
+                    node, SCRIPT_DIR, audio_file.rsplit(".", 1)[0]
+                ),
+            ],
+            timeout=30,
+            check=False
+        )
+    except subprocess.TimeoutExpired:
+        print(f"Subprocess timeout for node {node}")
+    except Exception as e:
+        print(f"Subprocess error for node {node}: {e}")

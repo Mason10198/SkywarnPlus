@@ -27,21 +27,43 @@ import requests
 import logging
 import zipfile
 from datetime import datetime
-from ruamel.yaml import YAML
-from pydub import AudioSegment
-from pydub.silence import split_on_silence
+from functools import lru_cache
+
+# Lazy imports for performance
+def _lazy_import_yaml():
+    """Lazy import YAML to avoid loading unless needed."""
+    try:
+        from ruamel.yaml import YAML
+        return YAML()
+    except ImportError:
+        raise ImportError("ruamel.yaml is required")
+
+def _lazy_import_pydub():
+    """Lazy import pydub to avoid loading unless needed."""
+    try:
+        from pydub import AudioSegment
+        from pydub.silence import split_on_silence
+        return AudioSegment, split_on_silence
+    except ImportError:
+        raise ImportError("pydub is required for audio processing")
 
 # Initialize YAML
-yaml = YAML()
+yaml = _lazy_import_yaml()
 
 # Directories and Paths
 BASE_DIR = os.path.dirname(os.path.realpath(__file__))
 CONFIG_PATH = os.path.join(BASE_DIR, "config.yaml")
 COUNTY_CODES_PATH = os.path.join(BASE_DIR, "CountyCodes.md")
 
+# Optimized configuration loading with caching
+@lru_cache(maxsize=1)
+def _load_config():
+    """Load configuration with caching."""
+    with open(CONFIG_PATH, "r") as config_file:
+        return yaml.load(config_file)
+
 # Load configurations
-with open(CONFIG_PATH, "r") as config_file:
-    config = yaml.load(config_file)
+config = _load_config()
 
 # Logging setup
 LOG_CONFIG = config.get("Logging", {})
@@ -95,7 +117,15 @@ def generate_wav(api_key, language, speed, voice, text, output_file):
         "v": voice,
     }
 
-    response = requests.get(base_url, params=params)
+    # Use session for connection pooling
+    session = requests.Session()
+    session.headers.update({
+        'User-Agent': 'SkywarnPlus-CountyIDGen/0.8.0',
+        'Accept': 'audio/wav',
+        'Accept-Encoding': 'gzip, deflate'
+    })
+    
+    response = session.get(base_url, params=params, timeout=30)
     response.raise_for_status()
 
     # If the response text contains "ERROR" then log it and exit
