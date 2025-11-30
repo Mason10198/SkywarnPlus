@@ -1,3 +1,6 @@
+> [!CAUTION]
+> This project is no longer maintained. Do not expect updates.
+
 ![SkywarnPlus Logo](https://raw.githubusercontent.com/Mason10198/SkywarnPlus/main/Logo_SWP.svg)
 
 ![Release Version](https://img.shields.io/github/v/release/Mason10198/SkywarnPlus?label=Version&color=f15d24)
